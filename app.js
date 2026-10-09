@@ -577,7 +577,8 @@
       var raw = localStorage.getItem("gxzsb.session");
       if (!raw) return false;
       var d = JSON.parse(raw);
-      if (d.date !== new Date().toDateString()) { localStorage.removeItem("gxzsb.session"); return false; }
+      // 已做完就不恢复
+      if (d.results && Object.keys(d.results).length >= d.ids.length) return false;
       var qs = d.ids.map(qById).filter(Boolean);
       if (!qs.length) return false;
       state.session = {
