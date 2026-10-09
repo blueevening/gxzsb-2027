@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>广西专升本练习 · gxzsb</title>
+<link rel="stylesheet" href="styles.css?v=109" />
+</head>
+<body>
+  <header class="topbar">
+    <button class="back" id="btnBack" type="button" aria-label="返回">‹</button>
+    <span class="title" id="pageTitle">广西专升本练习</span>
+    <button class="icon-btn" id="btnSearch" type="button" aria-label="搜索">🔍</button>
+    <button class="icon-btn" id="btnTheme" type="button" aria-label="切换主题">◐</button>
+  </header>
+
+  <div class="app-frame">
+    <nav class="side-nav" id="sideNav" aria-label="主导航"></nav>
+    <main class="shell">
+      <div id="app"><div class="boot"><div class="boot-logo">✓</div><div>加载中…</div></div></div>
+    </main>
+  </div>
+
+  <nav class="tabbar" id="tabbar" aria-label="底部导航"></nav>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  });
+}
+if (window.caches) {
+  caches.keys().then(function(keys) {
+    keys.forEach(function(k) { caches.delete(k); });
+  });
+}
+</script>
+<script defer src="bank-meta.js?v=109"></script>
+<script defer src="bank-q1.js?v=109"></script>
+<script defer src="bank-q2.js?v=109"></script>
+<script defer src="bank-q3.js?v=109"></script>
+<script defer src="bank-q4.js?v=109"></script>
+<script defer src="bank-q5.js?v=109"></script>
+<script defer src="bank-q6.js?v=109"></script>
+<script defer src="bank-q7.js?v=109"></script>
+<script defer src="bank-q8.js?v=109"></script>
+<script defer src="bank-q9.js?v=109"></script>
+<script defer src="bank-q10.js?v=109"></script>
+<script defer src="bank-q11.js?v=109"></script>
+<script defer src="bank-q12.js?v=109"></script>
+<script defer src="all-learn.js?v=109"></script>
+<script defer src="formula-book.js?v=109"></script>
+<script defer src="wordbook.js?v=109"></script>
+<script defer src="kp-detail.js?v=109"></script>
+<script defer src="syllabus.js?v=109"></script>
+<script defer src="syllabus-sample.js?v=109"></script>
+<script defer src="exam-plans-v2.js?v=109"></script>
+<script defer src="app.js?v=109"></script>
+</body>
+</html>
