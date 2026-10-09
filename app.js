@@ -1284,6 +1284,7 @@ function ensureExplain(q) {
         <button class="list-row" data-act="exam-info" type="button"><span class="main"><span class="t">考试结构说明</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="school" type="button"><span class="main"><span class="t">真题库/资料</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">切换深色/浅色模式</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t" style="color:var(--error)">退出登录</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span></span><span class="end">›</span></button>
       </div>
 
@@ -2187,6 +2188,10 @@ function formulaFilter() {
       state.theme = state.theme === "dark" ? "light" : "dark";
       save(LS.theme, state.theme);
       document.documentElement.setAttribute("data-theme", state.theme);
+    } else if (act === "logout") {
+      if (sb) sb.auth.signOut();
+      state.user = null;
+      go("login"); render();
     } else if (act === "clear") {
       if (!confirm("清除本机全部学习数据？")) return;
       Object.values(LS).forEach((k) => localStorage.removeItem(k));
