@@ -254,6 +254,8 @@
     const pub = ["高等数学", "英语"].map(subjStat);
     const maj = ["电工电子技术基础", "C语言程序设计", "计算机网络基础"].map((s) => ({ s, ...subjStat(s) }));
     const totalDone = new Set(state.attempts.map((a) => a.questionId).filter(Boolean)).size;
+    var todayStr = new Date().toDateString();
+    var todayDone = state.attempts.filter((a) => new Date(a.at || Date.now()).toDateString() === todayStr).length;
 
     return `
       <button class="syllabus-banner" data-nav="syllabus" type="button">
@@ -266,6 +268,21 @@
       </button>
 
       <div class="section-title">今日任务</div>
+      <div class="card" style="padding:16px;margin-bottom:12px;background:linear-gradient(135deg,#2D5BFF,#4F8CFF);color:white">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;opacity:0.9">今日已完成</div>
+            <div style="font-size:28px;font-weight:bold">${todayDone}<span style="font-size:14px;opacity:0.8"> / 30 题</span></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;opacity:0.9">连续打卡</div>
+            <div style="font-size:28px;font-weight:bold">🔥 ${state.streak.n || 0}<span style="font-size:14px;opacity:0.8"> 天</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;height:6px;background:rgba(255,255,255,0.25);border-radius:3px;overflow:hidden">
+          <div style="height:100%;background:white;width:${Math.min(todayDone/30*100,100)}%;border-radius:3px"></div>
+        </div>
+      </div>
       <div class="home-tasks">
         <div class="card" style="padding:8px 16px">
         <button class="task-row" data-act="daily" type="button">
