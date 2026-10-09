@@ -1213,11 +1213,12 @@ function ensureExplain(q) {
     const favN = Object.keys(state.fav || {}).filter((k) => state.fav[k]).length;
     const today = new Date().toDateString();
     const todayDone = state.attempts.filter((a) => new Date(a.at || Date.now()).toDateString() === today).length;
+    const nick = load("gxzsb.nick", "专升本备考人");
 
     return `
       <div class="card" style="text-align:center;padding:24px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;margin-bottom:16px">
-        <div style="width:64px;height:64px;border-radius:50%;background:white;color:#6366f1;font-size:28px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px">学</div>
-        <div style="font-size:18px;font-weight:bold">专升本备考人</div>
+        <div style="width:64px;height:64px;border-radius:50%;background:white;color:#6366f1;font-size:28px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px">${nick[0] || "学"}</div>
+        <div style="font-size:18px;font-weight:bold">${esc(nick)}</div>
         <div style="font-size:13px;opacity:0.9;margin-top:4px">今天已练 ${todayDone} 题 · 连续打卡 ${state.streak.n || 0} 天</div>
       </div>
       <div class="stat-grid" style="margin-bottom:16px">
@@ -1233,11 +1234,17 @@ function ensureExplain(q) {
         <button class="list-row" data-nav="wrong" type="button"><span class="main"><span class="t">我的错题本</span><span class="s">${Object.keys(state.wrong).length} 道待复习</span></span><span class="end">›</span></button>
       </div>
 
+      <div class="section-title">账号与数据</div>
+      <div class="card" style="padding:0;margin-bottom:16px">
+        <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span><span class="s">当前：${esc(nick)}</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出全部数据备份</span><span class="s">下载JSON文件，换设备可导入</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span><span class="s">从JSON文件恢复学习记录</span></span><span class="end">›</span></button>
+      </div>
+
       <div class="section-title">工具与设置</div>
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="exam-info" type="button"><span class="main"><span class="t">考试结构说明</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="school" type="button"><span class="main"><span class="t">真题库/资料</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="export" type="button"><span class="main"><span class="t">导出错题备份</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">切换深色/浅色模式</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span></span><span class="end">›</span></button>
       </div>
@@ -2071,6 +2078,35 @@ function formulaFilter() {
       a.href = URL.createObjectURL(blob);
       a.download = "gxzsb-wrong.json";
       a.click();
+    } else if (act === "set-nick") {
+      const cur = load("gxzsb.nick", "专升本备考人");
+      const n = prompt("输入昵称：", cur);
+      if (n && n.trim()) { save("gxzsb.nick", n.trim()); render(); }
+    } else if (act === "export-all") {
+      const data = {};
+      Object.values(LS).forEach((k) => { data[k] = load(k, null); });
+      data["gxzsb.nick"] = load("gxzsb.nick", null);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "gxzsb-backup-" + new Date().toISOString().slice(0,10) + ".json";
+      a.click();
+    } else if (act === "import") {
+      const inp = document.createElement("input");
+      inp.type = "file"; inp.accept = ".json";
+      inp.onchange = function() {
+        const f = inp.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = function() {
+          try {
+            const data = JSON.parse(r.result);
+            Object.keys(data).forEach((k) => { if (data[k] != null) save(k, data[k]); });
+            alert("导入成功！页面将刷新"); location.reload();
+          } catch(e) { alert("文件格式错误"); }
+        };
+        r.readAsText(f);
+      };
+      inp.click();
     } else if (act === "theme") {
       state.theme = state.theme === "dark" ? "light" : "dark";
       save(LS.theme, state.theme);
