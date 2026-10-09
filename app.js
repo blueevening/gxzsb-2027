@@ -2,6 +2,11 @@
 (function () {
   "use strict";
 
+  var sb = null;
+  if (window.supabase && window.SB_CONFIG) {
+    try { sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key); } catch(e) {}
+  }
+
   const D = window.STUDY_DATA || {};
   const Q = (D.questions || []).map((q) => {
     if (q.type === "choice") q.type = "single";
@@ -1204,6 +1209,34 @@ function ensureExplain(q) {
     `;
   }
 
+  function viewLogin() {
+    setTitle("登录", false);
+    return `
+      <div style="max-width:400px;margin:60px auto;padding:0 20px">
+        <div style="text-align:center;margin-bottom:32px">
+          <div style="font-size:40px;margin-bottom:8px">⚡</div>
+          <div style="font-size:22px;font-weight:bold">广西专升本练习</div>
+          <div style="color:#64748b;font-size:14px;margin-top:4px">登录后云端同步学习进度</div>
+        </div>
+        <div class="card" style="padding:24px">
+          <div style="margin-bottom:16px">
+            <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">邮箱</label>
+            <input id="loginEmail" type="email" placeholder="your@email.com" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
+          </div>
+          <div style="margin-bottom:20px">
+            <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">密码</label>
+            <input id="loginPwd" type="password" placeholder="至少6位" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
+          </div>
+          <button data-act="do-login" type="button" style="width:100%;padding:14px;background:#2D5BFF;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer">登录 / 注册</button>
+          <div id="loginMsg" style="text-align:center;margin-top:12px;font-size:13px;color:#64748b"></div>
+        </div>
+        <div style="text-align:center;margin-top:20px">
+          <button data-act="guest" type="button" style="color:#64748b;font-size:13px;background:none;border:none;cursor:pointer">先逛逛，稍后登录</button>
+        </div>
+      </div>
+    `;
+  }
+
   function viewMe() {
     setTitle("我的", false);
     const total = state.attempts.length;
@@ -1814,6 +1847,12 @@ function formulaFilter() {
     const { route, params } = parseHash();
     state.route = route;
     const app = $("#app");
+    if (sb && !state.user && route !== "login") {
+      app.innerHTML = viewLogin();
+      bindEvents();
+      return;
+    }
+    if (route === "login") { app.innerHTML = viewLogin(); bindEvents(); return; }
     if (route === "bank") app.innerHTML = viewBank();
     else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
     else if (route === "practice") app.innerHTML = viewPractice();
@@ -2078,6 +2117,27 @@ function formulaFilter() {
       a.href = URL.createObjectURL(blob);
       a.download = "gxzsb-wrong.json";
       a.click();
+    } else if (act === "do-login") {
+      var em = document.getElementById("loginEmail").value.trim();
+      var pw = document.getElementById("loginPwd").value;
+      var msg = document.getElementById("loginMsg");
+      if (!em || !pw) { msg.textContent = "请输入邮箱和密码"; return; }
+      msg.textContent = "登录中...";
+      sb.auth.signInWithPassword({ email: em, password: pw }).then(function(r) {
+        if (r.error && r.error.message.indexOf("Invalid") >= 0) {
+          return sb.auth.signUp({ email: em, password: pw }).then(function(r2) {
+            if (r2.error) { msg.textContent = r2.error.message; return; }
+            state.user = r2.user;
+            msg.textContent = "注册成功！请去邮箱验证后登录";
+          });
+        }
+        if (r.error) { msg.textContent = r.error.message; return; }
+        state.user = r.data.user;
+        go("home"); render();
+      });
+    } else if (act === "guest") {
+      state.user = { isGuest: true };
+      go("home"); render();
     } else if (act === "set-nick") {
       const cur = load("gxzsb.nick", "专升本备考人");
       const n = prompt("输入昵称：", cur);
