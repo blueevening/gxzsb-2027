@@ -538,8 +538,38 @@
     };
     state.last = { title: opts.title, subject: opts.subject, at: Date.now() };
     save(LS.last, state.last);
+    saveSession();
     go("practice");
     render();
+  }
+
+  function saveSession() {
+    if (!state.session) return;
+    try {
+      var s = state.session;
+      localStorage.setItem("gxzsb.session", JSON.stringify({
+        title: s.title, ids: s.q.map(function(q){return q.id;}), i: s.i,
+        sel: s.sel, submitted: s.submitted, results: s.results,
+        date: new Date().toDateString()
+      }));
+    } catch(e) {}
+  }
+
+  function restoreSession() {
+    try {
+      var raw = localStorage.getItem("gxzsb.session");
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (d.date !== new Date().toDateString()) { localStorage.removeItem("gxzsb.session"); return false; }
+      var qs = d.ids.map(qById).filter(Boolean);
+      if (!qs.length) return false;
+      state.session = {
+        title: d.title, q: qs, i: Math.min(d.i, qs.length-1),
+        sel: d.sel, submitted: d.submitted, results: d.results || {},
+        flags: {}, showExp: false, start: Date.now(), end: null, exam: null
+      };
+      return true;
+    } catch(e) { return false; }
   }
 
   function viewPractice() {
@@ -1982,6 +2012,7 @@ function formulaFilter() {
       startSession({ ids: shuffled, limit: ids.length, title: "收藏题练习" });
     }
     else if (act === "last") {
+      if (restoreSession()) { go("practice"); render(); return; }
       const last = state.last;
       if (last && last.subject && SUBJ[last.subject]) startSession({ subject: last.subject, limit: 12, title: "继续 " + last.subject });
       else startSession({ limit: 12, title: "综合练习" });
@@ -2011,17 +2042,17 @@ function formulaFilter() {
       const s = state.session;
       if (!s || s.submitted) return;
       s.sel = t.getAttribute("data-opt");
-      render();
-    } else if (act === "submit") submitQ();
-    else if (act === "next") nextQ();
-    else if (act === "prev") prevQ();
+      saveSession(); render();
+    } else if (act === "submit") { submitQ(); saveSession(); }
+    else if (act === "next") { nextQ(); saveSession(); }
+    else if (act === "prev") { prevQ(); saveSession(); }
     else if (act === "goto") {
       const s = state.session;
       s.i = +t.getAttribute("data-i");
       s.sel = null;
       s.submitted = s.q[s.i].id in s.results;
       s.showExp = false;
-      render();
+      saveSession(); render();
     } else if (act === "toggle-exp") {
       const s = state.session;
       if (!s.submitted) return alert("提交后可查看解析");
@@ -2415,5 +2446,8 @@ function formulaFilter() {
       render();
     });
   }
+  // 恢复上次答题
+  if (!state.session && !state.user) restoreSession();
+  if (!state.session && state.user) restoreSession();
   render();
 })();
