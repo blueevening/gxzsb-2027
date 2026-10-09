@@ -220,6 +220,12 @@
   const TAB_NAV_IDS = ["home","bank","words","wrong","me"];
   const TAB_NAV = NAV.filter(function(n){ return TAB_NAV_IDS.indexOf(n.id) >= 0; });
   function renderNav() {
+    var showNav = state.user && !state.user.isGuest ? true : true;
+    if (!state.user) {
+      $("#tabbar").innerHTML = "";
+      $("#sideNav").innerHTML = "";
+      return;
+    }
     const html = NAV.map(
       (n) =>
         `<button class="tab-item ${state.route === n.id || (n.id === "bank" && state.route === "subject") || (n.id === "words" && (state.route === "word-learn" || state.route === "word-review" || state.route === "word-list")) ? "is-active" : ""}" data-nav="${n.id}" type="button"><span class="ico">${n.ico}</span><span>${n.label}</span></button>`
@@ -2391,5 +2397,12 @@ function formulaFilter() {
 
   window.addEventListener("hashchange", render);
   document.documentElement.setAttribute("data-theme", state.theme);
+  // 恢复Supabase session
+  if (sb) {
+    sb.auth.getSession().then(function(res) {
+      if (res.data.session) state.user = res.data.session.user;
+      render();
+    });
+  }
   render();
 })();
