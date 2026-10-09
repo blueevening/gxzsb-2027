@@ -1994,9 +1994,11 @@ function formulaFilter() {
     } else if (act === "learn-mark") {
       t.textContent = "已学 \u2713";
     } else if (act === "daily") {
+      // 今天已开始过就继续
+      if (restoreSession()) { go("practice"); render(); return; }
       const allIds = Q.map((q) => q.id);
-      const shuffled = shuffle(allIds).slice(0, 10);
-      startSession({ ids: shuffled, limit: 30, title: "每日 30 题（随机）" });
+      const shuffled = shuffle(allIds).slice(0, 30);
+      startSession({ ids: shuffled, title: "每日 30 题（随机）" });
     }
     else if (act === "due") startSession({ dueOnly: true, onlyWrong: true, limit: 15, title: "到期错题" });
     else if (act === "practice-wrong-all") {
@@ -2447,7 +2449,7 @@ function formulaFilter() {
     });
   }
   // 恢复上次答题
-  if (!state.session && !state.user) restoreSession();
-  if (!state.session && state.user) restoreSession();
+  var restored = restoreSession();
+  if (restored && !location.hash) { location.hash = "#practice"; }
   render();
 })();
