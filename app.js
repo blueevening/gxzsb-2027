@@ -447,7 +447,7 @@
       <div class="section-title">筛选</div>
       <div class="chip-row">
         ${["基础", "强化", "冲刺"].filter((d) => qOf.some((q) => q.difficultyLabel === d)).map((d) => chip("diff", d, d)).join("")}
-        ${(name === "英语" ? ["单选", "判断", "填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("")}
+        ${(name === "英语" ? ["单选", "判断", "阅读", "阅读填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("")}
         ${["未做", "做错", "收藏"].map((s) => chip("status", s, s)).join("")}
         ${["客观题", "主观题"].map((k) => chip("kind", k, k)).join("")}
       </div>
