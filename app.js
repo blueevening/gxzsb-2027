@@ -657,9 +657,9 @@
         <div class="explain ${s.showExp && s.submitted ? "is-open" : ""}">
           <button class="explain-toggle" data-act="toggle-exp" type="button"><span>查看解析</span><span class="muted">${s.showExp && s.submitted ? "收起" : "展开"}</span></button>
           <div class="explain-body">
-            <div class="explain-block" style="border-left:3px solid #22c55e">
-              <h4>⚡ 秒懂考点</h4>
-              <div class="content">${esc(q.knowledgePoint || q.subject)} · ${esc(q.difficultyLabel)} · 答案：<strong>${esc(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
+            <div class="explain-block" style="border-left:3px solid #22c55e;background:#f0fdf4;padding:12px;border-radius:8px;margin-bottom:12px">
+              <h4 style="margin:0 0 6px 0">⚡ 秒懂考点</h4>
+              <div class="content" style="font-size:15px">本题考 <strong style="color:#16a34a">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:#16a34a;font-size:18px">${esc(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
             </div>
             <details class="explain-block" style="border-left:3px solid #3b82f6" open>
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 保姆级拆解（点击展开）</summary>
@@ -676,12 +676,12 @@
               </div>
             </details>
             <details class="explain-block" style="border-left:3px solid #f59e0b">
-              <summary style="cursor:pointer;font-weight:bold;padding:8px 0">⚠️ 避坑指南（点击展开）</summary>
+              <summary style="cursor:pointer;font-weight:bold;padding:8px 0">⚠️ 避坑指南（新手必看）</summary>
               <div class="content">
-                <p style="color:#92400e">做题时注意：</p>
-                <p>• 看清题目问的是什么（选正确还是错误）</p>
-                <p>• 注意单位、符号和正负号</p>
-                <p>• 不确定的题标记"再想想"，做完后回顾</p>
+                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:#92400e">• ${esc(p)}</p>`;}).join("") : ""}
+                <p style="color:#92400e">• 看清题目问的是正确还是错误选项</p>
+                <p style="color:#92400e">• 注意单位、符号和正负号</p>
+                ${wrongN ? `<p style="color:#dc2626">• 你曾错这道题 ${wrongN} 次，务必巩固</p>` : ""}
               </div>
             </details>
             <div class="explain-block"><h4>AI 深度解析</h4>
