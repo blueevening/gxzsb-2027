@@ -2263,6 +2263,10 @@ function formulaFilter() {
     } else if (act === "clear") {
       if (!confirm("清除本机全部学习数据？")) return;
       Object.values(LS).forEach((k) => localStorage.removeItem(k));
+      localStorage.removeItem("gxzsb.session");
+      localStorage.removeItem("gxzsb.nick");
+      localStorage.removeItem("gxzsb.uid");
+      if (sb) sb.auth.signOut();
       location.reload();
     } else if (act === "school") go("school");
     else if (act === "start-exam-paper") {
