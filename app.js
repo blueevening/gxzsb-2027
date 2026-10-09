@@ -657,29 +657,33 @@
         <div class="explain ${s.showExp && s.submitted ? "is-open" : ""}">
           <button class="explain-toggle" data-act="toggle-exp" type="button"><span>查看解析</span><span class="muted">${s.showExp && s.submitted ? "收起" : "展开"}</span></button>
           <div class="explain-body">
-            <div class="explain-block"><h4>答案</h4><div class="content"><strong>${esc(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div></div>
-            <div class="explain-block"><h4>考点定位</h4><div class="content">${esc(q.subject)} · ${esc(q.chapter || "")} · ${esc(q.knowledgePoint)} · ${esc(q.difficultyLabel)}</div></div>
-            ${
-              q.model
-                ? `<div class="explain-block"><h4>建模</h4><div class="content">${esc(q.model)}</div></div>`
-                : ""
-            }
+            <div class="explain-block" style="border-left:3px solid #22c55e">
+              <h4>⚡ 秒懂考点</h4>
+              <div class="content">${esc(q.knowledgePoint || q.subject)} · ${esc(q.difficultyLabel)} · 答案：<strong>${esc(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
+            </div>
+            <details class="explain-block" style="border-left:3px solid #3b82f6" open>
+              <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 保姆级拆解（点击展开）</summary>
+              <div class="content">
             ${
               (q.steps || []).length
-                ? `<div class="explain-block"><h4>步骤</h4><div class="content"><ol>${q.steps.map((t) => `<li>${esc(t)}</li>`).join("")}</ol></div></div>`
+                ? `<ol>${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
                 : ""
             }
-            ${
-              q.sample
-                ? `<div class="explain-block"><h4>范文 / 参考译文</h4><div class="content">${esc(q.sample).replace(/\n/g, "<br/>")}</div></div>`
-                : ""
-            }
-            ${
-              (q.scorePoints || []).length
-                ? `<div class="explain-block"><h4>评分要点</h4><div class="content">${q.scorePoints.map((x) => "• " + esc(x)).join("<br/>")}</div></div>`
-                : ""
-            }
-            <div class="explain-block"><h4>步骤 / 解析</h4><div class="content">${exp.split("\n").map((l) => (/^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`)).join("")}</div></div>
+            ${exp.split("\n").filter(function(l){return l.trim();}).map(function(l){ return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`; }).join("")}
+            ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}
+            ${q.sample ? `<p><strong>范文/译文：</strong></p><div>${esc(q.sample).replace(/\n/g,"<br/>")}</div>` : ""}
+            ${(q.scorePoints||[]).length ? `<p><strong>评分要点：</strong></p>${q.scorePoints.map(function(x){return "• "+esc(x);}).join("<br/>")}` : ""}
+              </div>
+            </details>
+            <details class="explain-block" style="border-left:3px solid #f59e0b">
+              <summary style="cursor:pointer;font-weight:bold;padding:8px 0">⚠️ 避坑指南（点击展开）</summary>
+              <div class="content">
+                <p style="color:#92400e">做题时注意：</p>
+                <p>• 看清题目问的是什么（选正确还是错误）</p>
+                <p>• 注意单位、符号和正负号</p>
+                <p>• 不确定的题标记"再想想"，做完后回顾</p>
+              </div>
+            </details>
             <div class="explain-block"><h4>AI 深度解析</h4>
               <div class="content" style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn btn-primary btn-sm" data-act="ai-deepseek" data-id="${attr(q.id)}" type="button">DeepSeek 解析</button>
