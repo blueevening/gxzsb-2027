@@ -1211,12 +1211,17 @@ function ensureExplain(q) {
 
   function viewLogin() {
     setTitle("登录", false);
+    var mode = state.loginMode || "login";
     return `
       <div style="max-width:400px;margin:60px auto;padding:0 20px">
         <div style="text-align:center;margin-bottom:32px">
           <div style="font-size:40px;margin-bottom:8px">⚡</div>
           <div style="font-size:22px;font-weight:bold">广西专升本练习</div>
           <div style="color:#64748b;font-size:14px;margin-top:4px">登录后云端同步学习进度</div>
+        </div>
+        <div style="display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:20px">
+          <button data-act="switch-login" data-mode="login" type="button" style="flex:1;padding:10px;border:none;border-radius:8px;font-size:15px;font-weight:${mode==='login'?'bold':'normal'};background:${mode==='login'?'white':'transparent'};color:${mode==='login'?'#1e293b':'#64748b'};cursor:pointer">登录</button>
+          <button data-act="switch-login" data-mode="register" type="button" style="flex:1;padding:10px;border:none;border-radius:8px;font-size:15px;font-weight:${mode==='register'?'bold':'normal'};background:${mode==='register'?'white':'transparent'};color:${mode==='register'?'#1e293b':'#64748b'};cursor:pointer">注册</button>
         </div>
         <div class="card" style="padding:24px">
           <div style="margin-bottom:16px">
@@ -1227,7 +1232,7 @@ function ensureExplain(q) {
             <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">密码</label>
             <input id="loginPwd" type="password" placeholder="至少6位" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
           </div>
-          <button data-act="do-login" type="button" style="width:100%;padding:14px;background:#2D5BFF;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer">登录 / 注册</button>
+          <button data-act="${mode==='login'?'do-login':'do-register'}" type="button" style="width:100%;padding:14px;background:#2D5BFF;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" style="text-align:center;margin-top:12px;font-size:13px;color:#64748b"></div>
         </div>
         <div style="text-align:center;margin-top:20px">
@@ -2117,6 +2122,9 @@ function formulaFilter() {
       a.href = URL.createObjectURL(blob);
       a.download = "gxzsb-wrong.json";
       a.click();
+    } else if (act === "switch-login") {
+      state.loginMode = t.getAttribute("data-mode");
+      render();
     } else if (act === "do-login") {
       var em = document.getElementById("loginEmail").value.trim();
       var pw = document.getElementById("loginPwd").value;
@@ -2124,16 +2132,20 @@ function formulaFilter() {
       if (!em || !pw) { msg.textContent = "请输入邮箱和密码"; return; }
       msg.textContent = "登录中...";
       sb.auth.signInWithPassword({ email: em, password: pw }).then(function(r) {
-        if (r.error && r.error.message.indexOf("Invalid") >= 0) {
-          return sb.auth.signUp({ email: em, password: pw }).then(function(r2) {
-            if (r2.error) { msg.textContent = r2.error.message; return; }
-            state.user = r2.user;
-            msg.textContent = "注册成功！请去邮箱验证后登录";
-          });
-        }
         if (r.error) { msg.textContent = r.error.message; return; }
         state.user = r.data.user;
         go("home"); render();
+      });
+    } else if (act === "do-register") {
+      var em2 = document.getElementById("loginEmail").value.trim();
+      var pw2 = document.getElementById("loginPwd").value;
+      var msg2 = document.getElementById("loginMsg");
+      if (!em2 || !pw2) { msg2.textContent = "请输入邮箱和密码"; return; }
+      if (pw2.length < 6) { msg2.textContent = "密码至少6位"; return; }
+      msg2.textContent = "注册中...";
+      sb.auth.signUp({ email: em2, password: pw2 }).then(function(r) {
+        if (r.error) { msg2.textContent = r.error.message; return; }
+        msg2.textContent = "注册成功！请去邮箱点验证链接后登录";
       });
     } else if (act === "guest") {
       state.user = { isGuest: true };
