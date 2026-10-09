@@ -2145,7 +2145,11 @@ function formulaFilter() {
       msg2.textContent = "注册中...";
       sb.auth.signUp({ email: em2, password: pw2 }).then(function(r) {
         if (r.error) { msg2.textContent = r.error.message; return; }
-        msg2.textContent = "注册成功！请去邮箱点验证链接后登录";
+        sb.auth.signInWithPassword({ email: em2, password: pw2 }).then(function(r2) {
+          if (r2.error) { msg2.textContent = "注册成功！请去邮箱验证后登录"; return; }
+          state.user = r2.data.user;
+          go("home"); render();
+        });
       });
     } else if (act === "guest") {
       state.user = { isGuest: true };
