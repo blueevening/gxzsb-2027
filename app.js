@@ -2151,9 +2151,20 @@ function formulaFilter() {
       if (pw2.length < 6) { msg2.textContent = "密码至少6位"; return; }
       msg2.textContent = "注册中...";
       sb.auth.signUp({ email: em2, password: pw2 }).then(function(r) {
-        if (r.error) { msg2.textContent = r.error.message; return; }
+        if (r.error) {
+          if (r.error.message.indexOf("already") >= 0 || r.error.message.indexOf("registered") >= 0) {
+            msg2.textContent = "该邮箱已注册，请去登录页登录";
+          } else {
+            msg2.textContent = r.error.message;
+          }
+          return;
+        }
+        // 注册成功，尝试自动登录
         sb.auth.signInWithPassword({ email: em2, password: pw2 }).then(function(r2) {
-          if (r2.error) { msg2.textContent = "注册成功！请去邮箱验证后登录"; return; }
+          if (r2.error) {
+            msg2.textContent = "注册成功！请去登录页登录";
+            return;
+          }
           state.user = r2.data.user;
           go("home"); render();
         });
