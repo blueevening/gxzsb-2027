@@ -667,9 +667,8 @@
             ${
               (q.steps || []).length
                 ? `<ol>${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
-                : ""
+                : exp.split("\n").filter(function(l){return l.trim();}).map(function(l){ return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`; }).join("")
             }
-            ${exp.split("\n").filter(function(l){return l.trim();}).map(function(l){ return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`; }).join("")}
             ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}
             ${q.sample ? `<p><strong>范文/译文：</strong></p><div>${esc(q.sample).replace(/\n/g,"<br/>")}</div>` : ""}
             ${(q.scorePoints||[]).length ? `<p><strong>评分要点：</strong></p>${q.scorePoints.map(function(x){return "• "+esc(x);}).join("<br/>")}` : ""}
