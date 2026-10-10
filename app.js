@@ -75,6 +75,177 @@
     searchQ: "",
   };
 
+  /* ========== 云端进度同步 ========== */
+  const SYNC_FIELDS = {
+    attempts: "gxzsb.a3",
+    wrong: "gxzsb.w3",
+    fav: "gxzsb.f3",
+    notes: "gxzsb.n3",
+    marks: "gxzsb.m3",
+    last: "gxzsb.last3",
+    streak: "gxzsb.streak3",
+    history: "gxzsb.his3",
+    reports: "gxzsb.rep3",
+  };
+  let syncTimer = null;
+  let syncing = false;           // 正在应用远端数据时，避免回环上传
+  let progressChannel = null;
+
+  function activeUser() {
+    return (state.user && !state.user.isGuest && sb) ? state.user : null;
+  }
+
+  function gatherLocal() {
+    const out = { _v: 1 };
+    Object.keys(SYNC_FIELDS).forEach((f) => { out[f] = state[f]; });
+    out.nick = load("gxzsb.nick", null);
+    return out;
+  }
+
+  function applyData(data) {
+    if (!data || typeof data !== "object") return;
+    Object.keys(SYNC_FIELDS).forEach((f) => {
+      if (data[f] !== undefined) {
+        state[f] = data[f];
+        save(SYNC_FIELDS[f], data[f]);
+      }
+    });
+    if (data.nick) save("gxzsb.nick", data.nick);
+  }
+
+  function mergeMap(a, b, pick) {
+    const out = Object.assign({}, a || {});
+    Object.keys(b || {}).forEach((k) => {
+      if (out[k] === undefined) out[k] = b[k];
+      else out[k] = pick(out[k], b[k]);
+    });
+    return out;
+  }
+
+  function mergeProgress(local, remote) {
+    if (!remote || typeof remote !== "object") return local;
+    const out = Object.assign({}, local);
+
+    // attempts：保留每次作答，按 (questionId, at) 去重，按时间排序，截断 1500
+    const am = new Map();
+    (local.attempts || []).concat(remote.attempts || []).forEach((r) => {
+      if (!r || r.questionId == null) return;
+      const key = r.questionId + "#" + r.at;
+      const ex = am.get(key);
+      if (!ex || (r.at || 0) > (ex.at || 0)) am.set(key, r);
+    });
+    out.attempts = Array.from(am.values()).sort((x, y) => (x.at || 0) - (y.at || 0)).slice(-1500);
+
+    // wrong：同题取错误次数 n、时间 last、复习到期 due 都较大者
+    out.wrong = mergeMap(local.wrong, remote.wrong, (x, y) => ({
+      n: Math.max(x.n || 0, y.n || 0),
+      last: Math.max(x.last || 0, y.last || 0),
+      due: Math.max(x.due || 0, y.due || 0),
+    }));
+
+    // fav：任一收藏即为 true
+    out.fav = mergeMap(local.fav, remote.fav, (x, y) => !!(x || y));
+    // marks：并集
+    out.marks = mergeMap(local.marks, remote.marks, (x, y) => (x || y));
+    // notes：取非空且较长者
+    out.notes = mergeMap(local.notes, remote.notes, (x, y) => {
+      const xs = String(x || ""), ys = String(y || "");
+      if (!xs) return ys;
+      if (!ys) return xs;
+      return ys.length > xs.length ? ys : xs;
+    });
+
+    // streak：连续天数取大；日期以较新为准
+    const ls = local.streak || {}, rs = remote.streak || {};
+    out.streak = {
+      d: (rs.d && (!ls.d || rs.d >= ls.d)) ? rs.d : ls.d,
+      n: Math.max(ls.n || 0, rs.n || 0),
+      today: Math.max(ls.today || 0, rs.today || 0),
+    };
+
+    // last：取时间较新的
+    const ll = local.last, rl = remote.last;
+    out.last = (rl && (!ll || (rl.at || 0) > (ll.at || 0))) ? rl : ll;
+
+    // history / reports：按标识去重合并
+    const uniqBy = (arr, keyfn) => {
+      const m = new Map();
+      (arr || []).forEach((x) => { const k = keyfn(x); if (x != null && !m.has(k)) m.set(k, x); });
+      return Array.from(m.values());
+    };
+    out.history = uniqBy((local.history || []).concat(remote.history || []),
+      (x) => (x && (x.id || x.date || JSON.stringify(x))));
+    out.reports = uniqBy((local.reports || []).concat(remote.reports || []),
+      (x) => (x && (x.id || JSON.stringify(x))));
+
+    out.nick = remote.nick || local.nick || null;
+    out.theme = local.theme;   // 主题为设备本地偏好，不参与同步
+    return out;
+  }
+
+  async function pushProgress(data) {
+    const u = activeUser();
+    if (!u) return;
+    const payload = data || gatherLocal();
+    try {
+      const { error } = await sb.from("progress").upsert(
+        { user_id: u.id, data: payload, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+      if (error) console.warn("sync push:", error.message);
+    } catch (e) {}
+  }
+
+  function scheduleSync() {
+    if (!activeUser() || syncing) return;
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => pushProgress(), 600);
+  }
+
+  async function pullAndMerge() {
+    const u = activeUser();
+    if (!u) return;
+    try {
+      const { data, error } = await sb.from("progress")
+        .select("data,updated_at").eq("user_id", u.id).maybeSingle();
+      if (error) return;
+      const local = gatherLocal();
+      let merged = local;
+      if (data && data.data) merged = mergeProgress(local, data.data);
+      syncing = true;
+      applyData(merged);
+      syncing = false;
+      render();
+      await pushProgress(merged);
+    } catch (e) { syncing = false; }
+  }
+
+  function subscribeRealtime() {
+    const u = activeUser();
+    if (!u) return;
+    try {
+      if (progressChannel) { sb.removeChannel(progressChannel); progressChannel = null; }
+      progressChannel = sb.channel("progress-" + u.id)
+        .on("postgres_changes",
+          { event: "UPDATE", schema: "public", table: "progress", filter: "user_id=eq." + u.id },
+          (payload) => {
+            if (syncing) return;
+            const row = payload.new;
+            if (!row || !row.data) return;
+            const merged = mergeProgress(gatherLocal(), row.data);
+            syncing = true;
+            applyData(merged);
+            syncing = false;
+            render();
+          })
+        .subscribe();
+    } catch (e) {}
+  }
+
+  function stopRealtime() {
+    try { if (progressChannel) { sb.removeChannel(progressChannel); progressChannel = null; } } catch (e) {}
+  }
+
   const $ = (s, r = document) => r.querySelector(s);
   const esc = (s) =>
     String(s ?? "")
@@ -194,6 +365,7 @@
     }
     save(LS.wrong, state.wrong);
     touchStreak();
+    scheduleSync();
   }
 
   /* ========== 路由 ========== */
@@ -2084,12 +2256,14 @@ function formulaFilter() {
       const q = s.q[s.i];
       state.fav[q.id] = !state.fav[q.id];
       save(LS.fav, state.fav);
+      scheduleSync();
       render();
     }  else if (act === "save-note") {
       const id = t.getAttribute("data-id");
       const box = document.getElementById("noteInput");
       state.notes[id] = box ? box.value : "";
       save(LS.notes, state.notes);
+      scheduleSync();
       t.textContent = "已保存";
     } else if (act === "open-q") startSession({ ids: [t.getAttribute("data-id")], title: "题目精练", limit: 1 });
     else if (act === "exam") {
@@ -2193,7 +2367,9 @@ function formulaFilter() {
       sb.auth.signInWithPassword({ email: em, password: pw }).then(function(r) {
         if (r.error) { msg.textContent = r.error.message; return; }
         state.user = r.data.user;
+        stopRealtime();
         go("home"); render();
+        pullAndMerge().then(subscribeRealtime);
       });
     } else if (act === "do-register") {
       var em2 = document.getElementById("loginEmail").value.trim();
@@ -2218,7 +2394,9 @@ function formulaFilter() {
             return;
           }
           state.user = r2.data.user;
+          stopRealtime();
           go("home"); render();
+          pullAndMerge().then(subscribeRealtime);
         });
       });
     } else if (act === "guest") {
@@ -2258,6 +2436,7 @@ function formulaFilter() {
       save(LS.theme, state.theme);
       document.documentElement.setAttribute("data-theme", state.theme);
     } else if (act === "logout") {
+      stopRealtime();
       if (sb) sb.auth.signOut();
       state.user = null;
       go("login"); render();
@@ -2467,7 +2646,10 @@ function formulaFilter() {
   // 恢复Supabase session
   if (sb) {
     sb.auth.getSession().then(function(res) {
-      if (res.data.session) state.user = res.data.session.user;
+      if (res.data.session) {
+        state.user = res.data.session.user;
+        pullAndMerge().then(subscribeRealtime);
+      }
       render();
     });
   }
