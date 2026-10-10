@@ -677,9 +677,7 @@
             <details class="explain-block" style="border-left:3px solid #f59e0b">
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">⚠️ 避坑指南（新手必看）</summary>
               <div class="content">
-                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:#92400e">• ${esc(p)}</p>`;}).join("") : ""}
-                <p style="color:#92400e">• 看清题目问的是正确还是错误选项</p>
-                <p style="color:#92400e">• 注意单位、符号和正负号</p>
+                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:#92400e">• ${esc(p)}</p>`;}).join("") : '<p style="color:#92400e">• 看清题目问的是什么</p>'}
                 ${wrongN ? `<p style="color:#dc2626">• 你曾错这道题 ${wrongN} 次，务必巩固</p>` : ""}
               </div>
             </details>
