@@ -2419,6 +2419,7 @@ function ensureExplain(q) {
                   (it) => `<div class="f-card f-item" style="border-left:3px solid ${sc.color}">
                     <div class="f-head">
                       <span class="f-name">${esc(it.name)}</span>
+                      ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
                       <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
                     </div>
                     <div class="f-body">${renderMathLine(it.formula)}</div>
