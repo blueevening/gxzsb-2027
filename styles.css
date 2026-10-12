@@ -1418,3 +1418,195 @@ html.qa-modal-open { overflow: hidden; }
   margin: 0 auto;
   padding: 24px 0 48px !important;
 }
+
+/* ===== 首页：2027 大纲结构 ===== */
+.home-hero {
+  display: flex; gap: 16px; align-items: stretch; justify-content: space-between;
+  background: linear-gradient(135deg, #2D5BFF, #4F8CFF);
+  color: #fff; border-radius: 18px; padding: 20px; margin-bottom: 16px;
+}
+.hh-tag { font-size: 12px; opacity: .9; margin-bottom: 8px; letter-spacing: .04em; }
+.hh-days { display: flex; align-items: flex-end; gap: 8px; }
+.hh-num { font-size: 48px; font-weight: 800; line-height: 1; }
+.hh-unit { font-size: 13px; opacity: .95; line-height: 1.35; }
+.hh-unit i { font-style: normal; opacity: .8; font-size: 11px; }
+.hh-note { margin-top: 10px; font-size: 13px; opacity: .95; }
+.hh-note b { font-size: 16px; }
+.hh-pdfs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hh-pdfs a {
+  display: inline-flex; align-items: center; height: 32px; padding: 0 12px;
+  border-radius: 999px; background: rgba(255,255,255,.18); color: #fff;
+  font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,.25);
+}
+.hh-pdfs a:hover { background: rgba(255,255,255,.28); }
+.hh-right { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 140px; }
+.ring {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: conic-gradient(#fff calc(var(--p, 0) * 1%), rgba(255,255,255,.25) 0);
+  display: grid; place-items: center;
+}
+.ring-in {
+  width: 78px; height: 78px; border-radius: 50%; background: #3B6FE0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ring-in b { font-size: 20px; line-height: 1.1; }
+.ring-in span { font-size: 10px; opacity: .9; }
+.hh-stats { display: flex; gap: 12px; width: 100%; justify-content: space-between; }
+.hh-stats > div { text-align: center; flex: 1; }
+.hh-stats b { display: block; font-size: 16px; }
+.hh-stats span { font-size: 11px; opacity: .85; }
+
+.home-today { margin-bottom: 8px; }
+.today-card {
+  display: flex; gap: 16px; align-items: stretch;
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px;
+}
+.today-main { flex: 1; min-width: 0; }
+.today-label { font-size: 12px; color: var(--text-sub); }
+.today-num { font-size: 36px; font-weight: 800; line-height: 1.15; margin: 4px 0 10px; }
+.today-num i { font-style: normal; font-size: 16px; color: var(--text-sub); font-weight: 600; }
+.bar.light { background: color-mix(in srgb, var(--text) 10%, transparent); height: 8px; }
+.bar.sub-math i { background: #3B82F6; }
+.bar.sub-en i { background: #8B5CF6; }
+.bar.sub-maj i { background: linear-gradient(90deg, #F97316, #10B981, #06B6D4); }
+.today-side { width: 148px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+
+.outline-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px; margin-bottom: 12px;
+}
+.oc-hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.oc-title { font-size: 17px; font-weight: 750; }
+.oc-sub { font-size: 12px; color: var(--text-sub); margin-top: 4px; line-height: 1.45; }
+.oc-score { text-align: right; color: var(--primary, #2D5BFF); }
+.oc-score b { font-size: 28px; line-height: 1; }
+.oc-score span { font-size: 12px; margin-left: 2px; }
+.oc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.oc-types { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.type-pill {
+  display: inline-flex; flex-direction: column; gap: 2px;
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; min-width: 88px;
+}
+.type-pill b { font-size: 12px; }
+.type-pill i { font-style: normal; font-size: 11px; color: var(--text-sub); }
+.oc-prog { margin-bottom: 12px; }
+.oc-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.oc-acts .btn { text-decoration: none; }
+
+.home-subj-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+.subj-chip {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px; text-align: left; display: flex; flex-direction: column; gap: 6px;
+}
+.subj-chip .sc-t { font-size: 13px; font-weight: 650; }
+.subj-chip .sc-p { font-size: 11px; color: var(--text-sub); }
+
+.qi-group-label {
+  font-size: 11px; color: var(--text-sub); margin: 10px 2px 6px; letter-spacing: .06em;
+}
+
+@media (max-width: 480px) {
+  .home-hero { flex-direction: column; }
+  .hh-right { flex-direction: row; width: 100%; justify-content: space-between; min-width: 0; }
+  .hh-stats { width: auto; flex: 1; }
+  .today-card { flex-direction: column; }
+  .today-side { width: 100%; }
+  .home-subj-row { grid-template-columns: 1fr; }
+}
+
+/* ===== UI 排版优化（一屏一焦点 / 反馈层级 / 限宽 / 等宽计时） ===== */
+
+/* 做题页：题干更清晰 */
+.q-stem {
+  font-size: 17px;
+  line-height: 1.75;
+  font-weight: 500;
+  color: var(--text);
+}
+.opt {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* 反馈层级：先对错、后解释 */
+.feedback {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+.feedback.ok {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--success) 45%, transparent);
+}
+.feedback.bad {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--error) 45%, transparent);
+}
+.smart-grade {
+  font-size: 14px;
+  font-weight: 650;
+  margin: 8px 0 4px;
+}
+.ref-answer {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+/* 电脑端正文限宽，不被侧栏挤压 */
+@media (min-width: 1024px) {
+  .practice-wrap,
+  #app > .q-progress + *,
+  .shell .practice-wrap {
+    max-width: 760px;
+  }
+  .explain-body { max-width: 760px; }
+  .q-stem { font-size: 18px; }
+  .opt { font-size: 16px; min-height: 52px; }
+  /* 大屏给题干/解析舒适行宽 */
+  .shell { --readable: 760px; }
+}
+
+/* 长解析：分段更易读 */
+.explain-block .content {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.explain-block + .explain-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.explain-block h4 {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+/* 等宽数字计时 */
+.exam-timer,
+.hh-num,
+.today-num,
+.stat-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* 对比度：次要文字不要太淡 */
+.muted, .oc-sub, .today-label, .hh-stats span {
+  color: var(--text-sub);
+}
+
+/* 空状态给出口 */
+.empty .btn {
+  margin-top: 12px;
+}

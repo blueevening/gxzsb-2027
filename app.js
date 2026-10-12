@@ -930,164 +930,309 @@
   }
 
   /* ========== 页面：首页 ========== */
+  /* ========== 首页：严格对齐 2027 专升本大纲三卷结构 ========== */
   function viewHome() {
     setTitle("广西专升本练习", false);
     const due = dueCount();
     const last = state.last;
-    const pub = ["高等数学", "英语"].map(subjStat);
-    const maj = ["电工电子技术基础", "C语言程序设计", "计算机网络基础"].map((s) => ({ s, ...subjStat(s) }));
-    const totalDone = new Set(state.attempts.map((a) => a.questionId).filter(Boolean)).size;
-    var todayDone = todayDoneCount();
+    const plans = D.EXAM_PLANS || {};
+    const days = daysLeft();
+    const todayDone = todayDoneCount();
+    const streakN = (state.streak && state.streak.n) || 0;
+
+    // 全库已练 / 正确率（去重题目）
+    const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
+    const totalQ = (D.questions || []).length || 1;
+    const totalDone = doneIds.size;
+    const okN = state.attempts.filter((a) => a.correct).length;
+    const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
+
+    // 按大纲卷：用分值权重估算「备考完成度」
+    function moduleProgress(names) {
+      let done = 0, total = 0, right = 0, answered = 0;
+      names.forEach(function (n) {
+        const p = subjStat(n);
+        const w = (SUBJ[n] && SUBJ[n].score) || 100;
+        done += p.done * w;
+        total += (p.total || 0) * w;
+        if (p.acc != null) {
+          right += p.acc * (p.done || 0) * w;
+          answered += (p.done || 0) * w;
+        }
+      });
+      return {
+        pct: total ? Math.min(100, Math.round((done / total) * 100)) : 0,
+        acc: answered ? Math.round(right / answered) : null,
+        done,
+        total
+      };
+    }
+
+    const mathP = subjStat("高等数学");
+    const enP = subjStat("英语");
+    const majP = moduleProgress(["电工电子技术基础", "C语言程序设计", "计算机网络基础"]);
+    const ready = Math.min(
+      100,
+      Math.round(
+        ((mathP.pct * 150 + enP.pct * 150 + majP.pct * 300) / 600) * 0.7 +
+          ((acc || 0) / 100) * 30
+      )
+    );
+
+    const typePill = (arr) =>
+      (arr || [])
+        .map(
+          (s) =>
+            `<span class="type-pill"><b>${esc(s.label || s.key)}</b><i>${s.n || "?"}题 · ${s.target || s.each ? (s.target || (s.n * s.each)) : "?"}分</i></span>`
+        )
+        .join("");
+
+    function outlineCard(opt) {
+      return `
+        <article class="outline-card">
+          <header class="oc-hd">
+            <div>
+              <div class="oc-title">${esc(opt.title)}</div>
+              <div class="oc-sub">${esc(opt.sub)}</div>
+            </div>
+            <div class="oc-score"><b>${opt.score}</b><span>分</span></div>
+          </header>
+          <div class="oc-meta">
+            <span class="pill">${opt.minutes} 分钟</span>
+            <span class="pill">${esc(opt.form)}</span>
+            ${opt.extra ? `<span class="pill">${esc(opt.extra)}</span>` : ""}
+          </div>
+          <div class="oc-types">${opt.typesHtml || ""}</div>
+          <div class="oc-prog">
+            <div class="row-between" style="font-size:12px">
+              <span class="muted">${esc(opt.progLabel)}</span>
+              <span>${opt.progText}</span>
+            </div>
+            <div class="bar ${opt.barCls || ""}"><i style="width:${Math.max(opt.pct, 2)}%"></i></div>
+          </div>
+          <div class="oc-acts">
+            <button class="btn btn-primary btn-sm" data-act="exam" data-plan="${attr(opt.plan)}" type="button">按大纲组卷</button>
+            <button class="btn btn-ghost btn-sm" data-nav="${attr(opt.subjectNav || "bank")}" ${opt.subjectName ? `data-act="subject" data-name="${attr(opt.subjectName)}"` : ""} type="button">去练该科</button>
+            <a class="btn btn-ghost btn-sm" href="${attr(opt.pdf)}" download="${attr(opt.pdfName)}" target="_blank" rel="noopener">大纲 PDF</a>
+          </div>
+        </article>
+      `;
+    }
+
+    const SYL_PDF = {
+      math: { href: "assets/syllabus/高等数学考试大纲（2027年版）.pdf", name: "高等数学考试大纲（2027年版）.pdf" },
+      en: { href: "assets/syllabus/英语考试大纲（2027年版）.pdf", name: "英语考试大纲（2027年版）.pdf" },
+      maj: { href: "assets/syllabus/电子与信息大类专业基础综合课考试大纲（2027年版）.pdf", name: "电子与信息大类专业基础综合课考试大纲（2027年版）.pdf" }
+    };
+
+    const mathPlan = plans["math-full"];
+    const enPlan = plans["english-full"];
+    const majPlan = plans["major-combined"];
 
     return `
-      <button class="syllabus-banner" data-nav="syllabus" type="button">
-        <span class="sb-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-        <span class="sb-main">
-          <span class="sb-t">2027 官方考纲</span>
-          <span class="sb-s">600分 · 3科公共+专业合卷 · 全部章节考点速览</span>
-        </span>
-        <span class="sb-arrow">›</span>
-      </button>
-
-      <div class="section-title">今日任务</div>
-      <div class="card" style="padding:16px;margin-bottom:12px;background:linear-gradient(135deg,#2D5BFF,#4F8CFF);color:white">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:13px;opacity:0.9">今日已完成</div>
-            <div style="font-size:28px;font-weight:bold">${todayDone}<span style="font-size:14px;opacity:0.8"> / 30 题</span></div>
+      <!-- 考情 Hero：对齐 2027 大纲 600 分制 -->
+      <section class="home-hero">
+        <div class="hh-left">
+          <div class="hh-tag">2027 广西专升本 · 电子与信息大类</div>
+          <div class="hh-days">
+            <span class="hh-num">${days}</span>
+            <span class="hh-unit">天后考试<br/><i>2027-04-24</i></span>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:13px;opacity:0.9">连续打卡</div>
-            <div style="font-size:28px;font-weight:bold">🔥 ${state.streak.n || 0}<span style="font-size:14px;opacity:0.8"> 天</span></div>
+          <div class="hh-note">公共课 150×2 + 专业合卷 300 = <b>600 分</b> · 全卷闭卷笔试</div>
+          <div class="hh-pdfs">
+            <a href="${attr(SYL_PDF.math.href)}" download="${attr(SYL_PDF.math.name)}" target="_blank" rel="noopener">数学大纲</a>
+            <a href="${attr(SYL_PDF.en.href)}" download="${attr(SYL_PDF.en.name)}" target="_blank" rel="noopener">英语大纲</a>
+            <a href="${attr(SYL_PDF.maj.href)}" download="${attr(SYL_PDF.maj.name)}" target="_blank" rel="noopener">专业大纲</a>
           </div>
         </div>
-        <div style="margin-top:12px;height:6px;background:rgba(255,255,255,0.25);border-radius:3px;overflow:hidden">
-          <div style="height:100%;background:white;width:${Math.min(todayDone/30*100,100)}%;border-radius:3px"></div>
+        <div class="hh-right">
+          <div class="ring" style="--p:${ready}">
+            <div class="ring-in">
+              <b>${ready}%</b>
+              <span>备考完成度</span>
+            </div>
+          </div>
+          <div class="hh-stats">
+            <div><b>${totalDone}</b><span>已练题目</span></div>
+            <div><b>${acc == null ? "—" : acc + "%"}</b><span>总正确率</span></div>
+            <div><b>${streakN}</b><span>连续打卡</span></div>
+          </div>
         </div>
-      </div>
-      <div class="home-tasks">
-        <div class="card" style="padding:8px 16px">
-        <button class="task-row" data-act="daily" type="button">
-          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-          <span class="main"><span class="t">每日 30 题</span><span class="s">全科目随机抽题，保持手感</span></span>
-          <span class="arrow">›</span>
-        </button>
-        <button class="task-row" data-act="due" type="button">
-          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>
-          <span class="main"><span class="t">重做到期错题</span><span class="s">${due ? due + " 道到期" : "暂无到期错题"}</span></span>
-          <span class="arrow">›</span>
-        </button>
-        <button class="task-row" data-act="last" type="button">
-          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-          <span class="main"><span class="t">继续上次</span><span class="s">${last ? esc(last.title || last.subject || "练习") : "从每日 30 题开始"}</span></span>
-          <span class="arrow">›</span>
-        </button>
+      </section>
+
+      <!-- 今日任务 -->
+      <section class="home-today">
+        <div class="section-title">今日任务 <span class="muted" style="font-weight:400;font-size:12px">锁定 30 题 · 只计这 30 题</span></div>
+        <div class="today-card">
+          <div class="today-main">
+            <div class="today-label">今日已完成</div>
+            <div class="today-num">${todayDone}<i>/30</i></div>
+            <div class="bar light"><i style="width:${Math.min((todayDone / 30) * 100, 100)}%"></i></div>
+          </div>
+          <div class="today-side">
+            <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续今日 30 题" : "开始今日 30 题"}</button>
+            <button class="btn btn-ghost btn-block" data-act="due" type="button">到期错题 ${due || 0}</button>
+            <button class="btn btn-ghost btn-block" data-act="last" type="button">${last ? "继续上次" : "综合练习"}</button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="section-title">两层进度</div>
-      <div class="home-progress">
-      <div class="card">
-        <div class="row-between"><strong>公共基础课（各 150 分）</strong><span class="muted" style="font-size:12px">单独考试</span></div>
-        ${["高等数学", "英语"]
-          .map((n) => {
-            const p = subjStat(n);
-            return `<div style="margin-top:12px">
-              <div class="row-between" style="font-size:13px"><span>${n}</span><span class="muted">已练 ${p.done}/${p.total} · ${p.acc == null ? "—" : p.acc + "%"}</span></div>
-              <div class="bar" style="margin-top:6px"><i style="width:${Math.max(p.pct, 3)}%"></i></div>
-            </div>`;
-          })
-          .join("")}
-      </div>
-      <div class="card">
-        <div class="row-between"><strong>专业基础综合课（合卷 300 分）</strong><span class="muted" style="font-size:12px">150 分钟</span></div>
-        <p class="muted" style="font-size:12px;margin:6px 0 12px">电工 + C语言 + 计算机网络</p>
-        ${maj
-          .map(
-            (m) => `<div style="margin-top:10px">
-              <div class="row-between" style="font-size:13px"><span><span class="swatch ${subjOf(m.s).cls}"></span> ${subjOf(m.s).short}</span><span class="muted">${m.done}/${m.total} · ${m.acc == null ? "—" : m.acc + "%"}</span></div>
-              <div class="bar sub" style="margin-top:6px"><i style="width:${Math.max(m.pct, 3)}%"></i></div>
-            </div>`
-          )
-          .join("")}
-      </div>
-      </div>
+      <!-- 按大纲：三卷学习进度 -->
+      <section>
+        <div class="section-title">按大纲备考 <span class="muted" style="font-weight:400;font-size:12px">公共两科各 150 · 专业合卷 300</span></div>
+        ${outlineCard({
+          title: "高等数学",
+          sub: "公共基础课 · 单独考试 · 一元微积分 + 常微分方程",
+          score: 150,
+          minutes: 120,
+          form: "闭卷笔试",
+          extra: "考纲 2 大块",
+          typesHtml: typePill(mathPlan && mathPlan.sections),
+          progLabel: "已练 " + mathP.done + " / " + mathP.total + " 题",
+          progText: (mathP.acc == null ? "正确率 —" : "正确率 " + mathP.acc + "%"),
+          pct: mathP.pct,
+          plan: "math-full",
+          subjectNav: "bank",
+          subjectName: "高等数学",
+          barCls: "sub-math",
+          pdf: SYL_PDF.math.href,
+          pdfName: SYL_PDF.math.name
+        })}
+        ${outlineCard({
+          title: "英语",
+          sub: "公共基础课 · 单独考试 · 词汇语法 / 阅读 / 翻译 / 写作",
+          score: 150,
+          minutes: 120,
+          form: "闭卷笔试",
+          extra: "考纲 4 部分",
+          typesHtml: typePill(enPlan && enPlan.sections),
+          progLabel: "已练 " + enP.done + " / " + enP.total + " 题",
+          progText: (enP.acc == null ? "正确率 —" : "正确率 " + enP.acc + "%"),
+          pct: enP.pct,
+          plan: "english-full",
+          subjectNav: "bank",
+          subjectName: "英语",
+          barCls: "sub-en",
+          pdf: SYL_PDF.en.href,
+          pdfName: SYL_PDF.en.name
+        })}
+        ${outlineCard({
+          title: "专业基础综合课（合卷）",
+          sub: "电工电子 100 + C语言 100 + 计算机网络 100 · 同卷连考",
+          score: 300,
+          minutes: 150,
+          form: "合卷 150 分钟",
+          extra: "单选/判断/填空/应用",
+          typesHtml: typePill(majPlan && majPlan.sections && majPlan.sections[0] && majPlan.sections[0].mix
+            ? majPlan.sections[0].mix.map(function (m, i) {
+                return { label: ["单选", "判断", "填空", "应用"][i] || m.type, n: m.n, each: m.each, target: m.n * m.each };
+              })
+            : [{ label: "单选30", n: 30, target: 120 }, { label: "判断15", n: 15, target: 45 }, { label: "填空30", n: 30, target: 60 }, { label: "应用6", n: 6, target: 75 }]),
+          progLabel: "三科合计进度（按 100 分权重）",
+          progText: majP.acc == null ? "正确率 —" : "正确率 " + majP.acc + "%",
+          pct: majP.pct,
+          plan: "major-combined",
+          subjectNav: "bank",
+          barCls: "sub-maj",
+          pdf: SYL_PDF.maj.href,
+          pdfName: SYL_PDF.maj.name
+        })}
+        <div class="home-subj-row">
+          ${["电工电子技术基础", "C语言程序设计", "计算机网络基础"]
+            .map(function (n) {
+              const p = subjStat(n);
+              const m = subjOf(n);
+              return `<button class="subj-chip" data-act="subject" data-name="${attr(n)}" type="button">
+                <span class="swatch ${m.cls}"></span>
+                <span class="sc-t">${m.short}</span>
+                <span class="sc-p">${p.done}/${p.total}</span>
+                <div class="bar sub"><i style="width:${Math.max(p.pct, 2)}%"></i></div>
+              </button>`;
+            })
+            .join("")}
+        </div>
+      </section>
 
-      <div class="section-title">快捷入口</div>
-      <div class="quick-3">
-      <button class="qi" data-nav="words" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></span>背单词</button>
-        <button class="qi" data-nav="learn" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>学习一刻</button>
-        <button class="qi" data-nav="formula" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>公式速查</button>
-        <button class="qi" data-act="due" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>错题重练</button>
-        <button class="qi" data-act="school" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>真题库</button>
-        <button class="qi" data-act="report" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>学习报告</button>
-        <button class="qi" data-nav="mock" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>模拟考试</button>
-        <button class="qi" data-nav="stats" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></svg></span>数据分析</button>
-      </div>
+      <!-- 快捷入口：按大纲备考动线 -->
+      <section>
+        <div class="section-title">快捷入口</div>
+        <div class="qi-group-label">刷题</div>
+        <div class="quick-3">
+          <button class="qi" data-act="daily" type="button"><span class="ico">${iconStar()}</span>每日 30 题</button>
+          <button class="qi" data-nav="bank" type="button"><span class="ico">${iconBook()}</span>章节 / 顺序</button>
+          <button class="qi" data-nav="mock" type="button"><span class="ico">${iconClock()}</span>模拟考（限时）</button>
+        </div>
+        <div class="qi-group-label">补强</div>
+        <div class="quick-3">
+          <button class="qi" data-act="due" type="button"><span class="ico">${iconClock()}</span>错题重练</button>
+          <button class="qi" data-act="weak" type="button"><span class="ico">${iconChart()}</span>薄弱考点</button>
+          <button class="qi" data-act="practice-fav" type="button"><span class="ico">${iconStar()}</span>收藏题</button>
+        </div>
+        <div class="qi-group-label">辅助</div>
+        <div class="quick-3">
+          <button class="qi" data-nav="words" type="button"><span class="ico">${iconType()}</span>背单词</button>
+          <button class="qi" data-nav="formula" type="button"><span class="ico">${iconBook()}</span>公式速查</button>
+          <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
+        </div>
+        <div class="quick-3">
+          <button class="qi" data-nav="syllabus" type="button"><span class="ico">${iconBook()}</span>2027 考纲</button>
+          <button class="qi" data-act="school" type="button"><span class="ico">${iconFile()}</span>真题库</button>
+          <button class="qi" data-nav="stats" type="button"><span class="ico">${iconChart()}</span>数据分析</button>
+        </div>
+      </section>
 
-      <div class="section-title">考纲套卷</div>
-      <div class="exam-stack">
-        <button class="exam-card" data-act="exam" data-plan="math-full" type="button">
-          <span class="exam-ico">数</span>
-          <span class="exam-main">
-            <span class="exam-t">高数考纲卷</span>
-            <span class="exam-s">单选 10×5 · 填空 4×5 · 解答 7×8 · 应用 2×12</span>
-            <span class="exam-meta"><span class="pill">150 分</span><span class="pill">120 分钟</span><span class="pill">考纲结构</span></span>
-          </span>
-          <span class="exam-go">开始</span>
-        </button>
-        <button class="exam-card" data-act="exam" data-plan="english-full" type="button">
-          <span class="exam-ico en">英</span>
-          <span class="exam-main">
-            <span class="exam-t">英语考纲卷</span>
-            <span class="exam-s">词汇语法20·阅读25·填空5·翻译8·写作1</span>
-            <span class="exam-meta"><span class="pill">150 分</span><span class="pill">120 分钟</span><span class="pill">2027 考纲</span></span>
-          </span>
-          <span class="exam-go">开始</span>
-        </button>
-        <button class="exam-card" data-act="exam" data-plan="ee-special" type="button">
-          <span class="exam-ico" style="background:#F97316">电</span>
-          <span class="exam-main">
-            <span class="exam-t">电工专项突破卷</span>
-            <span class="exam-s">50道高频易错题 · 60分钟自测</span>
-            <span class="exam-meta"><span class="pill">100 分</span><span class="pill">60 分钟</span><span class="pill">专项训练</span></span>
-          </span>
-          <span class="exam-go">开始</span>
-        </button>
+      <!-- 考纲套卷（精简，结构与大纲一致） -->
+      <section>
+        <div class="section-title">考纲套卷 <span class="muted" style="font-weight:400;font-size:12px">严格按 2027 题型分值</span></div>
+        <div class="exam-stack">
+          <button class="exam-card" data-act="exam" data-plan="math-full" type="button">
+            <span class="exam-ico">数</span>
+            <span class="exam-main">
+              <span class="exam-t">高数考纲卷 · 150 分</span>
+              <span class="exam-s">单选10×5 · 填空4×5 · 解答7×8 · 应用2×12</span>
+            </span>
+            <span class="exam-go">开始</span>
+          </button>
+          <button class="exam-card" data-act="exam" data-plan="english-full" type="button">
+            <span class="exam-ico en">英</span>
+            <span class="exam-main">
+              <span class="exam-t">英语考纲卷 · 150 分</span>
+              <span class="exam-s">词汇语法40 · 阅读60 · 翻译32 · 写作18</span>
+            </span>
+            <span class="exam-go">开始</span>
+          </button>
+          <button class="exam-card" data-act="exam" data-plan="major-combined" type="button">
+            <span class="exam-ico maj">专</span>
+            <span class="exam-main">
+              <span class="exam-t">专业合卷 · 300 分</span>
+              <span class="exam-s">单选30×4 + 判断15×3 + 填空30×2 + 应用6×12.5</span>
+            </span>
+            <span class="exam-go">开始</span>
+          </button>
+        </div>
+      </section>
 
-        <button class="exam-card" data-act="exam" data-plan="c-special" type="button" style="margin-top:12px">
-          <span class="exam-ico" style="background:#10B981">C</span>
-          <span class="exam-main">
-            <span class="exam-t">C语言专项突破卷</span>
-            <span class="exam-s">50道高频易错题 · 60分钟自测</span>
-            <span class="exam-meta"><span class="pill">100 分</span><span class="pill">60 分钟</span><span class="pill">专项训练</span></span>
-          </span>
-          <span class="exam-go">开始</span>
-        </button>
-
-        <button class="exam-card" data-act="exam" data-plan="net-special" type="button" style="margin-top:12px">
-          <span class="exam-ico" style="background:#06B6D4">网</span>
-          <span class="exam-main">
-            <span class="exam-t">计网专项突破卷</span>
-            <span class="exam-s">50道高频易错题 · 60分钟自测</span>
-            <span class="exam-meta"><span class="pill">100 分</span><span class="pill">60 分钟</span><span class="pill">专项训练</span></span>
-          </span>
-          <span class="exam-go">开始</span>
-        </button>
-
-        <button class="exam-card" data-act="exam" data-plan="major-combined" type="button" style="margin-top:12px">
-          <span class="exam-ico maj">专</span>
-          <span class="exam-main">
-            <span class="exam-t">专业综合合卷</span>
-            <span class="exam-s">电工 100 + C语言 100 + 计网 100 · 同卷连考</span>
-            <span class="exam-meta"><span class="pill">300 分</span><span class="pill">150 分钟</span><span class="pill">合卷适应</span></span>
-          </span>
-          <span class="exam-go">开始</span>
-        </button>
-      </div>
-
-      <div class="disclaimer">本站为个人 AI 辅助整理的练习工具，非广西招生考试院官方平台。内容仅供参考，请以官方大纲为准。</div>
+      <div class="disclaimer">本站为个人学习工具，非广西招生考试院官方平台。题型与分值以 2027 官方大纲为准。</div>
     `;
+  }
+
+  function iconStar() {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  }
+  function iconBook() {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
+  }
+  function iconClock() {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  }
+  function iconChart() {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></svg>';
+  }
+  function iconType() {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>';
+  }
+  function iconFile() {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
   }
 
   /* ========== 题库首页 ========== */
@@ -1672,6 +1817,11 @@
     if (s.sel != null && q && q.id != null) s.answers[q.id] = s.sel;
     saveSession();
     render();
+    // 提交后自动滚到反馈区，方便立刻看对错
+    try {
+      const fb = document.querySelector(".feedback");
+      if (fb) fb.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    } catch (e) {}
   }
 
   function nextQ() {
@@ -1992,7 +2142,14 @@
     function rows(arr, kind) {
       if (!arr.length) {
         const msg = kind === "fav" ? "还没有收藏题。做题时点「收藏」。" : "暂无错题。";
-        return '<div class="empty">' + msg + "</div>";
+        return (
+          '<div class="empty">' +
+          esc(msg) +
+          '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+          '<button class="btn btn-primary btn-sm" data-act="daily" type="button">去做今日 30 题</button>' +
+          '<button class="btn btn-ghost btn-sm" data-nav="bank" type="button">去题库</button>' +
+          "</div></div>"
+        );
       }
       return (
         '<div class="card" style="padding:0">' +
