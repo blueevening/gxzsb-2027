@@ -1,4 +1,4 @@
-﻿/* gxzsb — 全站布局规范实现 */
+/* gxzsb — 全站布局规范实现 */
 (function () {
   "use strict";
 
@@ -2424,6 +2424,8 @@ function ensureExplain(q) {
                     <div class="f-body">${renderMathLine(it.formula)}</div>
                     <div class="f-row"><span class="f-tag">怎么用</span><span class="f-txt">${mathHtml(it.use)}</span></div>
                     <div class="f-row"><span class="f-tag ex">例题</span><span class="f-txt">${mathHtml(it.example)}</span></div>
+                    ${it.steps && it.steps.length ? `<ol class="f-steps">${it.steps.map((s) => `<li>${mathHtml(s)}</li>`).join("")}</ol>` : ""}
+                    ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><span class="f-txt"><b>${mathHtml(it.answer)}</b></span></div>` : ""}
                     <div class="f-row"><span class="f-tag bad">易错</span><span class="f-txt">${mathHtml(it.wrong)}</span></div>
                     <div class="f-actions">
                       <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>

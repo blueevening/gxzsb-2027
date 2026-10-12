@@ -1621,3 +1621,23 @@ html.qa-modal-open { overflow: hidden; }
 .subj-chip .sc-t,
 .subj-chip .sc-p { display: block; }
 .subj-chip .swatch { display: inline-block; margin-bottom: 2px; }
+
+/* 公式卡：分步详解与答案 */
+.f-steps {
+  margin: 6px 0 8px 4px;
+  padding-left: 18px;
+}
+.f-steps li {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  margin: 4px 0;
+}
+.f-steps li::marker {
+  color: var(--primary, #2D5BFF);
+  font-weight: 700;
+}
+.f-tag.ok {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
