@@ -1695,3 +1695,52 @@ html.qa-modal-open { overflow: hidden; }
   padding: 1px 6px;
   min-width: 18px;
 }
+
+/* 答题操作区：一主一副，不堆按钮 */
+.q-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.q-nav-row {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center;
+}
+.q-nav-row .btn-primary {
+  flex: 1.2;
+  min-height: 44px;
+  font-weight: 700;
+}
+.q-nav-row .btn-ghost {
+  flex: 0.9;
+}
+
+/* 错因标签：低调圆角小签 */
+.reason-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+}
+.reason-lab {
+  font-size: 11px;
+  color: var(--text-sub);
+  padding: 2px 0;
+}
+.reason-pick .chip {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  opacity: 0.85;
+}
+.reason-pick .chip.is-active {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.type-pill i {
+  white-space: normal;
+  line-height: 1.35;
+}

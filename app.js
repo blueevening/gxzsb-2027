@@ -1087,7 +1087,7 @@
           minutes: 120,
           form: "闭卷笔试",
           extra: "考纲 2 大块",
-          typesHtml: typePill(mathPlan && mathPlan.sections),
+          typesHtml: typePill(SYL_MATH),
           progLabel: "已练 " + mathP.done + " / " + mathP.total + " 题",
           progText: (mathP.acc == null ? "正确率 —" : "正确率 " + mathP.acc + "%"),
           pct: mathP.pct,
@@ -1105,7 +1105,7 @@
           minutes: 120,
           form: "闭卷笔试",
           extra: "考纲 4 部分",
-          typesHtml: typePill(enPlan && enPlan.sections),
+          typesHtml: typePill(SYL_EN),
           progLabel: "已练 " + enP.done + " / " + enP.total + " 题",
           progText: (enP.acc == null ? "正确率 —" : "正确率 " + enP.acc + "%"),
           pct: enP.pct,
@@ -1123,11 +1123,7 @@
           minutes: 150,
           form: "合卷 150 分钟",
           extra: "单选/判断/填空/应用",
-          typesHtml: typePill(majPlan && majPlan.sections && majPlan.sections[0] && majPlan.sections[0].mix
-            ? majPlan.sections[0].mix.map(function (m, i) {
-                return { label: ["单选", "判断", "填空", "应用"][i] || m.type, n: m.n, each: m.each, target: m.n * m.each };
-              })
-            : [{ label: "单选30", n: 30, target: 120 }, { label: "判断15", n: 15, target: 45 }, { label: "填空30", n: 30, target: 60 }, { label: "应用6", n: 6, target: 75 }]),
+          typesHtml: typePill(SYL_MAJ),
           progLabel: "三科合计进度（按 100 分权重）",
           progText: majP.acc == null ? "正确率 —" : "正确率 " + majP.acc + "%",
           pct: majP.pct,
@@ -1730,17 +1726,20 @@
         <div class="q-nav-row">
           <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
           <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
-          <button class="btn btn-ghost" data-act="next" type="button">下一题</button>
+          ${
+            s.submitted
+              ? `<button class="btn btn-primary" data-act="next" type="button">下一题</button>`
+              : `<button class="btn btn-primary" data-act="submit" type="button">提交答案</button>`
+          }
         </div>
         ${
-          !s.submitted
-            ? `<button class="btn btn-primary btn-block" data-act="submit" type="button">提交答案</button>`
-            : `<button class="btn btn-primary btn-block" data-act="next" type="button">下一题 →</button>`
+          s.exam && !s.examSubmitted && s.i >= s.q.length - 1
+            ? `<button class="btn btn-accent btn-block" data-act="submit-exam" type="button">交卷并出分</button>`
+            : ""
         }
         ${
           s.exam && !s.examSubmitted
-            ? `<button class="btn btn-ghost btn-block" data-act="submit-exam" type="button">交卷</button>
-               <button class="btn btn-ghost btn-block" data-act="exit-exam" type="button">退出考试</button>`
+            ? `<button class="btn btn-ghost btn-block btn-sm" data-act="exit-exam" type="button" style="opacity:.65">退出考试（不计成绩）</button>`
             : ""
         }
         <button class="btn btn-ghost btn-block btn-sm" data-act="show-shortcuts" type="button" style="opacity:.75">答题快捷键</button>
