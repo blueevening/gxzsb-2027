@@ -2379,6 +2379,8 @@ function ensureExplain(q) {
     const cur = list.indexOf(state.formulaTab) >= 0 ? state.formulaTab : list[0];
     const groups = book[cur] || [];
     const sc = subjOf(cur);
+    const isEnLang = cur === "英语";
+    const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
     return `
       <div class="seg-top">
         <button class="seg-top-btn ${g === "public" ? "is-active" : ""}" data-act="fgroup" data-v="public" type="button">公共课</button>
@@ -2422,14 +2424,14 @@ function ensureExplain(q) {
                       ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
                       <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
                     </div>
-                    <div class="f-body">${renderMathLine(it.formula)}</div>
-                    ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><span class="f-txt">${mathHtml(it.plain)}</span></div>` : ""}
-                    <div class="f-row"><span class="f-tag">怎么用</span><span class="f-txt">${mathHtml(it.use)}</span></div>
-                    <div class="f-row"><span class="f-tag ex">例题</span><span class="f-txt">${mathHtml(it.example)}</span></div>
-                    ${it.steps && it.steps.length ? `<ol class="f-steps">${it.steps.map((s) => `<li>${mathHtml(s)}</li>`).join("")}</ol>` : ""}
-                    ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><span class="f-txt"><b>${mathHtml(it.answer)}</b></span></div>` : ""}
-                    ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><span class="f-txt">${mathHtml(it.tip)}</span></div>` : ""}
-                    <div class="f-row"><span class="f-tag bad">易错</span><span class="f-txt">${mathHtml(it.wrong)}</span></div>
+                    <div class="f-body">${ft(it.formula)}</div>
+                    ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><span class="f-txt">${ft(it.plain)}</span></div>` : ""}
+                    <div class="f-row"><span class="f-tag">怎么用</span><span class="f-txt">${ft(it.use)}</span></div>
+                    <div class="f-row"><span class="f-tag ex">例题</span><span class="f-txt">${ft(it.example)}</span></div>
+                    ${it.steps && it.steps.length ? `<ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol>` : ""}
+                    ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><span class="f-txt"><b>${ft(it.answer)}</b></span></div>` : ""}
+                    ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><span class="f-txt">${ft(it.tip)}</span></div>` : ""}
+                    <div class="f-row"><span class="f-tag bad">易错</span><span class="f-txt">${ft(it.wrong)}</span></div>
                     <div class="f-actions">
                       <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>
                       <button class="btn btn-ghost btn-sm" data-act="copy" data-t="${attr(it.formula)}" type="button">复制公式</button>

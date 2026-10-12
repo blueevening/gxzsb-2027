@@ -692,7 +692,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "定语从句",
-          "formula": "先行词 + 关系词(frac{who}{whom}/whose/which/that/where/when/why) + 从句",
+          "formula": "先行词 + 关系词(who/whom/whose/which/that/where/when/why) + 从句",
           "plain": "跟在名词后面修饰它的句子。关系词既指代前面的名词，又在从句里充当成分。",
           "use": "句中出现「……的」修饰名词；先找先行词是人还是物、在从句中作主语还是宾语。",
           "steps": [
@@ -752,7 +752,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           ],
           "example": "I want ____ (join) the club.",
           "answer": "to join",
-          "wrong": "错在写成 want join 或 want joining；want 后只能 to do。；错在使役/感官动词后乱加 to；make/let/have + sb + do（不带 to），see/hear + sb + frac{do}{doing}。；错在不定式符号 to 后用动名词；to do 的 to 是不定式符号，后接原形。",
+          "wrong": "错在写成 want join 或 want joining；want 后只能 to do。；错在使役/感官动词后乱加 to；make/let/have + sb + do（不带 to），see/hear + sb + do/doing。；错在不定式符号 to 后用动名词；to do 的 to 是不定式符号，后接原形。",
           "tip": "口诀：想要决定计划都 to do，to 后原形别丢。"
         },
         {
@@ -771,7 +771,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "tip": "口诀：enjoy finish mind practice 双 V-ing；介词后面必是 ing。"
         },
         {
-          "name": "被动非谓语（to be done / being frac{done}{done}）",
+          "name": "被动非谓语（to be done / being done/done）",
           "formula": "to be done（将来被动）；being done（进行被动）；done（完成被动/过去分词作定语）",
           "plain": "非谓语也有被动：要看动作是「被做且未做」「正被做」还是「已被做」。",
           "use": "非谓语的逻辑主语是动作承受者时，用被动形式。",
@@ -899,7 +899,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "省略与替代",
-          "formula": "to 的省略（want to / hope so）、frac{do}{did}/does 替代、so/not 替代从句",
+          "formula": "to 的省略（want to / hope so）、do/did/does 替代、so/not 替代从句",
           "plain": "避免重复，英语大量省略相同成分，或用 do/so 代替上文。",
           "use": "口语化考题、状语从句省略主语+be、不定式省略原形动词。",
           "steps": [
