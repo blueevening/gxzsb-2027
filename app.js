@@ -1,4 +1,4 @@
-/* gxzsb — 全站布局规范实现 */
+﻿/* gxzsb — 全站布局规范实现 */
 (function () {
   "use strict";
 
@@ -1008,7 +1008,7 @@
               <span class="muted">${esc(opt.progLabel)}</span>
               <span>${opt.progText}</span>
             </div>
-            <div class="bar ${opt.barCls || ""}"><i style="width:${Math.max(opt.pct, 2)}%"></i></div>
+            <div class="bar ${opt.barCls || ""}"><i style="width:${(opt.pct || 0)}%"></i></div>
           </div>
           <div class="oc-acts">
             <button class="btn btn-primary btn-sm" data-act="exam" data-plan="${attr(opt.plan)}" type="button">按大纲组卷</button>
@@ -1146,7 +1146,7 @@
                 <span class="swatch ${m.cls}"></span>
                 <span class="sc-t">${m.short}</span>
                 <span class="sc-p">${p.done}/${p.total}</span>
-                <div class="bar sub"><i style="width:${Math.max(p.pct, 2)}%"></i></div>
+                <div class="bar sub"><i style="width:${(p.pct || 0)}%"></i></div>
               </button>`;
             })
             .join("")}
@@ -1260,7 +1260,7 @@
             '<span class="sw"></span>' +
             '<span style="flex:1"><span class="t">' + esc(m.short) + '</span>' +
             '<span class="s">' + p.total + " 题 · 已练 " + p.done + " · " + (p.acc == null ? "—" : p.acc + "%") + "</span>" +
-            '<div class="bar" style="margin-top:8px"><i style="width:' + Math.max(p.pct, 3) + '%;background:' + m.color + '"></i></div></span>' +
+            '<div class="bar" style="margin-top:8px"><i style="width:' + (p.pct || 0) + '%;background:' + m.color + '"></i></div></span>' +
             '<span class="muted">›</span></button>'
           );
         }).join("")

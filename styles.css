@@ -1610,3 +1610,14 @@ html.qa-modal-open { overflow: hidden; }
 .empty .btn {
   margin-top: 12px;
 }
+
+/* 进度条：0 进度不显示假填充；科目标题与统计分行 */
+.bar > i[style*="width:0%"],
+.bar > i[style*="width: 0%"] {
+  display: none;
+}
+.bank-subject .t { display: block; }
+.bank-subject .s { display: block; margin-top: 2px; }
+.subj-chip .sc-t,
+.subj-chip .sc-p { display: block; }
+.subj-chip .swatch { display: inline-block; margin-bottom: 2px; }
