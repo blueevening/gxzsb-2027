@@ -14,7 +14,7 @@ function ok(cond, msg) {
 }
 
 console.log("[1] 语法检查");
-["app.js", "all-bank.js", "all-learn.js", "wordbook.js", "exam-plans-v2.js", "sb-config.js"].forEach((f) => {
+["app.js", "all-bank.js", "all-learn.js", "learn-book-2027.js", "formula-book.js", "wordbook.js", "exam-plans-v2.js", "sb-config.js", "syllabus.js"].forEach((f) => {
   try {
     new vm.Script(fs.readFileSync(path.join(root, f), "utf8"), { filename: f });
     ok(true, f + " 可解析");
@@ -292,6 +292,51 @@ ok(/show-shortcuts|答题快捷键/.test(appSrc), "答题快捷键说明");
 ok(/exit-exam/.test(appSrc) && /退出模拟考|退出考试/.test(appSrc), "模拟考退出二次确认");
 const typeless = (appSrc.match(/<button(?![^>]*type=)[^>]*>/g) || []).length;
 ok(typeless === 0, "无 typeless button (got " + typeless + ")");
+
+/* ========== T3/T4 学习一刻 2027 ========== */
+console.log("[18] T3 学习一刻数据按 2027 大纲重建");
+const learnCtx = { window: {}, console: { log() {}, warn() {}, error() {} } };
+vm.createContext(learnCtx);
+vm.runInContext(fs.readFileSync(path.join(root, "all-learn.js"), "utf8"), learnCtx, { timeout: 10000 });
+vm.runInContext(fs.readFileSync(path.join(root, "learn-book-2027.js"), "utf8"), learnCtx, { timeout: 10000 });
+const LB = learnCtx.window.STUDY_DATA.LEARN_BOOK;
+ok(!!LB, "LEARN_BOOK 存在");
+const needSubjs = ["高等数学", "英语", "电工电子技术基础", "C语言程序设计", "计算机网络基础"];
+needSubjs.forEach((s) => ok(!!LB[s] && LB[s].length >= 3, s + " 有章节 (" + ((LB[s] || []).length) + ")"));
+const reqFields = ["id", "name", "outline", "plain", "steps", "example", "answer", "warn", "examTip", "relatedFormula", "level", "minutes"];
+let fieldMiss = 0, shortSteps = 0, idSet = new Set(), idDup = 0, totalPts = 0;
+needSubjs.forEach((s) => {
+  const chs = LB[s] || [];
+  let n = 0;
+  chs.forEach((ch) => {
+    ok(!!ch.chapter, s + " 章节名: " + (ch.chapter || "(空)"));
+    (ch.points || []).forEach((p) => {
+      n++;
+      totalPts++;
+      reqFields.forEach((k) => {
+        if (p[k] == null || p[k] === "") fieldMiss++;
+      });
+      if (!Array.isArray(p.steps) || p.steps.length < 3) shortSteps++;
+      if (idSet.has(p.id)) idDup++;
+      idSet.add(p.id);
+    });
+  });
+  ok(n >= 20, s + " 知识点 ≥20 (got " + n + ")");
+});
+ok(fieldMiss === 0, "知识点必填字段齐全 (miss " + fieldMiss + ")");
+ok(shortSteps === 0, "steps 均 ≥3 (short " + shortSteps + ")");
+ok(idDup === 0, "知识点 id 无重复");
+ok(totalPts >= 100, "总知识点 ≥100 (got " + totalPts + ")");
+
+console.log("[19] T4 学习一刻列表+详情 UI");
+ok(/function viewLearn\(/.test(appSrc), "viewLearn 存在");
+ok(/function viewLearnDetail\(/.test(appSrc), "viewLearnDetail 存在");
+ok(/p\.plain/.test(appSrc) && /p\.steps/.test(appSrc) && /p\.examTip/.test(appSrc), "详情渲染 plain/steps/examTip");
+ok(/p\.outline/.test(appSrc), "列表/详情渲染 outline 考纲标签");
+ok(/ch\.chapter/.test(appSrc), "列表按大纲章节分组");
+ok(/isEnLang \? escKeep/.test(appSrc), "英语不用 frac（escKeep）");
+ok(/mathHtml\(/.test(appSrc), "数理用 mathHtml/frac");
+ok(/learn-book-2027\.js/.test(fs.readFileSync(path.join(root, "index.html"), "utf8")), "index.html 引用 learn-book-2027.js");
 
 console.log(failed ? "\nSMOKE FAILED: " + failed : "\nSMOKE PASSED");
 process.exit(failed ? 1 : 0);

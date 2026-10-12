@@ -1,6 +1,6 @@
 /* 学习一刻 · 分科知识点 */
 window.STUDY_DATA = window.STUDY_DATA || {};
-window.STUDY_DATA.LEARN_BOOK = {
+window.STUDY_DATA.LEARN_BOOK_LEGACY = {
   高等数学: [
     {
       chapter: "极限与连续",
@@ -876,10 +876,10 @@ window.STUDY_DATA.LEARN_BOOK = {
 };
 /* 学习一刻 2027大纲版 - C语言+计网 深度内容 */
 window.STUDY_DATA = window.STUDY_DATA || {};
-window.STUDY_DATA.LEARN_BOOK = window.STUDY_DATA.LEARN_BOOK || {};
+window.STUDY_DATA.LEARN_BOOK_LEGACY = window.STUDY_DATA.LEARN_BOOK_LEGACY || {};
 
 // ============ C语言程序设计 ============
-window.STUDY_DATA.LEARN_BOOK["C语言程序设计"] = [
+window.STUDY_DATA.LEARN_BOOK_LEGACY["C语言程序设计"] = [
   {
     chapter: "第1章 程序设计和C语言",
     points: [
@@ -1001,7 +1001,7 @@ window.STUDY_DATA.LEARN_BOOK["C语言程序设计"] = [
 ];
 
 // ============ 计算机网络基础 ============
-window.STUDY_DATA.LEARN_BOOK["计算机网络基础"] = [
+window.STUDY_DATA.LEARN_BOOK_LEGACY["计算机网络基础"] = [
   {
     chapter: "第1章 网络概述",
     points: [
@@ -1073,9 +1073,9 @@ window.STUDY_DATA.LEARN_BOOK["计算机网络基础"] = [
 console.log("C语言计网深度内容加载完成！");
 /* 学习一刻 2027大纲版 - 电工深度内容 */
 window.STUDY_DATA = window.STUDY_DATA || {};
-window.STUDY_DATA.LEARN_BOOK = window.STUDY_DATA.LEARN_BOOK || {};
+window.STUDY_DATA.LEARN_BOOK_LEGACY = window.STUDY_DATA.LEARN_BOOK_LEGACY || {};
 
-window.STUDY_DATA.LEARN_BOOK["电工电子技术基础"] = [
+window.STUDY_DATA.LEARN_BOOK_LEGACY["电工电子技术基础"] = [
   {
     chapter: "第1章 电路基本概念",
     points: [
@@ -1191,10 +1191,10 @@ window.STUDY_DATA.LEARN_BOOK["电工电子技术基础"] = [
 console.log("电工深度内容加载完成！");
 /* 学习一刻 2027大纲版 - 数学+英语 深度内容 */
 window.STUDY_DATA = window.STUDY_DATA || {};
-window.STUDY_DATA.LEARN_BOOK = window.STUDY_DATA.LEARN_BOOK || {};
+window.STUDY_DATA.LEARN_BOOK_LEGACY = window.STUDY_DATA.LEARN_BOOK_LEGACY || {};
 
 // ============ 高等数学 ============
-window.STUDY_DATA.LEARN_BOOK["高等数学"] = [
+window.STUDY_DATA.LEARN_BOOK_LEGACY["高等数学"] = [
   {
     chapter: "第1章 函数极限与连续",
     points: [
@@ -1263,7 +1263,7 @@ window.STUDY_DATA.LEARN_BOOK["高等数学"] = [
 ];
 
 // ============ 英语 ============
-window.STUDY_DATA.LEARN_BOOK["英语"] = [
+window.STUDY_DATA.LEARN_BOOK_LEGACY["英语"] = [
   {
     chapter: "第1章 词汇与语法",
     points: [

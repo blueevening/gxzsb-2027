@@ -2267,31 +2267,39 @@ function ensureExplain(q) {
     const subjects = Object.keys(book);
     const cur = state.learnSubj && book[state.learnSubj] ? state.learnSubj : subjects[0];
     const chapters = book[cur] || [];
+    const sc = subjOf(cur);
     const total = chapters.reduce(function (n, ch) { return n + (ch.points || []).length; }, 0);
     return (
-      '<div class="learn-hero"><h2>学习一刻</h2><p>分科讲解：高数讲步骤，英语讲规则，电工讲定律，C 讲执行，计网讲过程。学完直接去练。</p></div>' +
+      '<div class="learn-hero"><h2>学习一刻</h2><p>严格按 2027 考纲精讲：高数走步骤，英语讲规则，电工讲定律，C 讲执行，计网讲过程。学完直接去练。</p></div>' +
       '<div class="chip-row" style="margin-bottom:16px">' +
       subjects.map(function (t) {
         return '<button class="chip ' + (t === cur ? "is-active" : "") + '" data-act="learn-subj" data-v="' + attr(t) + '" type="button">' + esc(subjOf(t).short || t) + "</button>";
       }).join("") +
       "</div>" +
+      '<div class="subject-banner ' + (sc.cls || "") + '"><span class="swatch"></span><strong>' + esc(cur) + '</strong><span class="muted">' + chapters.length + " 个大纲小节 · " + total + " 个知识点</span></div>" +
       chapters.map(function (ch, ci) {
         return (
-          '<div class="section-title">' + esc(ch.chapter) + "</div>" +
-          ch.points.map(function (p, pi) {
+          '<div class="formula-group">' +
+          '<div class="formula-group-title"><span class="line" style="background:' + (sc.color || "#2563EB") + '"></span>' +
+          esc(ch.chapter) + '<span class="muted">（' + (ch.points || []).length + "）</span></div>" +
+          (ch.outline ? '<p class="muted" style="font-size:12px;margin:-4px 0 8px;line-height:1.6">' + esc(ch.outline) + "</p>" : "") +
+          '<div class="card" style="padding:0;overflow:hidden">' +
+          (ch.points || []).map(function (p, pi) {
             return (
               '<button class="kp-card" data-act="learn-open" data-id="' + attr(p.id) + '" type="button">' +
-              '<span class="num" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;background:' +
-              (subjOf(cur).color || "#2563EB") + ';color:#fff">' + (ci + 1) + "." + (pi + 1) + "</span>" +
-              '<span style="flex:1;min-width:0"><span class="t" style="display:block;font-weight:700;font-size:15px">' + esc(p.name) + '</span>' +
-              '<span class="s" style="font-size:12px;color:var(--text-sub)">' + esc(p.level) + " · " + p.minutes + " 分钟 · " + esc(p.kp || "") + "</span></span>" +
-              '<span class="kp-badge ' + (p.level === "冲刺" ? "hard" : p.level === "强化" ? "mid" : "") + '">' + esc(p.level) + "</span>" +
+              '<span class="num" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;flex-shrink:0;background:' +
+              (sc.color || "#2563EB") + ';color:#fff">' + (ci + 1) + "." + (pi + 1) + "</span>" +
+              '<span style="flex:1;min-width:0"><span class="t" style="display:block;font-weight:700;font-size:15px">' + esc(p.name) + "</span>" +
+              '<span class="s" style="font-size:12px;color:var(--text-sub);display:block;margin-top:2px">' + esc(p.outline || "") + "</span>" +
+              '<span style="font-size:11px;color:var(--text-sub);display:block;margin-top:4px">' + esc(p.level || "") + " · " + (p.minutes || 6) + " 分钟 · " + esc(p.relatedFormula || "") + "</span></span>" +
+              '<span class="kp-badge ' + (p.level === "冲刺" ? "hard" : p.level === "强化" ? "mid" : "") + '">' + esc(p.level || "") + "</span>" +
               "</button>"
             );
-          }).join("")
+          }).join("") +
+          "</div></div>"
         );
       }).join("") +
-      '<p class="muted" style="font-size:12px;margin-top:16px;text-align:center">共 ' + total + " 个知识点</p>"
+      '<p class="muted" style="font-size:12px;margin-top:16px;text-align:center">共 ' + total + " 个知识点 · 按 2027 广西专升本考纲编写</p>"
     );
   }
 
@@ -2301,67 +2309,47 @@ function ensureExplain(q) {
     Object.keys(book).forEach(function (subj) {
       (book[subj] || []).forEach(function (ch) {
         (ch.points || []).forEach(function (p) {
-          if (p.id === id) pt = { p: p, subj: subj, chapter: ch.chapter };
+          if (p.id === id) pt = { p: p, subj: subj, chapter: ch.chapter, outline: ch.outline };
         });
       });
     });
     if (!pt) return '<div class="card"><div class="empty">未找到知识点</div></div>';
     const p = pt.p;
     setTitle(p.name, true);
-    const fmt = function (s) {
-      return mathHtml(String(s));
+    const sc = subjOf(pt.subj);
+    const isEnLang = pt.subj === "英语";
+    const ft = function (s) {
+      return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s);
     };
     return (
       '<div class="card">' +
-      '<div class="row-between"><strong>' + esc(p.name) +
-      '</strong><span class="chip">' + esc(p.level) + " · " + p.minutes + " 分钟</span></div>" +
-      '<p class="muted" style="margin-top:8px">' + esc(pt.subj) + " · " + esc(pt.chapter) + "</p></div>" +
-      (p.content
-        ? '<div class="card kp-content"><div style="line-height:1.9;font-size:15px;color:var(--text)">' + esc(p.content).split("\n").map(function(line){
-            if(!line.trim()) return "<br/>";
-            if(line.indexOf("【")===0 && line.indexOf("】")>0) return '<div style="font-size:16px;font-weight:700;color:var(--primary);margin:16px 0 6px;padding-left:10px;border-left:3px solid var(--primary)">'+line+'</div>';
-            if(line.indexOf("例：")===0 || line.indexOf("例题：")===0) return '<div style="background:rgba(59,130,246,0.08);padding:10px 14px;border-radius:8px;margin:8px 0;font-family:var(--mono);font-size:14px">'+line+'</div>';
-            if(line.indexOf("【易错")>=0 || line.indexOf("易错点")>=0) return '<div style="background:rgba(220,38,38,0.08);padding:10px 14px;border-radius:8px;margin:8px 0;color:#DC2626">'+line+'</div>';
-            if(line.indexOf("答案")>=0 || line.indexOf("解：")===0) return '<div style="color:#16A34A;font-weight:600;margin:4px 0">'+line+'</div>';
-            return line;
-          }).join("<br/>") + '</div></div>'
-        : '') +
-      (p.define
-        ? '<div class="card"><h3 style="font-size:13px;color:var(--text-sub);margin-bottom:6px">一句话</h3><p>' +
-          esc(p.define) + "</p></div>"
-        : '') +
-      (p.why
-        ? '<div class="card"><h3 style="font-size:13px;color:var(--text-sub);margin-bottom:6px">为什么考</h3><p>' +
-          esc(p.why) + "</p></div>"
-        : '') +
-      ((p.core && p.core.length) || (p.steps && p.steps.length)
-        ? '<div class="card"><h3 style="font-size:13px;color:var(--text-sub);margin-bottom:8px">核心内容</h3>' +
-          (p.core || [])
-            .map(function (c) {
-              return (
-                '<div class="f-row"><span class="f-tag">' + esc(c.k) +
-                '</span><span class="f-txt">' + fmt(c.v) + "</span></div>"
-              );
-            })
-            .join("") +
-          '<ol style="margin:12px 0 0 1.2em;font-size:14px;line-height:1.7">' +
-          (p.steps || []).map(function (st) { return "<li>" + esc(st) + "</li>"; }).join("") +
-          "</ol></div>"
-        : '') +
-      (p.example
-        ? '<div class="card"><h3 style="font-size:13px;color:var(--text-sub);margin-bottom:8px">典型例题</h3>' +
-          '<div style="font-size:15px;font-weight:600;line-height:1.7;margin-bottom:8px">' + fmt(p.example.stem) + "</div>" +
-          '<div class="mistake-box">' + esc(p.example.analysis) + "</div></div>"
-        : '') +
-      ((p.mistakes && p.mistakes.length)
-        ? '<div class="card"><h3 style="font-size:13px;color:var(--text-sub);margin-bottom:8px">常见错误</h3>' +
-          '<div class="mistake-box">' +
-          p.mistakes.map(function (m) { return "• " + esc(m); }).join("<br/>") +
-          "</div></div>"
-        : '') +
+      '<div class="row-between"><strong style="font-size:17px">' + esc(p.name) +
+      '</strong><span class="chip">' + esc(p.level) + " · " + (p.minutes || 6) + " 分钟</span></div>" +
+      '<p class="muted" style="margin-top:8px">' + esc(pt.subj) + " · " + esc(pt.chapter) + "</p>" +
+      (p.outline
+        ? '<div class="f-row" style="margin-top:10px"><span class="f-tag">考纲</span><span class="f-txt">' + esc(p.outline) + "</span></div>"
+        : "") +
+      "</div>" +
+      '<div class="f-card" style="border-left:3px solid ' + (sc.color || "#2563EB") + '">' +
+      '<div class="f-head"><span class="f-name">' + esc(p.name) + "</span>" +
+      '<span class="chip chip-soft" style="background:' + (sc.color || "#2563EB") + '18;color:' + (sc.color || "#2563EB") + ';border:0">' + esc(sc.short || pt.subj) + "</span></div>" +
+      (p.plain ? '<div class="f-row"><span class="f-tag plain">说人话</span><span class="f-txt">' + ft(p.plain) + "</span></div>" : "") +
+      (p.steps && p.steps.length
+        ? '<ol class="f-steps">' + p.steps.map(function (st) { return "<li>" + ft(st) + "</li>"; }).join("") + "</ol>"
+        : "") +
+      (p.example ? '<div class="f-row"><span class="f-tag ex">例题</span><span class="f-txt">' + ft(p.example) + "</span></div>" : "") +
+      (p.answer ? '<div class="f-row"><span class="f-tag ok">答案</span><span class="f-txt"><b>' + ft(p.answer) + "</b></span></div>" : "") +
+      (p.examTip ? '<div class="f-row"><span class="f-tag tip">应试口诀</span><span class="f-txt">' + ft(p.examTip) + "</span></div>" : "") +
+      (p.warn ? '<div class="f-row"><span class="f-tag bad">易错</span><span class="f-txt">' + ft(p.warn) + "</span></div>" : "") +
+      (p.relatedFormula
+        ? '<div class="f-row"><span class="f-tag">相关公式</span><span class="f-txt">' + esc(p.relatedFormula) + "</span></div>"
+        : "") +
+      '<div class="f-actions">' +
+      '<button class="btn btn-ghost btn-sm" data-act="learn-practice" data-p="' + attr(p.kp || p.name) + '" data-subj="' + attr(pt.subj) + '" type="button">练相关题</button>' +
+      '<button class="btn btn-ghost btn-sm" data-act="goto-formula" data-subj="' + attr(pt.subj) + '" type="button">查看公式</button>' +
+      "</div></div>" +
       '<div style="display:flex;flex-direction:column;gap:8px;margin:16px 0 8px">' +
       '<button class="btn btn-primary btn-block" data-act="learn-practice" data-p="' + attr(p.kp || p.name) + '" data-subj="' + attr(pt.subj) + '" type="button">去练习该考点</button>' +
-      '<button class="btn btn-ghost btn-block" data-act="goto-formula" data-subj="' + attr(pt.subj) + '" type="button">查看公式</button>' +
       '<button class="btn btn-ghost btn-block" data-act="learn-mark" data-id="' + attr(p.id) + '" type="button">标记已学</button>' +
       '<button class="btn btn-ghost btn-block" data-act="learn-back-list" type="button">返回知识列表</button>' +
       "</div>"
@@ -2382,6 +2370,7 @@ function ensureExplain(q) {
     const isEnLang = cur === "英语";
     const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
     return `
+      <div class="formula-page">
       <div class="seg-top">
         <button class="seg-top-btn ${g === "public" ? "is-active" : ""}" data-act="fgroup" data-v="public" type="button">公共课</button>
         <button class="seg-top-btn ${g === "major" ? "is-active" : ""}" data-act="fgroup" data-v="major" type="button">专业课</button>
@@ -2413,7 +2402,7 @@ function ensureExplain(q) {
             (grp) => `<div class="formula-group">
               <div class="formula-group-title">
                 <span class="line" style="background:${sc.color}"></span>
-                ${esc(grp.key)}
+                <span class="formula-group-name">${esc(grp.key)}</span>
                 <span class="muted">（${grp.items.length}）</span>
               </div>
               ${grp.items
@@ -2425,13 +2414,13 @@ function ensureExplain(q) {
                       <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
                     </div>
                     <div class="f-body">${ft(it.formula)}</div>
-                    ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><span class="f-txt">${ft(it.plain)}</span></div>` : ""}
-                    <div class="f-row"><span class="f-tag">怎么用</span><span class="f-txt">${ft(it.use)}</span></div>
-                    <div class="f-row"><span class="f-tag ex">例题</span><span class="f-txt">${ft(it.example)}</span></div>
-                    ${it.steps && it.steps.length ? `<ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol>` : ""}
-                    ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><span class="f-txt"><b>${ft(it.answer)}</b></span></div>` : ""}
-                    ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><span class="f-txt">${ft(it.tip)}</span></div>` : ""}
-                    <div class="f-row"><span class="f-tag bad">易错</span><span class="f-txt">${ft(it.wrong)}</span></div>
+                    ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><div class="f-txt">${ft(it.plain)}</div></div>` : ""}
+                    <div class="f-row"><span class="f-tag">怎么用</span><div class="f-txt">${ft(it.use)}</div></div>
+                    <div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>
+                    ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
+                    ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}
+                    ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><div class="f-txt">${ft(it.tip)}</div></div>` : ""}
+                    <div class="f-row"><span class="f-tag bad">易错</span><div class="f-txt">${ft(it.wrong)}</div></div>
                     <div class="f-actions">
                       <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>
                       <button class="btn btn-ghost btn-sm" data-act="copy" data-t="${attr(it.formula)}" type="button">复制公式</button>
@@ -2444,6 +2433,7 @@ function ensureExplain(q) {
           .join("")}
       </div>
       <div class="empty hidden" id="fEmpty">没有匹配的公式</div>
+      </div>
     `;
   }
 
@@ -2580,6 +2570,7 @@ function ensureExplain(q) {
     const nick = load("gxzsb.nick", "专升本备考人");
 
     return `
+      <div class="me-page">
       <div class="card" style="text-align:center;padding:24px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;margin-bottom:16px">
         <div style="width:64px;height:64px;border-radius:50%;background:white;color:#6366f1;font-size:28px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px">${nick[0] || "学"}</div>
         <div style="font-size:18px;font-weight:bold">${esc(nick)}</div>
@@ -2594,18 +2585,18 @@ function ensureExplain(q) {
 
       <div class="section-title">学习数据</div>
       <div class="card" style="padding:0;margin-bottom:16px">
-        <button class="list-row" data-nav="stats" type="button"><span class="main"><span class="t">数据分析看板</span><span class="s">正确率趋势 · 薄弱考点 · 近 7 日学习量</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="mock" type="button"><span class="main"><span class="t">模拟考试</span><span class="s">限时交卷 · 出分对答案 · 历史记录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="words" type="button"><span class="main"><span class="t">背单词进度</span><span class="s">已掌握 ${wbS.mastered}/${wbS.total} · 复习中 ${wbS.reviewing}</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="wrong" type="button"><span class="main"><span class="t">我的错题本</span><span class="s">${Object.keys(state.wrong).length} 道待复习</span></span><span class="end">›</span></button>
+        <button class="list-row" data-nav="stats" type="button"><span class="main"><span class="t">数据分析看板</span></span><span class="end">›</span></button>
+        <button class="list-row" data-nav="mock" type="button"><span class="main"><span class="t">模拟考试</span></span><span class="end">›</span></button>
+        <button class="list-row" data-nav="words" type="button"><span class="main"><span class="t">背单词进度</span></span><span class="end">${wbS.mastered}/${wbS.total} ›</span></button>
+        <button class="list-row" data-nav="wrong" type="button"><span class="main"><span class="t">我的错题本</span></span><span class="end">${Object.keys(state.wrong).length} 道 ›</span></button>
       </div>
 
       <div class="section-title">账号与数据</div>
       <div class="card" style="padding:0;margin-bottom:16px">
-        <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span><span class="s">当前：${esc(nick)}</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出全部数据备份</span><span class="s">下载JSON文件，换设备可导入</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span><span class="s">从JSON文件恢复学习记录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span><span class="s">只清做题/错题/笔记，保留主题与登录</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出全部数据备份</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
       </div>
 
       <div class="section-title">工具与设置</div>
@@ -2613,8 +2604,8 @@ function ensureExplain(q) {
         <button class="list-row" data-act="exam-info" type="button"><span class="main"><span class="t">考试结构说明</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="school" type="button"><span class="main"><span class="t">真题库/资料</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">切换深色/浅色模式</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span><span class="s">保留本机学习记录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span><span class="s">含主题与备份，不可恢复</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span></span><span class="end">›</span></button>
       </div>
 
       <div class="disclaimer">
@@ -2624,6 +2615,7 @@ function ensureExplain(q) {
           : "你当前是游客/未登录模式，所有数据仅保存在你本机浏览器中，不上传任何服务器。"}
         <br/><br/><a href="https://www.gxeea.cn/zsb/tzgg.htm" target="_blank" rel="noopener" style="color:#6366f1">官方信息：广西招生考试院专升本公告 ›</a>
         <br/><br/>版本 v3.0 · 3000核心词 · 五科1500+题
+      </div>
       </div>
     `;
   }

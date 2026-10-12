@@ -574,23 +574,33 @@ html.qa-modal-open { overflow: hidden; }
 .practice-wrap { display:grid; gap:16px; }
 .answer-card-panel { display:none; }
 .formula-wrap { display:grid; gap:12px; }
+.formula-page { max-width: 100%; }
+@media (min-width: 1024px) {
+  .formula-page { max-width: 720px; margin-left: auto; margin-right: auto; }
+}
 .formula-group { margin-bottom:12px; }
 .formula-group-title {
-  display:flex; align-items:center; gap:8px;
-  font-size:13px; font-weight:750; color:var(--text-sub);
-  margin:16px 0 8px;
+  display:flex; align-items:center; gap:10px;
+  font-size:15px; font-weight:800; color:var(--text);
+  margin:22px 0 12px;
 }
 .formula-group-title .line {
-  width:3px; height:14px; border-radius:2px;
+  width:4px; height:18px; border-radius:2px;
   background:var(--primary);
 }
+.formula-group-title .formula-group-name { letter-spacing: 0.01em; }
+.formula-group-title .muted { font-size:12px; font-weight:600; }
 .f-card {
   border:1px solid var(--border); border-radius:var(--radius-card);
   background:var(--card); padding:18px; margin-bottom:14px;
   box-shadow:var(--shadow);
   transition: box-shadow 0.2s;
 }
-.f-card .f-name { font-size:14px; color:var(--text-sub); font-weight:600; margin-bottom:4px; }
+.f-card .f-name {
+  font-size:16px; color:var(--text); font-weight:750;
+  margin-bottom:0; line-height:1.35;
+  flex: 1 1 auto; min-width: 0;
+}
 .f-card .f-body {
   min-height:56px; display:flex; align-items:center; justify-content:center;
   font-family:var(--mono); font-size:20px; margin:16px 0;
@@ -598,7 +608,7 @@ html.qa-modal-open { overflow: hidden; }
   color:var(--text);
 }
 .f-card .f-note { font-size:13px; color:var(--text-sub); line-height:1.6; }
-.f-card .f-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+.f-card .f-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--border); }
 .f-tab-underline {
   border:0; background:none; padding:8px 4px; font-size:13px; font-weight:650;
   color:var(--text-sub); border-bottom:2px solid transparent;
@@ -683,21 +693,27 @@ html.qa-modal-open { overflow: hidden; }
 
 /* ��ʽ������ */
 .f-side-title { font-size:12px; font-weight:750; color:var(--text-sub); margin:0 0 8px; }
+/* 标签块与正文分行：教辅讲义式排版 */
 .f-row {
-  display:flex; gap:8px; align-items:flex-start;
-  margin-top:8px; font-size:13px; line-height:1.55;
+  display:flex; flex-direction:column; gap:6px;
+  margin-top:14px; font-size:13.5px; line-height:1.75;
 }
 .f-tag {
+  align-self:flex-start;
   flex-shrink:0; font-size:11px; font-weight:750;
-  padding:2px 8px; border-radius:999px;
+  padding:2px 10px; border-radius:999px;
   background:var(--bg); border:1px solid var(--border); color:var(--text-sub);
 }
 .f-tag.ex { color:var(--success); border-color:color-mix(in srgb, var(--success) 35%, var(--border)); }
 .f-tag.bad { color:var(--error); border-color:color-mix(in srgb, var(--error) 35%, var(--border)); }
-.f-txt { color:var(--text); min-width:0; }
+.f-tag.step {
+  color:var(--primary, #2D5BFF);
+  border-color:color-mix(in srgb, var(--primary, #2D5BFF) 35%, var(--border));
+}
+.f-txt { color:var(--text); min-width:0; line-height:1.75; }
 .f-card .f-body {
   background:var(--bg); border:1px solid var(--border);
-  border-radius:8px; padding:12px; margin:10px 0 4px;
+  border-radius:10px; padding:16px 12px; margin:12px 0 4px;
 }
 
 /* ����/רҵ�л� */
@@ -720,7 +736,7 @@ html.qa-modal-open { overflow: hidden; }
 }
 .subject-banner .swatch { width:10px; height:10px; }
 .f-head {
-  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px;
 }
 .f-card { border-left-width:3px !important; }
 
@@ -1630,18 +1646,20 @@ html.qa-modal-open { overflow: hidden; }
 
 /* ��ʽ�����ֲ������� */
 .f-steps {
-  margin: 6px 0 8px 4px;
-  padding-left: 18px;
+  margin: 4px 0 0;
+  padding-left: 22px;
 }
 .f-steps li {
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: 13.5px;
+  line-height: 1.75;
   color: var(--text);
-  margin: 4px 0;
+  margin: 8px 0;
+  padding-left: 2px;
 }
 .f-steps li::marker {
   color: var(--primary, #2D5BFF);
   font-weight: 700;
+  font-size: 14px;
 }
 .f-tag.ok {
   background: color-mix(in srgb, var(--success) 16%, transparent);
@@ -1659,9 +1677,12 @@ html.qa-modal-open { overflow: hidden; }
 .f-card {
   margin-bottom: 14px;
 }
-.f-row { align-items: flex-start; }
+/* 我的页作用域：列表只保留主标题+右侧数字/箭头，隐藏灰色小字 */
+.me-page .list-row .s { display: none; }
+.me-page .list-row .t { white-space: normal; }
+.me-page .list-row .end { font-size: 13px; }
 
-/* ˵������������·�ʽҲҪ���� */
+/* ˵������������·�ʽҲҪ���� */
 .f-txt .frac,
 .f-steps .frac {
   display: inline-flex;
