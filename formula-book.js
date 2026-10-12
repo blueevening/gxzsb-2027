@@ -1,4 +1,5 @@
-/* 公式手册 · 按 2027 大纲补充完整例题与分步详解 */
+/* 公式手册 · 按 2027 大纲 · 超详解（零基础友好） */
+/* 每条含：plain 大白话 / use 怎么识别 / steps 板书步骤 / example 例题 / answer 答案 / wrong 易错 / tip 口诀 */
 window.STUDY_DATA = window.STUDY_DATA || {};
 window.STUDY_DATA.FORMULA_BOOK = {
   "高等数学": [
@@ -6,58 +7,124 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "高频必背",
       "items": [
         {
-          "name": "重要极限",
-          "formula": "lim(x→0) frac{sin x}{x} = 1",
-          "use": "x→0 且出现 sin(ax)、tan(ax) 与 x 的比时套用；可先凑出标准形。",
+          "name": "重要极限（sin 型）",
+          "formula": "lim(x→0) frac{sin x}{x} = 1；lim(x→0) frac{tan x}{x} = 1",
+          "plain": "x 无限接近 0 时，sin x 和 x 几乎一样大，所以它们的比值是 1。这是三角函数求极限的万能钥匙。",
+          "use": "看到 x→0，且分子分母出现 sin( )、tan( ) 与 x 的比，就先凑成「同一个无穷小的比」再算。",
+          "steps": [
+            "先看类型：x→0 时分子分母都趋于 0，是 0/0 未定式。",
+            "因为 lim(u→0) sin u / u = 1，所以把 3x 整体看成 u，写成 3 · (sin 3x)/(3x)。",
+            "因为 (sin 3x)/(3x) → 1，所以原式 = 3 × 1 = 3。"
+          ],
           "example": "求 lim(x→0) frac{sin 3x}{x}",
-          "steps": ["把 3x 看成整体：sin 3x / x = 3 · sin 3x / 3x", "3x→0 时 sin 3x / 3x → 1", "结果 = 3×1 = 3"],
           "answer": "3",
-          "wrong": "不要写成 0/0=1；等价无穷小只用于乘除，加减先变形。"
+          "wrong": "错在把 0/0 直接写成 1；0/0 是未定式，必须变形后再算。；错在只把 sin 3x 当成 sin x；角是 3x 就要同除 3x，系数跟着角走。；错在加减式里乱替换等价无穷小；等价无穷小优先用于乘除因式。",
+          "tip": "口诀：三角比极限，同角相除是 1，系数跟着角走。"
         },
         {
-          "name": "e 的极限",
-          "formula": "lim(x→∞) (1+frac{1}{x})^x = e；lim(x→∞) (1+frac{a}{x})^x = e^a",
-          "use": "形如 (1+a/x)^x 或 (1+x)^{1/x} 时凑成 e 的定义。",
+          "name": "重要极限（e 型）",
+          "formula": "lim(x→∞) (1+frac{1}{x})^x = e；lim(x→∞) (1+frac{a}{x})^x = e^a；lim(x→0) (1+x)^{frac{1}{x}} = e",
+          "plain": "「底数接近 1、指数很大」时，结果会稳定到常数 e（约 2.718）。这是定义 e 的标准形状。",
+          "use": "看到 (1 + 小量)^{大数}，或底数→1、指数→∞，就往 e 的定义上凑。",
+          "steps": [
+            "识别形状：底数是 1 加一个无穷小，指数是该无穷小的倒数倍。",
+            "因为 (1+a/x)^x = [(1+a/x)^{x/a}]^a，而内层 (1+a/x)^{x/a} → e。",
+            "所以 (1+a/x)^x → e^a；本题 a=2，结果是 e²。"
+          ],
           "example": "求 lim(x→∞) (1+frac{2}{x})^x",
-          "steps": ["写成 [(1+2/x)^{x/2}]^2", "内层 (1+2/x)^{x/2} → e", "结果 = e²"],
           "answer": "e²",
-          "wrong": "结果是 e^a 不是 e；(1−1/x)^x → 1/e。"
+          "wrong": "错在答案写成 e；指数上的系数 a 会变成 e 的幂，必须是 e^a。；错在 (1−1/x)^x 写成 e；这是 e^{-1}=1/e，符号要跟着括号里走。；错在 x→0 与 x→∞ 两套公式混用；先看清自变量趋向再套。",
+          "tip": "口诀：底 1 加小量，指数倒数凑，系数上指数。"
         },
         {
           "name": "常用等价无穷小",
-          "formula": "x→0：sinx~x，tanx~x，1−cosx~frac{x²}{2}，eˣ−1~x，ln(1+x)~x",
-          "use": "乘除式可直接替换；加减式先通分或泰勒展开。",
+          "formula": "x→0：sinx~x；tanx~x；1−cosx~frac{x²}{2}；eˣ−1~x；ln(1+x)~x；(1+x)^a−1~ax",
+          "plain": "这些函数在 0 附近「几乎等于」一个更简单的式子，乘除法里可以互相换，算极限会快很多。",
+          "use": "乘除因式里出现上述函数、且整体趋于 0，可直接替换；加减式先通分或泰勒展开。",
+          "steps": [
+            "先判断能否替换：必须是乘除因子，且替换后的部分→0。",
+            "因为 x→0 时 1−cos 2x ~ (2x)²/2 = 2x²，所以分子换成 2x²。",
+            "所以原式 = 2x²/x² = 2。"
+          ],
           "example": "求 lim(x→0) frac{1−cos 2x}{x²}",
-          "steps": ["1−cos 2x ~ (2x)²/2 = 2x²", "原式 = 2x² / x²", "结果 = 2"],
           "answer": "2",
-          "wrong": "1−cosx 是 ~x²/2，不是 ~x；2x 要代入整个表达式。"
+          "wrong": "错在 1−cosx~x；正确是 ~x²/2，少个 1/2 结果会差一倍。；错在只替换 sin 里的 x 不替换整个角；sin 3x~3x，角上的系数要一起进。；错在加减里直接换导致抵消丢失；加减先泰勒展开到同阶再算。",
+          "tip": "口诀：乘除随便换，加减要展开；1−cos 记 x²/2。"
         },
         {
           "name": "导数基本公式",
-          "formula": "(xⁿ)′=nxⁿ⁻¹；(sinx)′=cosx；(cosx)′=−sinx；(eˣ)′=eˣ；(lnx)′=frac{1}{x}",
-          "use": "所有求导题先落到这几条，再套四则与链式法则。",
+          "formula": "(xⁿ)′=nxⁿ⁻¹；(sinx)′=cosx；(cosx)′=−sinx；(eˣ)′=eˣ；(aˣ)′=aˣlna；(lnx)′=frac{1}{x}；(log_a x)′=frac{1}{x ln a}",
+          "plain": "求导公式表就是「每个基本函数的瞬时变化率」，后面所有求导题都是在这些公式上做加减乘除和复合。",
+          "use": "一切求导题先落到这几条基本公式，再用四则运算、链式法则拼起来。",
+          "steps": [
+            "逐项求导：因为 (x³)′=3x²，(sinx)′=cosx，(lnx)′=1/x。",
+            "因为求导对加法可拆：y′ = (x³)′ + (sinx)′ + (lnx)′。",
+            "所以 y′ = 3x² + cosx + 1/x。"
+          ],
           "example": "求 y = x³ + sinx + lnx 的导数",
-          "steps": ["(x³)′ = 3x²", "(sinx)′ = cosx", "(lnx)′ = 1/x", "y′ = 3x² + cosx + 1/x"],
           "answer": "y′ = 3x² + cosx + 1/x",
-          "wrong": "(cosx)′ 有负号；(lnx)′ 没有负号。"
+          "wrong": "错在 (cosx)′ 写成 sinx；正确是 −sinx，负号不能丢。；错在 (lnx)′ 写成 −1/x 或 x；正确是 1/x。；错在 (xⁿ)′ 指数忘记减 1；是 nxⁿ⁻¹，不是 nxⁿ。",
+          "tip": "口诀：幂降一、sin 变 cos、cos 带负号、e 原样、ln 变倒数。"
         },
         {
           "name": "乘积与商法则",
           "formula": "(uv)′=u′v+uv′；(frac{u}{v})′=frac{u′v−uv′}{v²}",
-          "use": "两个函数相乘/相除时用。",
+          "plain": "两个函数相乘，导数是「各导一次、交叉相乘再相加」；相除则是交叉相乘再相减，分母平方。",
+          "use": "乘积求导看「两个函数相乘」；商法则看「分数且分子分母都含 x」。",
+          "steps": [
+            "设 u=x²，v=sinx，则 u′=2x，v′=cosx。",
+            "因为 (uv)′=u′v+uv′，所以代入得 2x·sinx + x²·cosx。",
+            "所以 (x² sinx)′ = 2x sinx + x² cosx。"
+          ],
           "example": "求 (x²·sinx)′",
-          "steps": ["u=x²，v=sinx", "u′=2x，v′=cosx", "(uv)′=2x·sinx + x²·cosx"],
           "answer": "2x sinx + x² cosx",
-          "wrong": "乘积求导不是 u′v′；商法则分子是 u′v−uv′ 不要写反。"
+          "wrong": "错在写成 u′v′=2x cosx；乘积法则是两项之和不是一项之积。；错在商法则分子写成 uv′−u′v；正确顺序是 u′v−uv′，减反了就差个负号。；错在分母不平方；商法则分母必须是 v²。",
+          "tip": "口诀：乘积「左导右＋左导右」，商「上导下减上导下，下要方」。"
         },
         {
-          "name": "链式法则",
+          "name": "链式法则（复合求导）",
           "formula": "[f(g(x))]′ = f′(g(x))·g′(x)",
-          "use": "复合函数：外层求导 × 内层求导。",
+          "plain": "套娃函数求导：外层先求导（里面不动），再乘以内层的导数。就像剥洋葱，一层一层往外乘。",
+          "use": "识别「函数里面还有函数」：sin(2x)、e^{x²}、ln(3x+1)、(x²+1)⁵ 等。",
+          "steps": [
+            "认外层与内层：外层 sin，内层 2x。",
+            "因为外层导数是 cos(2x)，内层导数是 (2x)′=2，所以要相乘。",
+            "所以 (sin 2x)′ = cos 2x · 2 = 2cos 2x。"
+          ],
           "example": "求 (sin 2x)′ 与 (e^{x²})′",
-          "steps": ["(sin 2x)′ = cos 2x · (2x)′ = 2cos 2x", "(e^{x²})′ = e^{x²} · (x²)′ = 2x e^{x²}"],
           "answer": "2cos 2x；2x e^{x²}",
-          "wrong": "易漏内层系数（如 2）。"
+          "wrong": "错在漏乘内层导数；sin 2x 求导必须再乘 2，否则差一倍。；错在 e^{x²} 写成 e^{x²} 但不乘 2x；e 的指数上还有 x²，链式必乘 2x。；错在多层复合只乘一层；每一层内层都要乘上。",
+          "tip": "口诀：外层照抄求导，里面原样，再乘内层导。"
+        },
+        {
+          "name": "不定积分基本公式",
+          "formula": "∫xⁿdx = frac{xⁿ⁺¹}{n+1} + C（n≠−1）；∫frac{1}{x}dx = ln|x| + C；∫eˣdx = eˣ + C；∫cosx dx = sinx + C；∫sinx dx = −cosx + C",
+          "plain": "积分是求导的逆运算。求导会「降幂」，积分就「升幂」；但 1/x 的积分是 ln|x|，不能用幂公式。",
+          "use": "先化成幂函数 xⁿ 或基本初等函数，再套公式；不定积分结果必须加任意常数 C。",
+          "steps": [
+            "拆开积分：∫(x³+2x)dx = ∫x³dx + ∫2x dx。",
+            "因为 n=3，所以 ∫x³dx = x⁴/4；因为 (x²)′=2x，所以 ∫2x dx = x²。",
+            "所以结果 = x⁴/4 + x² + C（C 千万不能漏）。"
+          ],
+          "example": "求 ∫(x³ + 2x)dx",
+          "answer": "x⁴/4 + x² + C",
+          "wrong": "错在漏写 +C；不定积分是一族函数，C 必须写。；错在 n=−1 还用幂公式；∫x⁻¹dx=ln|x|+C，分母不能为 0。；错在积分后忘了系数；∫2x dx=x² 已含系数 2，不要再乘 2。",
+          "tip": "口诀：积分升幂除新幂，1/x 变 ln，e 不变，三角带符号。"
+        },
+        {
+          "name": "牛顿—莱布尼茨公式",
+          "formula": "∫_a^b f(x)dx = F(b) − F(a)，其中 F′(x)=f(x)",
+          "plain": "定积分就是「原函数在终点的值减起点的值」。先把不定积分别求出来，再代入上下限相减。",
+          "use": "被积函数连续、上下限是常数的定积分计算，都是先找原函数 F，再算 F(b)−F(a)。",
+          "steps": [
+            "找原函数：因为 (x³)′=3x²，所以 3x² 的一个原函数是 F(x)=x³。",
+            "代入上下限：F(2)=8，F(0)=0。",
+            "所以 ∫_0^2 3x² dx = 8 − 0 = 8。"
+          ],
+          "example": "求 ∫_0^2 3x² dx",
+          "answer": "8",
+          "wrong": "错在只算 F(b) 忘了减 F(a)；定积分必须代入上下限相减。；错在把定积分结果也写 +C；定积分是确定的数，不加 C。；错在上下限代反导致负号；是上限值减下限值，F(b)−F(a)。",
+          "tip": "口诀：先原函数，再「上代减下代」。"
         }
       ]
     },
@@ -65,76 +132,124 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "常考变形",
       "items": [
         {
-          "name": "幂函数与基本积分",
-          "formula": "∫xⁿdx = frac{xⁿ⁺¹}{n+1} + C（n≠−1）；∫frac{1}{x}dx = ln|x| + C；∫eˣdx = eˣ + C",
-          "use": "先化成 xⁿ 再积分；不定积分必加 C。",
-          "example": "求 ∫(x³ + 2x)dx",
-          "steps": ["∫x³dx = x⁴/4", "∫2x dx = x²", "结果 = x⁴/4 + x² + C"],
-          "answer": "x⁴/4 + x² + C",
-          "wrong": "漏写 +C；n=−1 不能用幂公式。"
-        },
-        {
-          "name": "凑微分",
+          "name": "凑微分（第一换元）",
           "formula": "∫f(g(x))g′(x)dx = ∫f(u)du，u=g(x)",
-          "use": "见到「复合 × 内层导」就凑 u。",
-          "example": "求 ∫2x·e^{x²}dx",
-          "steps": ["令 u=x²，则 du=2x dx", "原式 = ∫e^u du = e^u + C", "代回 = e^{x²} + C"],
-          "answer": "e^{x²} + C",
-          "wrong": "定积分换元要改上下限。"
+          "plain": "把被积函数里「一部分的导数」偷偷塞进 dx，换元后变成好积的形状。核心是凑出 du=g′(x)dx。",
+          "use": "见到「复合函数 × 内层导数」（或可凑出常数倍内层导数）就设 u=内层。",
+          "steps": [
+            "观察指数上的 x²，它的导数是 2x，与前面的 x 只差常数 2。",
+            "因为 d(x²)=2x dx，所以 x dx = frac{1}{2} d(x²)，设 u=x²。",
+            "所以原式 = frac{1}{2}∫e^u du = frac{1}{2}e^u + C = frac{1}{2}e^{x²} + C。"
+          ],
+          "example": "求 ∫x·e^{x²}dx",
+          "answer": "frac{1}{2}e^{x²} + C",
+          "wrong": "错在漏系数 1/2；凑微分时 dx 前的常数要配平。；错在定积分换元不换限；换元后上下限要换成新变量的限，或最后代回原变量。；错在 u 设错层；u 应设内层函数（如 x²），不是整个被积函数。",
+          "tip": "口诀：找内层，写 du，缺多少补多少。"
         },
         {
           "name": "分部积分",
-          "formula": "∫udv = uv − ∫vdu",
-          "use": "多项式×指数/三角，或含 ln、arctan。",
-          "example": "求 ∫x eˣdx",
-          "steps": ["u=x，dv=eˣdx ⇒ du=dx，v=eˣ", "∫x eˣdx = x eˣ − ∫eˣ dx", "= x eˣ − eˣ + C = eˣ(x−1)+C"],
-          "answer": "eˣ(x−1)+C",
-          "wrong": "uv 与积分项符号搞反；u 一般选求导后变简单的。"
-        },
-        {
-          "name": "牛顿-莱布尼茨公式",
-          "formula": "∫ₐᵇf(x)dx = F(b) − F(a)",
-          "use": "先求原函数 F，再代上下限。",
-          "example": "求 ∫₀² x² dx",
-          "steps": ["F(x) = x³/3", "F(2) = 8/3", "F(0) = 0", "积分值 = 8/3 − 0 = 8/3"],
-          "answer": "8/3",
-          "wrong": "忘了减 F(a)。"
+          "formula": "∫u dv = uv − ∫v du",
+          "plain": "把积分拆成两部分：一部分求导变简单，一部分积分不变更难。用乘积求导公式的逆运算换来换去。",
+          "use": "被积函数是「多项式×指数/三角」或含 ln、arcsin、arctan 时用。口诀「反对幂指三」，排在前面的选作 u。",
+          "steps": [
+            "设 u=x，dv=eˣdx，则 du=dx，v=eˣ。",
+            "因为 ∫u dv = uv − ∫v du，所以原式 = x eˣ − ∫eˣ dx。",
+            "∫eˣ dx = eˣ，所以结果 = x eˣ − eˣ + C = eˣ(x−1)+C。"
+          ],
+          "example": "求 ∫x eˣ dx",
+          "answer": "eˣ(x−1) + C",
+          "wrong": "错在公式写成 uv + ∫v du；中间是减号。；错在 u 选成 eˣ 导致越积越难；多项式应作 u，求导后降次。；错在 dv 选成 x dx 后 v 积错；v=∫dv 必须积对，常数取 0 即可。",
+          "tip": "口诀：反对幂指三，前者为 u；一次分部降次，对数反三角必选 u。"
         },
         {
           "name": "变上限积分求导",
-          "formula": "d/dx ∫ₐˣf(t)dt = f(x)",
-          "use": "F(x)=∫ₐˣf(t)dt，则 F′(x)=f(x)。",
-          "example": "F(x)=∫₀ˣ sin t dt，求 F′(x)",
-          "steps": ["直接套公式", "F′(x) = sin x"],
+          "formula": "frac{d}{dx} ∫_a^x f(t)dt = f(x)；frac{d}{dx} ∫_{u(x)}^{v(x)} f(t)dt = f(v)v′ − f(u)u′",
+          "plain": "上限在动的积分，求导就是「把被积函数里的 t 换成上限」，再乘上限的导数（下限则带负号）。",
+          "use": "题干出现 F(x)=∫ f(t)dt 且要求 F′ 或 F″，或用它判断单调性、求极限。",
+          "steps": [
+            "写成 F(x)=∫_0^x sin t dt，直接套基本公式。",
+            "因为 (d/dx)∫_a^x f(t)dt = f(x)，所以 F′(x)=sin x。",
+            "若上下限都含 x，则用完整公式 f(v)v′−f(u)u′。"
+          ],
+          "example": "F(x)=∫_0^x sin t dt，求 F′(x)",
           "answer": "F′(x) = sin x",
-          "wrong": "被积函数含 x 时要先提出再求导。"
+          "wrong": "错在被积函数还含 x 时直接套；先把 x 提出来或换元再求导。；错在上下限都是 x 的函数却只代上限；必须 f(v)v′−f(u)u′ 两项都要。；错在下限代入不带负号；下限项前面是减号。",
+          "tip": "口诀：上限代入乘上限导，下限代入乘下限导取负。"
         },
         {
-          "name": "面积与旋转体",
-          "formula": "S=∫ₐᵇ|f|dx；V=π∫ₐᵇ[f(x)]²dx（绕 x 轴）",
-          "use": "面积保证上减下；体积对 f 平方。",
-          "example": "y=x²，x=0..2，求面积与绕 x 轴体积",
-          "steps": ["S = ∫₀² x² dx = [x³/3]₀² = 8/3", "V = π ∫₀² (x²)² dx = π ∫₀² x⁴ dx", "= π [x⁵/5]₀² = 32π/5"],
-          "answer": "S=8/3，V=32π/5",
-          "wrong": "体积公式里是 f²，不是 f。"
+          "name": "定积分求面积",
+          "formula": "S = ∫_a^b |f(x) − g(x)| dx；上曲线减下曲线",
+          "plain": "两条曲线之间的面积，就是把「上面的高度减下面的高度」从左积到右。有交叉时要分段去绝对值。",
+          "use": "求平面图形面积；先画草图定上下，再定积分限。",
+          "steps": [
+            "画图看出 y=x 与 y=x² 在 [0,1] 上 x 在上、x² 在下。",
+            "因为高度差是 x − x²，所以 S = ∫_0^1 (x−x²) dx。",
+            "计算：x²/2 − x³/3 从 0 到 1 = 1/2 − 1/3 = 1/6。"
+          ],
+          "example": "求 y=x 与 y=x² 围成的面积",
+          "answer": "1/6",
+          "wrong": "错在上下搞反成负面积；面积取正，被积函数用上减下。；错在积分限取错交点；先解方程 f(x)=g(x) 找交点定限。；错在两条曲线交叉不拆段；交叉处必须分段积分再相加。",
+          "tip": "口诀：先画图，找交点，上减下，交叉分段。"
         },
         {
-          "name": "极值与最值",
-          "formula": "f′(x)=0 找驻点 → 判极值 → 闭区间再比端点",
-          "use": "应用题先列目标函数再求导。",
-          "example": "f=x²−2x，求极值与在 [0,3] 上最值",
-          "steps": ["f′=2x−2=0 ⇒ x=1", "f″=2>0 ⇒ x=1 极小，f(1)=−1", "f(0)=0，f(3)=3", "最小 −1，最大 3"],
-          "answer": "极小 −1；区间最小 −1，最大 3",
-          "wrong": "驻点不一定是极值；最值必须比端点。"
+          "name": "旋转体体积（绕 x 轴）",
+          "formula": "V = π ∫_a^b [f(x)]² dx",
+          "plain": "把曲线绕 x 轴转一圈，得到的立体体积等于把每个截面圆片 πf² 累加起来。",
+          "use": "题干出现「绕 x 轴旋转一周」求体积；若是绕 y 轴，对 y 积分或用柱壳法。",
+          "steps": [
+            "f(x)=x，绕 x 轴从 0 到 2 旋转。",
+            "因为截面半径是 f(x)=x，所以 V = π ∫_0^2 x² dx。",
+            "∫x² dx = x³/3，代入得 π(8/3 − 0) = 8π/3。"
+          ],
+          "example": "y=x（0≤x≤2）绕 x 轴旋转，求体积",
+          "answer": "8π/3",
+          "wrong": "错在公式里漏平方；体积是 π∫f²，不是 π∫f。；错在面积公式与体积公式混用；面积是 ∫f，体积是 π∫f²。；错在绕 y 轴却对 x 用圆盘法；换轴就换积分变量或改柱壳法。",
+          "tip": "口诀：绕 x 对 x 积，半径平方再乘 π。"
         },
         {
-          "name": "可分离变量方程",
-          "formula": "dy/dx = g(x)h(y) ⇒ ∫frac{dy}{h(y)} = ∫g(x)dx",
-          "use": "分离变量后积分，初值定 C。",
-          "example": "解 y′=2xy，y(0)=1",
-          "steps": ["dy/y = 2x dx", "ln|y| = x² + C₁", "y = C e^{x²}", "y(0)=1 ⇒ C=1"],
-          "answer": "y = e^{x²}",
-          "wrong": "通解要含任意常数 C；初值题必须定 C。"
+          "name": "求极值与闭区间最值",
+          "formula": "f′(x)=0 求驻点 → 用 f″ 或单调性判极值 → 闭区间再比端点",
+          "plain": "极值是「局部的山顶山谷」，最值是「整个区间里的最高最低」。驻点不一定是极值，最值还要看端点。",
+          "use": "应用题求最大利润/最小用料；或给定区间求最值。步骤永远是：求导→驻点→判极值→比端点。",
+          "steps": [
+            "求导：f′(x)=2x−2，令 f′(x)=0 得驻点 x=1。",
+            "因为 f″(x)=2>0，所以 x=1 是极小值点，f(1)=1−2=−1。",
+            "闭区间 [0,3]：f(0)=0，f(3)=9−6=3，所以最小 −1，最大 3。"
+          ],
+          "example": "f(x)=x²−2x，求极值及在 [0,3] 上的最值",
+          "answer": "极小值 −1；区间最小 −1，最大 3",
+          "wrong": "错在把驻点直接当极值；f′=0 只是嫌疑点，可能不是极值（如 y=x³）。；错在闭区间不比端点；最值必须把驻点与两个端点一起比。；错在只写极值不写区间最值；题目要哪种就答哪种，应用题通常要最值。",
+          "tip": "口诀：导数零点找嫌疑，二导正负定凹凸，闭区两端不能丢。"
+        },
+        {
+          "name": "隐函数求导",
+          "formula": "对方程两边同时对 x 求导，把 y 看成 x 的函数，解出 y′",
+          "plain": "y 和 x 搅在一个方程里解不出来时，不必解出 y，直接两边求导，遇到 y 就多乘一个 y′（链式）。",
+          "use": "方程形式如 x²+y²=25、e^y+xy=0，要求 y′ 或某点切线斜率。",
+          "steps": [
+            "方程 x²+y²=25 两边对 x 求导。",
+            "因为 (y²)′ = 2y·y′（链式），所以得 2x + 2y y′ = 0。",
+            "解出 y′ = −x/y；在点 (3,4) 处 y′ = −3/4。"
+          ],
+          "example": "设 x²+y²=25，求 y′ 及在 (3,4) 处的斜率",
+          "answer": "y′ = −x/y；斜率 −3/4",
+          "wrong": "错在求 (y²)′ 写成 2y 漏 y′；y 是 x 的函数，链式必须乘 y′。；错在最后不把 y′ 解出来；要整理成 y′=… 的形式。；错在代点时代入不在曲线上的点；先确认点满足原方程。",
+          "tip": "口诀：两边求导，见 y 就乘 y′，再解方程。"
+        },
+        {
+          "name": "对数求导法",
+          "formula": "先 ln 两边，利用 ln(ab)=lna+lnb 拆开，再求导",
+          "plain": "当函数是「一堆乘除乘方」时，先取对数把乘变加、除变减、幂变乘，求导会轻松很多。",
+          "use": "y = u(x)^{v(x)}（幂指函数）或多个因式连乘连除时用。",
+          "steps": [
+            "y = xˣ 两边取 ln：ln y = x ln x。",
+            "两边对 x 求导：frac{1}{y} y′ = ln x + x·frac{1}{x} = ln x + 1。",
+            "所以 y′ = y(ln x + 1) = xˣ(ln x + 1)。"
+          ],
+          "example": "求 y = xˣ（x>0）的导数",
+          "answer": "y′ = xˣ(ln x + 1)",
+          "wrong": "错在对幂指函数用幂公式或指数公式；xˣ 既不是幂函数也不是指数函数，必须对数求导。；错在求完导不乘回 y；y′ = y·(右边导数)。；错在忘定义域；对数求导默认真数>0，注意 x 的范围。",
+          "tip": "口诀：幂指函数先取 ln，乘变加，导完全乘回 y。"
         }
       ]
     },
@@ -143,21 +258,78 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "items": [
         {
           "name": "洛必达法则",
-          "formula": "lim frac{f}{g} = lim frac{f′}{g′}（仅 0/0 或 ∞/∞）",
-          "use": "先判型，再求导，可多次。",
-          "example": "求 lim(x→0) frac{eˣ−1}{x}",
-          "steps": ["代入 0 得 0/0，可用洛必达", "分子导 eˣ，分母导 1", "极限 = e⁰/1 = 1"],
-          "answer": "1",
-          "wrong": "非 0/0、∞/∞ 乱用会错。"
+          "formula": "若 frac{f}{g} 为 0/0 或 ∞/∞，则 lim frac{f}{g} = lim frac{f′}{g′}",
+          "plain": "遇到分子分母都趋于 0 或都趋于无穷时，可以「上下分别求导」再取极限。注意：只能用于这两种未定式。",
+          "use": "先代入判型：0/0 或 ∞/∞ 才用；其他未定式（∞−∞、1^∞ 等）先变形。",
+          "steps": [
+            "代入 x→1：分子 1−1=0，分母 1−1=0，是 0/0，可用洛必达。",
+            "因为上下求导：分子 (x²−1)′=2x，分母 (x−1)′=1。",
+            "所以原式 = lim(x→1) 2x/1 = 2。"
+          ],
+          "example": "求 lim(x→1) frac{x²−1}{x−1}",
+          "answer": "2",
+          "wrong": "错在对非 0/0 也用洛必达；例如 x→∞ 时 x/sin x 不是这两种型。；错在求导后不判型、反复乱用；每次用前都要确认仍是 0/0 或 ∞/∞。；错在积或和也分别求导；洛必达只对商的分子分母整体求导。",
+          "tip": "口诀：先代入判型，0/0 ∞/∞ 才开刀，其余先变形。"
         },
         {
-          "name": "泰勒展开",
-          "formula": "sinx = x − frac{x³}{6} + o(x³)；eˣ = 1+x+frac{x²}{2}+o(x²)",
-          "use": "加减抵消时用，比等价无穷小更稳。",
-          "example": "求 lim(x→0) frac{sinx−x}{x³}",
-          "steps": ["sinx − x = −x³/6 + o(x³)", "原式 = −1/6"],
-          "answer": "−1/6",
-          "wrong": "展开阶数不够会算错。"
+          "name": "常用泰勒（麦克劳林）公式",
+          "formula": "eˣ = 1+x+frac{x²}{2}+o(x²)；sinx = x−frac{x³}{6}+o(x³)；cosx = 1−frac{x²}{2}+o(x²)；ln(1+x) = x−frac{x²}{2}+o(x²)",
+          "plain": "把复杂函数在 0 附近展开成多项式，加减抵消时能看到真正的阶数，比等价无穷小更稳。",
+          "use": "加减式抵消、比较无穷小阶数、1^∞ 型极限、求高阶导数值。",
+          "steps": [
+            "分子是 eˣ−1−x，展开 eˣ = 1+x+x²/2+o(x²)。",
+            "因为 eˣ−1−x = x²/2 + o(x²)，所以分子主要部分是 x²/2。",
+            "所以 lim(x→0) (eˣ−1−x)/x² = 1/2。"
+          ],
+          "example": "求 lim(x→0) frac{eˣ−1−x}{x²}",
+          "answer": "1/2",
+          "wrong": "错在展开阶数不够；加减抵消到哪阶就展到哪阶，阶数不够会算错。；错在把 o(x²) 乱当 0；余项是更高阶无穷小，比较阶时要保留意识。；错在 sinx 展成 x−x³/6 却用于只需 x 的场合；按需取项，别多别少。",
+          "tip": "口诀：加减怕抵消，泰勒展到同阶；e、sin、cos、ln 四条要背熟。"
+        },
+        {
+          "name": "微分中值定理",
+          "formula": "罗尔：f(a)=f(b) 则存在 ξ 使 f′(ξ)=0；拉格朗日：f′(ξ)=frac{f(b)−f(a)}{b−a}",
+          "plain": "连续光滑的弧线上，一定存在一点的切线是「水平的」（罗尔），或切线斜率等于弦的斜率（拉格朗日）。",
+          "use": "证明题出现「存在一点 ξ 使 f′(ξ)=…」、证明不等式、讨论根的个数。",
+          "steps": [
+            "验证罗尔条件：f 在 [1,3] 连续、(1,3) 可导，且 f(1)=f(3)=0。",
+            "因为满足罗尔定理，所以存在 ξ∈(1,3) 使 f′(ξ)=0。",
+            "拉格朗日则写成 f′(ξ) = (f(3)−f(1))/(3−1)，用来放缩或证不等式。"
+          ],
+          "example": "f(x)=x²−4x+3 在 [1,3] 上，说明存在 ξ 使 f′(ξ)=0",
+          "answer": "存在 ξ∈(1,3) 使 f′(ξ)=0（实际 ξ=2）",
+          "wrong": "错在忽略连续、可导前提；中值定理必须验证条件。；错在罗尔不检查端点函数值相等；f(a)=f(b) 是罗尔的核心条件。；错在把 ξ 写成区间端点；ξ 一定在开区间 (a,b) 内。",
+          "tip": "口诀：连可导、端点等→罗尔；连可导→拉格朗日配弦斜率。"
+        },
+        {
+          "name": "广义积分（无穷限）",
+          "formula": "∫_a^{+∞} f(x)dx = lim(b→+∞) ∫_a^b f(x)dx；收敛则求出极限值",
+          "plain": "积分上限跑到无穷远，不能直接代入，要「先积到 b，再让 b 趋于无穷」看极限是否存在。",
+          "use": "积分限出现 ∞，或被积函数在区间内有无穷间断点（瑕积分），都要用极限定义。",
+          "steps": [
+            "把 ∞ 写成极限：∫_1^{+∞} frac{1}{x²}dx = lim(b→+∞) ∫_1^b x^{−2} dx。",
+            "因为 ∫x^{−2}dx = −x^{−1} = −1/x，所以积分值 = −1/b − (−1/1) = 1 − 1/b。",
+            "令 b→+∞，1/b→0，所以广义积分收敛，值为 1。"
+          ],
+          "example": "判断并计算 ∫_1^{+∞} frac{1}{x²}dx",
+          "answer": "1（收敛）",
+          "wrong": "错在直接把 ∞ 代进 −1/x；必须用极限，∞ 不能当数运算。；错在 ∫_1^{+∞} 1/x dx 也算成有限；这是发散的，∫1/x=lnx 在 +∞ 处无界。；错在忘写收敛还是发散；广义积分题通常要先判敛。",
+          "tip": "口诀：∞ 先写 lim，积完再代；p 积分 1/x^p 在 p>1 收敛。"
+        },
+        {
+          "name": "二阶常系数齐次微分方程",
+          "formula": "y″+py′+qy=0 的特征方程 r²+pr+q=0；两不等实根 r1,r2 → y=C₁e^{r₁x}+C₂e^{r₂x}；等根 r → y=(C₁+C₂x)e^{rx}；共轭复根 α±βi → y=e^{αx}(C₁cosβx+C₂sinβx)",
+          "plain": "这类方程的解由特征方程的根决定：两个不同根就两个指数解，重根就多乘一个 x，复根就变三角函数。",
+          "use": "方程是 y″、y′、y 的常数系数线性齐次组合，最高二阶。",
+          "steps": [
+            "写特征方程：r² − 3r + 2 = 0。",
+            "因式分解 (r−1)(r−2)=0，得两不等实根 r=1,2。",
+            "所以通解 y = C₁eˣ + C₂e^{2x}。"
+          ],
+          "example": "解 y″ − 3y′ + 2y = 0",
+          "answer": "y = C₁eˣ + C₂e^{2x}",
+          "wrong": "错在重根仍写 C₁e^{rx}+C₂e^{rx}；重根通解必须是 (C₁+C₂x)e^{rx}。；错在复根写成 e^{αx}(cos+sin) 漏 β 的自变量；应是 cos βx、sin βx。；错在非齐次方程直接用齐次通解；非齐次要再加特解。",
+          "tip": "口诀：特征根三情况：不等两指、重根乘 x、复根配三角。"
         }
       ]
     },
@@ -165,49 +337,551 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "大纲补强",
       "items": [
         {
-          "name": "罗尔定理",
-          "formula": "闭连续、开可导、f(a)=f(b) ⇒ 存在 ξ∈(a,b) 使 f′(ξ)=0",
-          "use": "证明至少有一驻点/根。",
-          "example": "f(x)=x²−2x 在 [0,2]，验证罗尔定理",
-          "steps": ["f(0)=0，f(2)=0，连续可导", "存在 ξ∈(0,2) 使 f′(ξ)=0", "f′=2x−2=0 ⇒ ξ=1"],
-          "answer": "ξ=1",
-          "wrong": "三条件缺一不可。"
+          "name": "连续与间断点",
+          "formula": "连续：lim(x→x₀)f(x)=f(x₀)；间断分两类：可去（极限存在）、跳跃/无穷（左右极限问题）",
+          "plain": "连续就是「图像不断笔」，代入值等于极限值。断了就是间断点，看极限在不在、左右限相不相等来分类。",
+          "use": "判断函数连续性、求间断点并分类、由连续定参数。",
+          "steps": [
+            "先看 f(1) 是否有定义；无定义则必间断。",
+            "再求 lim(x→1) f(x)；若极限存在但 ≠f(1) 或无定义 → 可去间断。",
+            "若左右极限不相等 → 跳跃间断；若极限为 ∞ → 无穷间断。"
+          ],
+          "example": "讨论 f(x)=frac{x²−1}{x−1} 在 x=1 处的连续性",
+          "answer": "x=1 可去间断（补充定义 f(1)=2 可变连续）",
+          "wrong": "错在只算极限不看函数值；连续要求极限=f(x₀) 两者都到。；错在把可去间断当连续；f(1) 无定义时并不连续。；错在忽略分母为 0 的点；分母零点、对数真数零点都是嫌疑间断点。",
+          "tip": "口诀：连续三件事：有定义、有极限、两者相等。"
         },
         {
-          "name": "拉格朗日中值定理",
-          "formula": "f(b)−f(a) = f′(ξ)(b−a)",
-          "use": "证明不等式、估值。",
-          "example": "f(x)=lnx 在 [1,2] 写出中值公式",
-          "steps": ["f(2)−f(1)=ln2", "f′(x)=1/x", "ln2 = 1/ξ · (2−1) ⇒ ξ = 1/ln2 ∈ (1,2)"],
-          "answer": "ln2 = 1/ξ",
-          "wrong": "ξ 在开区间内，不在端点。"
+          "name": "凹凸区间与拐点",
+          "formula": "f″(x)>0 凹（下凸）；f″(x)<0 凸（上凸）；f″ 变号处为拐点",
+          "plain": "一阶导数管升降，二阶导数管弯曲方向。拐点是「凹凸改变」的那个点。",
+          "use": "求曲线凹凸区间、拐点坐标；或作图题。",
+          "steps": [
+            "求 f″(x)；本例 f(x)=x³−3x，f′=3x²−3，f″=6x。",
+            "令 f″=0 得 x=0；x<0 时 f″<0（凸），x>0 时 f″>0（凹）。",
+            "因为 f″ 在 0 两侧变号，所以拐点是 (0, f(0))=(0,0)。"
+          ],
+          "example": "求 f(x)=x³−3x 的凹凸区间与拐点",
+          "answer": "凸区间 (−∞,0)，凹区间 (0,+∞)，拐点 (0,0)",
+          "wrong": "错在把 f′=0 的驻点当拐点；拐点看 f″ 变号，不是 f′。；错在 f″=0 就断定是拐点；必须两侧凹凸改变（变号）。；错在凹凸说法搞反；按考试大纲用字：f″>0 为凹，f″<0 为凸（以教材定义为准记忆）。",
+          "tip": "口诀：一导管升降，二导管弯曲；二导变号才拐点。"
         },
         {
-          "name": "二阶常系数齐次方程",
-          "formula": "y″+py′+qy=0，特征根 r₁,r₂：Δ>0 两异根；Δ=0 重根；Δ<0 共轭复根",
-          "use": "写特征方程 r²+pr+q=0 求根。",
-          "example": "解 y″−3y′+2y=0",
-          "steps": ["r²−3r+2=0 ⇒ r=1 或 2", "y = C₁eˣ + C₂e²ˣ"],
-          "answer": "y = C₁eˣ + C₂e²ˣ",
-          "wrong": "Δ<0 时不要漏 e^{αx}。"
+          "name": "一阶线性微分方程",
+          "formula": "y′ + P(x)y = Q(x) 的通解：y = e^{−∫P dx} [ ∫Q e^{∫P dx} dx + C ]",
+          "plain": "标准形是 y′ 加上 P 乘 y 等于 Q。套通解公式即可，关键是把方程先化成标准形。",
+          "use": "方程只含 y′ 和 y 的一次项（没有 y²、yy′ 等），且是线性的。",
+          "steps": [
+            "化标准形：y′ − 2y = eˣ，故 P(x)=−2，Q(x)=eˣ。",
+            "算积分因子指数：∫P dx = ∫(−2)dx = −2x。",
+            "代公式：y = e^{2x}[∫eˣ e^{−2x} dx + C] = e^{2x}[∫e^{−x}dx + C] = e^{2x}(−e^{−x}+C) = Ce^{2x} − eˣ。"
+          ],
+          "example": "解 y′ − 2y = eˣ",
+          "answer": "y = Ce^{2x} − eˣ",
+          "wrong": "错在没化成标准形就识别 P、Q；y′ 系数必须先变成 1。；错在公式指数符号弄反；e^{−∫P} 与 e^{∫P} 两处符号相反。；错在通解漏 C；一阶方程通解含一个任意常数。",
+          "tip": "口诀：先标准形，P 积一次，公式直接套，C 要带。"
         },
         {
-          "name": "定积分对称性",
-          "formula": "f 奇：∫₋ₐᵃf=0；f 偶：∫₋ₐᵃf=2∫₀ᵃf",
-          "use": "对称区间先看奇偶。",
-          "example": "求 ∫₋₁¹ x³ dx",
-          "steps": ["x³ 是奇函数", "区间对称", "积分 = 0"],
-          "answer": "0",
-          "wrong": "不是所有对称区间都为 0，要先看奇偶。"
+          "name": "级数收敛的必要条件",
+          "formula": "若 ∑uₙ 收敛，则 lim(n→∞) uₙ = 0；反之不成立（如调和级数）",
+          "plain": "无穷多个数加起来还能是有限值，那么后面加的数必须越来越小到 0。但趋于 0 不代表级数一定收敛。",
+          "use": "选择题判敛、证明发散：若通项不趋于 0，级数必发散。",
+          "steps": [
+            "看通项 uₙ = n/(n+1)。",
+            "因为 lim(n→∞) n/(n+1) = 1 ≠ 0，不满足必要条件。",
+            "所以 ∑ n/(n+1) 发散。"
+          ],
+          "example": "判断 ∑ frac{n}{n+1} 的敛散性",
+          "answer": "发散（通项极限为 1≠0）",
+          "wrong": "错在由 lim uₙ=0 就断定收敛；调和级数 1/n 通项→0 但仍发散。；错在必要条件当充分条件；只能用「不→0 则发散」单方向推理。；错在忽略通项形式；先写出 uₙ 再取极限。",
+          "tip": "口诀：收敛必通项零，通项不零必发散；通项零不够，还要更多判别。"
         },
         {
-          "name": "拐点判别",
-          "formula": "f″(x₀)=0 且两侧 f″ 变号 ⇒ 拐点",
-          "use": "找凹凸分界点。",
-          "example": "判断 y=x³ 在 x=0 处",
-          "steps": ["y″=6x", "x=0 处 y″=0", "x<0 时 y″<0，x>0 时 y″>0，变号", "是拐点"],
-          "answer": "(0,0) 是拐点",
-          "wrong": "f″=0 不一定是拐点，必须两侧变号。"
+          "name": "无穷小的比较",
+          "formula": "若 lim frac{α}{β}=0 则 α 是 β 的高阶无穷小；=c≠0 为同阶；=1 为等价",
+          "plain": "比较两个无穷小谁「更快到 0」：比值是 0 说明分子更快（高阶），比值是常数说明差不多（同阶）。",
+          "use": "选择题问阶数、比较无穷小、判断等价。",
+          "steps": [
+            "当 x→0，α=sinx，β=x。",
+            "因为 lim sinx/x = 1，所以 sinx 与 x 是等价无穷小。",
+            "若 α=x²，β=x，则 lim x²/x=0，故 x² 是 x 的高阶无穷小。"
+          ],
+          "example": "比较 x→0 时 α=sinx 与 β=x 的阶",
+          "answer": "等价无穷小（同阶且比值为 1）",
+          "wrong": "错在把高阶理解成「次数高就高阶」；要看极限比值定义。；错在等价与同阶混用；等价是同阶中比值为 1 的特例。；错在忽略 x→0 的前提；比较都是在同一点的同一趋向下。",
+          "tip": "口诀：比值 0 高阶，常数同阶，1 等价。"
+        },
+        {
+          "name": "有理函数积分（拆分）",
+          "formula": "假分式先拆多项式 + 真分式；真分式再部分分式分解后逐项积分",
+          "plain": "分子次数不低于分母时先做除法；然后把复杂分数拆成几个简单分数之和，每个都会积。",
+          "use": "被积函数是两个多项式之比，且难以凑微分时。",
+          "steps": [
+            "被积函数 (2x+3)/(x²+x) = (2x+3)/(x(x+1))。",
+            "设 frac{2x+3}{x(x+1)} = frac{A}{x} + frac{B}{x+1}，去分母得 2x+3 = A(x+1)+Bx。",
+            "令 x=0 得 A=3；令 x=−1 得 B=−1；所以积分 = 3ln|x| − ln|x+1| + C。"
+          ],
+          "example": "求 ∫ frac{2x+3}{x²+x} dx",
+          "answer": "3ln|x| − ln|x+1| + C",
+          "wrong": "错在假分式不除法就拆；先化带分式再拆真分式。；错在待定系数解错；代特殊值（使因式为 0 的 x）最快。；错在结果忘加 C 与绝对值；∫1/x=ln|x|+C。",
+          "tip": "口诀：假分式先除，真分式拆因式，代零点定系数。"
+        }
+      ]
+    }
+  ],
+  "英语": [
+    {
+      "key": "高频必背",
+      "items": [
+        {
+          "name": "一般现在时",
+          "formula": "主语 + 动词原形 / 第三人称单数 +s；be: am/is/are",
+          "plain": "表示习惯、事实、真理。主语是 he/she/it 或单数名词时，实义动词要加 s/es。",
+          "use": "时间标志 often, usually, every day；或客观事实；主谓一致问题最爱考三单。",
+          "steps": [
+            "先找主语：主语是 she（第三人称单数）。",
+            "因为实义动词在一般现在时三单要变第三人称单数形式，所以 go 变 goes。",
+            "所以句子是 She goes to school every day。"
+          ],
+          "example": "She ____ (go) to school every day.",
+          "answer": "goes",
+          "wrong": "错在写成 go；she 是三单，必须 goes。；错在三单加 s 规则乱用；go→goes，study→studies，have→has 要单独记。；错在 be 动词与实义动词混用；有 be 就用 am/is/are，有实义动词就变 s，不能同时写。",
+          "tip": "口诀：三单加 s，s/x/ch/sh 加 es，辅音 y 变 ies。"
+        },
+        {
+          "name": "一般过去时",
+          "formula": "主语 + 动词过去式；be: was/were；否定/疑问用 did",
+          "plain": "表示过去发生的动作或状态，现在通常已结束。动词要变成过去式。",
+          "use": "时间标志 yesterday, last week, ago, in 2020, just now。",
+          "steps": [
+            "看到 yesterday，确定是一般过去时。",
+            "因为实义动词过去式是规则变化 +ed，所以 play 变 played。",
+            "否定句要加 did not 并还原动词：She did not play football yesterday。"
+          ],
+          "example": "They ____ (visit) the museum last Sunday.",
+          "answer": "visited",
+          "wrong": "错在过去式写原形 visit；有过去时间必须变 visited。；错在否定写 did not visited；did 后一律用原形。；错在不规则过去式记错；go→went，see→saw，take→took 要背。",
+          "tip": "口诀：过去时间配过去式，did 一出现，动词回原形。"
+        },
+        {
+          "name": "现在完成时",
+          "formula": "have/has + 过去分词",
+          "plain": "强调「过去发生，对现在有影响」或「从过去持续到现在」。不能跟具体过去时间连用。",
+          "use": "标志 already, yet, just, ever, never, since, for, so far。",
+          "steps": [
+            "看到 already，优先想现在完成时。",
+            "因为结构是 have/has + 过去分词，主语是 she，所以用 has。",
+            "finish 的过去分词是 finished，所以填 has finished。"
+          ],
+          "example": "She has already ____ (finish) her homework.",
+          "answer": "finished",
+          "wrong": "错在写成 has finished 与 yesterday 连用；具体过去时间不能配现在完成时。；错在 has 后用过去式；必须用过去分词（规则动词 +ed，不规则要背）。；错在 have/has 选错；he/she/it 用 has，其余用 have。",
+          "tip": "口诀：现完看现在结果，since 接点 for 接段，already yet just 要眼熟。"
+        },
+        {
+          "name": "过去完成时",
+          "formula": "had + 过去分词",
+          "plain": "表示「过去的过去」：在过去某一时间之前已经完成的动作。比一般过去更早。",
+          "use": "主句一般过去 + by the time / before / when 从句；或叙述中先后两个过去动作。",
+          "steps": [
+            "主句是过去时 arrived，宾语从句动作「离开」发生在到达之前。",
+            "因为「过去的过去」用过去完成时，结构是 had + 过去分词。",
+            "所以填 had left。"
+          ],
+          "example": "When we arrived, the train ____ (leave).",
+          "answer": "had left",
+          "wrong": "错在两个动作都用一般过去；有先后时更早的用过去完成。；错在 had 后用过去式；had 后接过去分词 left。；错在没找参照过去时间就乱用；先定「过去的过去」再用 had done。",
+          "tip": "口诀：过去完成是「过去的过去」，had done 抢先到。"
+        },
+        {
+          "name": "将来时（will / be going to）",
+          "formula": "will + 动词原形；be going to + 动词原形",
+          "plain": "will 表临时决定、预测、意愿；be going to 表事先计划或有迹象即将发生。",
+          "use": "tomorrow, next week, in the future；看语境是「临时」还是「已计划」。",
+          "steps": [
+            "对话中 A 问谁来开门，B 当场决定自己去——属临时决定。",
+            "因为临时决定用 will + 原形，所以填 will open。",
+            "若是「我早就打算买票」，则用 am going to buy。"
+          ],
+          "example": "—The phone is ringing. —I ____ (answer) it.",
+          "answer": "will answer",
+          "wrong": "错在一律用 will；有计划、有迹象时用 be going to 更准。；错在 will 后加 to 或 ing；will 后必须动词原形。；错在 be going to 漏 be；going 前要有 am/is/are。",
+          "tip": "口诀：当场决定用 will，早有打算 going to。"
+        },
+        {
+          "name": "被动语态",
+          "formula": "be + 过去分词 (+ by + 动作执行者)",
+          "plain": "强调「主语被怎么样」。把动作承受者放前面，动作执行者放 by 后面（可省）。",
+          "use": "主语是动作承受者、不必说执行者、或题干中文是「被…」。",
+          "steps": [
+            "主语 the bridge 是「被建」，所以用被动。",
+            "因为时态是一般过去时，be 用 was/were，主语三单用 was。",
+            "build 的过去分词是 built，所以填 was built。"
+          ],
+          "example": "The bridge ____ (build) in 2010.",
+          "answer": "was built",
+          "wrong": "错在写成 was build；被动必须用过去分词 built。；错在时态动词 was/were 选错；按原句时态选 be，再配过去分词。；错在及物动词才有被动；不及物动词（happen, take place）没有被动语态。",
+          "tip": "口诀：被动 be + done，时态全在 be 上，done 不变。"
+        },
+        {
+          "name": "定语从句",
+          "formula": "先行词 + 关系词(who/whom/whose/which/that/where/when/why) + 从句",
+          "plain": "跟在名词后面修饰它的句子。关系词既指代前面的名词，又在从句里充当成分。",
+          "use": "句中出现「……的」修饰名词；先找先行词是人还是物、在从句中作主语还是宾语。",
+          "steps": [
+            "先行词是 the girl（人），从句缺主语。",
+            "因为人在从句作主语，关系词用 who/that。",
+            "所以填 who/that is singing over there。"
+          ],
+          "example": "The girl ____ is singing over there is my sister.",
+          "answer": "who / that",
+          "wrong": "错在先行词是人却用 which；指人用 who/whom/that。；错在从句成分已完整还用 who/that 不省略；作宾语且介词不前置时可省略。；错在 what 引导定语从句；what 不能引导定语从句，只能引导名词性从句。",
+          "tip": "口诀：人 who 物 which，主语 who/that，宾语可省，介词前置用 whom/which。"
+        },
+        {
+          "name": "名词性从句（主语/宾语/表语从句）",
+          "formula": "that / whether / 疑问词 + 完整句子",
+          "plain": "整个从句当名词用：可作主语、宾语、表语、同位语。语序用陈述语序。",
+          "use": "从句在句中占「主语/宾语/表语」位置；或 it 作形式主语。",
+          "steps": [
+            "谓语是 is known，前面整个从句作主语，是主语从句。",
+            "因为「他是否会来」不确定，用 whether（不能用 if 放句首）。",
+            "从句用陈述语序：whether he will come，所以填 Whether he will come is unknown。"
+          ],
+          "example": "____ he will come is still unknown.",
+          "answer": "Whether",
+          "wrong": "错在主语从句用 if；句首主语从句只能用 whether。；错在从句用疑问语序；名词性从句一律陈述语序（whether he will come，不是 will he come）。；错在 that 在宾语从句中一般可省，但在主语从句/同位语从句中不能随便省。",
+          "tip": "口诀：名从陈述语序，句首是否用 whether，that 只负责「无意义」。"
+        }
+      ]
+    },
+    {
+      "key": "常考变形",
+      "items": [
+        {
+          "name": "状语从句（时间/条件/让步）",
+          "formula": "when/while/as soon as/until；if/unless；although/though/even if",
+          "plain": "给主句交代时间、条件、让步等背景。从句不能用将来时表将来（主将从现）。",
+          "use": "看连词意义：时间（当…时）、条件（如果）、让步（虽然）；注意「主将从现」。",
+          "steps": [
+            "if 引导条件状语从句，主句是 will go（将来）。",
+            "因为「主将从现」：主句将来时，从句用一般现在时表将来。",
+            "所以从句填 come（原形三单为 comes）。"
+          ],
+          "example": "If it ____ (rain) tomorrow, we will stay at home.",
+          "answer": "rains",
+          "wrong": "错在 if 从句用 will rain；条件状语从句用一般现在时表将来。；错在 although 与 but 连用；中文「虽然…但是…」，英文只能留一个。；错在 until/not…until 意思搞反；not…until 是「直到…才…」。",
+          "tip": "口诀：主将从现；虽然不连但是；直到才用 not…until。"
+        },
+        {
+          "name": "不定式 to do",
+          "formula": "to + 动词原形；可作主/宾/宾补/定/状/表",
+          "plain": "表示目的、将来、一次具体动作。want/hope/decide/plan/ask 后常跟 to do。",
+          "use": "want to, would like to, decide to, in order to；或作目的状语。",
+          "steps": [
+            "want 后固定跟 to do 作宾语。",
+            "因为 want to do sth 是固定结构，所以填 to join。",
+            "目的状语也用 to：He came here to study English。"
+          ],
+          "example": "I want ____ (join) the club.",
+          "answer": "to join",
+          "wrong": "错在写成 want join 或 want joining；want 后只能 to do。；错在使役/感官动词后乱加 to；make/let/have + sb + do（不带 to），see/hear + sb + do/doing。；错在不定式符号 to 后用动名词；to do 的 to 是不定式符号，后接原形。",
+          "tip": "口诀：想要决定计划都 to do，to 后原形别丢。"
+        },
+        {
+          "name": "动名词 doing",
+          "formula": "动词 + -ing；作主/宾/表；介词后一律用 doing",
+          "plain": "把动作当「一件事」看待。enjoy/finish/mind/practice/avoid 后接 doing；介词后永远 doing。",
+          "use": "enjoy/finish/mind/practice/keep/consider + doing；或介词 by/about/of/for 后。",
+          "steps": [
+            "enjoy 后固定接动名词作宾语。",
+            "因为 enjoy doing sth，所以填 reading。",
+            "介词后也如此：by reading books（by 是介词）。"
+          ],
+          "example": "She enjoys ____ (read) novels.",
+          "answer": "reading",
+          "wrong": "错在 enjoy 后用 to read；enjoy 只接 doing。；错在介词后用原形或 to do；介词（in/on/at/by/about…）后必用 doing。；错在 forget/remember/stop to do 与 doing 混；to do 表未做/去做，doing 表已做/停止正在做的事。",
+          "tip": "口诀：enjoy finish mind practice 双 V-ing；介词后面必是 ing。"
+        },
+        {
+          "name": "被动非谓语（to be done / being done / done）",
+          "formula": "to be done（将来被动）；being done（进行被动）；done（完成被动/过去分词作定语）",
+          "plain": "非谓语也有被动：要看动作是「被做且未做」「正被做」还是「已被做」。",
+          "use": "非谓语的逻辑主语是动作承受者时，用被动形式。",
+          "steps": [
+            "the question 与 discuss 是被动关系（问题被讨论）。",
+            "因为会议将于明天讨论该问题，是将来被动。",
+            "所以填 to be discussed。"
+          ],
+          "example": "The question ____ (discuss) tomorrow is very important.",
+          "answer": "to be discussed",
+          "wrong": "错在用 to discuss；问题是被讨论，必须被动。；错在时间是明天却用 done；done 表已完成或泛指被动。；错在 being done 与 to be done 混；进行被动 vs 将来被动看时间。",
+          "tip": "口诀：非谓语看主客：主动 doing/to do，被动 done/to be done。"
+        },
+        {
+          "name": "虚拟语气（if 条件句）",
+          "formula": "与现在相反：if + 过去式(be→were)，主句 would/could/might/should + do；与过去相反：if + had done，主句 would have done",
+          "plain": "假设的事情不是真的：现在假的用过去式，过去假的用过去完成，主句用 would 系列。",
+          "use": "if 从句内容与事实相反；或 wish/as if/if only/it’s time 后。",
+          "steps": [
+            "事实上你昨天不在，假设「如果你昨天在」——与过去相反。",
+            "因为与过去相反：if 从句用 had + 过去分词。",
+            "主句用 would have + 过去分词，所以填 If you had been, you would have seen me。"
+          ],
+          "example": "If you ____ (be) here yesterday, you would have seen me.",
+          "answer": "had been",
+          "wrong": "错在与过去相反却用一般过去；必须 had done。；错在主句用 will have；虚拟主句是 would/could/might/should + have done。；错在 be 的虚拟写成 was；虚拟语气 be 统一用 were 更规范。",
+          "tip": "口诀：现在假过去式，过去假 had done，主句 would 系列。"
+        },
+        {
+          "name": "虚拟语气（名词性从句 / 固定句型）",
+          "formula": "suggest/demand/insist + (should) do；wish + 过去式/had done；It’s time + 过去式 / should do",
+          "plain": "表示建议、要求、愿望、该做未做时，动词后用 (should)+原形，should 常省略。",
+          "use": "suggest, propose, demand, require, order, insist, request 后的宾语从句。",
+          "steps": [
+            "suggest 后的宾语从句用虚拟语气。",
+            "因为结构是 (should) + 动词原形，should 可省略。",
+            "所以填 (should) start，即 We suggest that he (should) start at once。"
+          ],
+          "example": "We suggest that he ____ (start) at once.",
+          "answer": "(should) start",
+          "wrong": "错在 suggest 后用第三人称单数 starts；虚拟用原形。；错在 insist 表「坚持认为」也用虚拟；只有「坚持要求」才虚拟。；错在漏掉 should 可省规则；写 start 或 should start 都对，但不能 starts。",
+          "tip": "口诀：一坚持二命令三建议四要求，从句 should + 原形。"
+        },
+        {
+          "name": "主谓一致",
+          "formula": "语法一致 / 意义一致 / 就近一致；either…or, neither…nor, there be 用就近",
+          "plain": "主语和谓语在人称和数上要一致。长主语先抓核心词；or 系列看靠近谓语的那个主语。",
+          "use": "长难主语、集合名词、each/every、with/together with、either…or…。",
+          "steps": [
+            "核心词是 each of the students，each 是单数概念。",
+            "因为 each + of + 复数名词，谓语仍用单数。",
+            "所以填 has。"
+          ],
+          "example": "Each of the students ____ (have) a book.",
+          "answer": "has",
+          "wrong": "错在被复数 students 迷惑用 have；核心是 each，谓语单数。；错在 with/together with 后的名词抢走谓语数；A with B 谓语随 A。；错在 there be 就近看错；there be 的 be 与最近的主语一致。",
+          "tip": "口诀：主语看中心，with 不管它，or 系就最近。"
+        },
+        {
+          "name": "比较级与最高级",
+          "formula": "比较级 + than；the + 最高级 + in/of；as + 原级 + as；the more…, the more…",
+          "plain": "两者比用比较级，三者及以上比用最高级。「越来越」用比较级叠加，「越…越…」用 the more 结构。",
+          "use": "than, of all, in the class, as…as, 比较级前 much/even/a lot 修饰。",
+          "steps": [
+            "两者（Tom 与 Jim）相比，用比较级。",
+            "因为 tall 是短音节，比较级加 -er：taller。",
+            "所以填 taller，完整为 Tom is taller than Jim。"
+          ],
+          "example": "Tom is ____ (tall) than Jim.",
+          "answer": "taller",
+          "wrong": "错在三者以上也用比较级；of all/in the class 要用最高级。；错在双音节以上形容词加 -er；多用 more + 原级。；错在 very 修饰比较级；比较级用 much/even/a little，very 修饰原级。",
+          "tip": "口诀：两者比用 er，三者比用 est，as…as 中间原级。"
+        }
+      ]
+    },
+    {
+      "key": "冷门补充",
+      "items": [
+        {
+          "name": "倒装句",
+          "formula": "完全倒装：地点/方位副词开头 + 不及物动词 + 主语；部分倒装：否定/only/so 置首 + 助动词 + 主语",
+          "plain": "为了强调或平衡，把谓语的一部分或全部放到主语前面。否定词放句首必倒装。",
+          "use": "never, hardly, seldom, not only, only + 状语, so/neither 开头。",
+          "steps": [
+            "句首是 Never（否定词），需要部分倒装。",
+            "因为否定副词置首，把助动词 had 提到主语前。",
+            "所以填 Never had I seen such a beautiful place。"
+          ],
+          "example": "Never ____ I seen such a beautiful place.",
+          "answer": "had",
+          "wrong": "错在否定词置首仍用正常语序；必须倒装。；错在完全倒装与部分倒装混；完全倒装是整个谓语提前，部分倒装只提前助动词。；错在 only 放句首就倒装却忽略「only + 状语」才倒装；only + 主语不倒装。",
+          "tip": "口诀：否定 only 状语提句首，助动 be 提前走。"
+        },
+        {
+          "name": "强调句",
+          "formula": "It is / was + 被强调部分 + that/who + 其余",
+          "plain": "把想强调的人或事放进 It is…that 结构里。去掉结构后句子仍完整，这是验证方法。",
+          "use": "强调主语、宾语、状语；强调人可用 who，其余用 that。",
+          "steps": [
+            "原句 I met Tom yesterday，强调「Tom」。",
+            "因为强调句结构是 It was + 被强调部分 + that + 其余。",
+            "所以填 It was Tom that/whom I met yesterday。"
+          ],
+          "example": "It was Tom ____ I met yesterday.",
+          "answer": "that / whom",
+          "wrong": "错在写成 which；强调人用 who/whom 或 that。；错在与定语从句、主语从句混淆；去掉 It is…that 后句子通顺才是强调句。；错在强调句中用倒装；强调句本身不倒装。",
+          "tip": "口诀：It is/was…that，抽掉还原还成立才是强调。"
+        },
+        {
+          "name": "it 的用法",
+          "formula": "形式主语/宾语、时间/距离/天气、强调句、固定句型",
+          "plain": "it 既可指上文事物，也可当「形式主语」占位，把真正主语放到后面；天气时间也用 it。",
+          "use": "It is + adj + to do / that…；It takes sb time to do；It is no use doing。",
+          "steps": [
+            "真正主语是 to learn English well，太长放后面。",
+            "因为常用形式主语 it 占位：It is important to…。",
+            "所以填 It is important to learn English well。"
+          ],
+          "example": "____ is important to learn English well.",
+          "answer": "It",
+          "wrong": "错在用 that/to 直接开头；形式主语只能是 it。；错在 it 指代不清；前文应有明确名词可指，或用形式主/宾语。；错在 forget it / take it for granted 等固定搭配记错；当词组整体记忆。",
+          "tip": "口诀：to do/that 从句长，it 出面占主位。"
+        },
+        {
+          "name": "省略与替代",
+          "formula": "to 的省略（want to / hope so）、do/did/does 替代、so/not 替代从句",
+          "plain": "避免重复，英语大量省略相同成分，或用 do/so 代替上文。",
+          "use": "口语化考题、状语从句省略主语+be、不定式省略原形动词。",
+          "steps": [
+            "上文用 Did you go to school？下文避免重复用 Yes, I did。",
+            "因为 did 替代了 went to school，所以省略重复部分。",
+            "不确定用 I’m afraid not，肯定替代用 I hope so。"
+          ],
+          "example": "—Did you finish it? —Yes, I ___.",
+          "answer": "did",
+          "wrong": "错在答 Yes, I finished it 显得冗长（语法不算错但考省略）；标准简答用助动词。；错在 hope so/not 用错；肯定 so，否定 not。；错在状语从句主语不同也省略；只有主从句主语一致才可省略主语+be。",
+          "tip": "口诀：问 did 答 did，问 be 答 be，怕的是 I’m afraid not。"
+        },
+        {
+          "name": "反意疑问句",
+          "formula": "前肯后否 / 前否后肯；陈述句 + 简短问句",
+          "plain": "前面说得肯定，后面就用否定问；前面有 never/hardly 等否定词，后面用肯定问。",
+          "use": "看到 Let’s / There be / 祈使句 / I think that… 的特殊规则。",
+          "steps": [
+            "陈述句是 You are a student（前肯）。",
+            "因为前肯后否，助动词 be 提前。",
+            "所以填 aren’t you。"
+          ],
+          "example": "You are a student, ____ you?",
+          "answer": "aren’t",
+          "wrong": "错在前后肯否一致；必须前肯后否、前否后肯。；错在 Let’s 的反意疑问用 don’t you；Let’s 用 shall we，Let us 用 will you。；错在 I think that… 的反意看从句；看宾语从句主谓，且主语一般不是第一人称时才变。",
+          "tip": "口诀：前肯后否，前否后肯；Let’s shall we，Let us will you。"
+        }
+      ]
+    },
+    {
+      "key": "大纲补强",
+      "items": [
+        {
+          "name": "冠词 a/an/the/零冠词",
+          "formula": "a + 辅音音素开头；an + 元音音素开头；the 表特指/独一无二/序数词；球类三餐零冠词",
+          "plain": "a/an 是「一个」（泛指），the 是「这个那个」（特指），有些固定场合不加冠词。",
+          "use": "名词前选冠词题、改错题；看泛指还是特指、可数与否、音素不是字母。",
+          "steps": [
+            "hour 虽以 h 开头，但读音是元音音素 /aʊ/。",
+            "因为 a/an 看音素不看字母，所以用 an。",
+            "所以填 an hour；而 university 读 /juː/ 开头是辅音音素，用 a university。"
+          ],
+          "example": "He waited for ____ hour.",
+          "answer": "an",
+          "wrong": "错在看字母 h 就用 a；要看发音音素。；错在球类、三餐、交通方式前加 the；play football / have breakfast / by bus 不加冠词。；错在序数词、最高级前漏 the；the first, the best 要加 the。",
+          "tip": "口诀：看音素不看字母；独一无二序数词最高级前用 the。"
+        },
+        {
+          "name": "代词与物主代词",
+          "formula": "主格 I/he/she；宾格 me/him；形容词性物主 my/his；名词性物主 mine/his；反身 myself",
+          "plain": "代词要看在句中做什么成分：主语用主格，介词/动词后用宾格，表示「谁的」用物主代词。",
+          "use": "介词后宾格、主语空缺主格、名词前用形容词性物主、单独用名词性物主。",
+          "steps": [
+            "give 后是间接宾语，动词后用宾格。",
+            "因为 give sb sth，sb 是宾格位置，所以填 me。",
+            "「我的书」名词前用形容词性物主：my book。"
+          ],
+          "example": "Please give ____ the book.（I）",
+          "answer": "me",
+          "wrong": "错在动词/介词后用主格 I；宾格用 me。；错在 your 与 yours 混；your 后要接名词，yours 相当于 your + 名词。；错在反身代词主宾不一致；enjoy oneself / help oneself 要与主语人称对应。",
+          "tip": "口诀：主格主语位，宾格动介后，my 后有名词，mine 独立用。"
+        },
+        {
+          "name": "固定搭配（高频介词/动词）",
+          "formula": "be good at / be interested in / look forward to + doing；arrive in/at；listen to；depend on",
+          "plain": "介词和动词的搭配是约定俗成的，不能翻译硬套，必须当成词组整体背。",
+          "use": "单选介词题、完形填空；注意 to 是介词时后接 doing。",
+          "steps": [
+            "look forward to 中的 to 是介词，不是不定式。",
+            "因为介词后接动名词，所以填 seeing。",
+            "同理：be used to doing（习惯于）也用 doing。"
+          ],
+          "example": "I look forward to ____ (see) you.",
+          "answer": "seeing",
+          "wrong": "错在 look forward to 后用原形/ to see；此处 to 是介词，必须 seeing。；错在 arrive in 大地点 / arrive at 小地点混用；in+国家城市，at+小场所。；错在 listen to 漏 to；不及物动词常靠介词接宾语。",
+          "tip": "口诀：to 是介词就 ing：look forward to / be used to / object to。"
+        },
+        {
+          "name": "英译汉技巧",
+          "formula": "先抓主干（主谓宾），再挂修饰；长定语从句拆译；被动常译成主动「由…」",
+          "plain": "翻译不是逐词硬翻。先把句子骨架找出来，定语、状语按中文习惯重排。",
+          "use": "英译汉题；长难句理解；阅读理解长句。",
+          "steps": [
+            "先找主干：The boy who is wearing a red hat is my brother → 主干 The boy is my brother。",
+            "因为 who 从句是定语，修饰 boy，所以先译修饰再译主干（中文习惯）。",
+            "译文：戴红帽子的那个男孩是我弟弟。"
+          ],
+          "example": "The boy who is wearing a red hat is my brother.",
+          "answer": "戴红帽子的那个男孩是我弟弟。",
+          "wrong": "错在逐词硬翻导致语序生硬；英汉定语位置不同，要调整。；错在被动句照搬「被」；中文多用主动，常译「由…」「受到…」。；错在漏译否定、时态；not、完成时等信息要在译文体现。",
+          "tip": "口诀：先主干后修饰，定语从句往前挪，被动化主动。"
+        },
+        {
+          "name": "汉译英技巧",
+          "formula": "先定主语谓语，再补修饰；无主语用 there be / 被动 / 祈使；时态语态要一致",
+          "plain": "中文多用流水句、省主语，英文必须主谓齐全。先搭骨架，再填血肉。",
+          "use": "汉译英、写作句；注意「有人…」用 There is…；「据说」It is said that…",
+          "steps": [
+            "中文「桌子上有一本书」是存在句。",
+            "因为英文存在句用 there be，书是单数。",
+            "所以译 There is a book on the desk。"
+          ],
+          "example": "桌子上有一本书。",
+          "answer": "There is a book on the desk.",
+          "wrong": "错在译成 On the desk has a book；英文不用 has 表存在。；错在漏介词 on；地点介词要准确（on the desk / in the box）。；错在单复数与 be 不一致；a book 用 is，books 用 are。",
+          "tip": "口诀：先定主谓，再挂地点时间；存在用 there be。"
+        },
+        {
+          "name": "写作模板句（图表/观点/书信）",
+          "formula": "总起：As is shown in the chart…；观点：In my opinion…；总结：In conclusion…",
+          "plain": "作文框架句能保证结构完整、字数够用。背熟开头、过渡、结尾三类句型。",
+          "use": "应用文、议论文；图表作文、书信、演讲。",
+          "steps": [
+            "开头引出话题：With the development of society, more and more people…",
+            "中间给理由：Firstly… Secondly… What’s more…",
+            "结尾总结：In short / In a word, we should take action to…"
+          ],
+          "example": "以「环境保护」为题，写 80 词短文的开头句",
+          "answer": "With the development of society, environmental protection has become a hot topic.",
+          "wrong": "错在模板句与题目无关；模板要扣题替换关键词。；错在全用简单句堆砌；至少使用 2–3 个复合句（定语从句、状语从句）。；错在时态人称混乱；全文保持一般现在时为主，书信注意 I/you 角色。",
+          "tip": "口诀：开头 With…，中间 Firstly，结尾 In a word；三段式稳拿结构分。"
+        },
+        {
+          "name": "情态动词",
+          "formula": "can/could/may/might/must/should/need + 动词原形；must 表推测；needn’t = don’t have to",
+          "plain": "情态动词后接动词原形，本身有人称变化（除 have to）。must 还可表示「一定」推测。",
+          "use": "can 表能力/许可；must 表必须/一定；should 表建议；need 表需要。",
+          "steps": [
+            "后文 You’ve already got one，说明「不必再买」。",
+            "因为「不必」用 needn’t 或 don’t have to。",
+            "所以填 needn’t / don’t have to。"
+          ],
+          "example": "You ____ buy another one; you’ve already got one.",
+          "answer": "needn’t / don’t have to",
+          "wrong": "错在 mustn’t 与 needn’t 混；mustn’t 是禁止，needn’t 是不必。；错在情态动词后加 to 或 ing；后接动词原形。；错在 must have done 与 must do 混；must have done 表对过去的推测。",
+          "tip": "口诀：情态后原形；mustn’t 禁止，needn’t 不必，must have done 是猜过去。"
+        },
+        {
+          "name": "非谓语作状语（目的/结果/伴随）",
+          "formula": "to do 表目的；doing 表伴随/主动；done 表被动/完成；独立主格结构",
+          "plain": "句子已有谓语，另一个动作不能再当谓语，只能变非谓语或从句。",
+          "use": "句中出现两个动词却无连词；看与主语的主被动关系与时间先后。",
+          "steps": [
+            "主语 he 与 wait 是主动关系，且与主句动作同时发生。",
+            "因为伴随状语用 doing，所以填 waiting。",
+            "若是被动/完成则用 done：Given more time, we could do it better。"
+          ],
+          "example": "He sat there, ____ (wait) for the bus.",
+          "answer": "waiting",
+          "wrong": "错在两个谓语动词直接并列却无连词；必须非谓语或加连词。；错在主动关系用 done；done 表被动或已完成。；错在 to do 与 doing 时间搞反；to do 多表未发生目的，doing 多表同时或进行。",
+          "tip": "口诀：主动 doing 被动 done，目的 to do，主客先分清。"
         }
       ]
     }
@@ -219,47 +893,122 @@ window.STUDY_DATA.FORMULA_BOOK = {
         {
           "name": "欧姆定律",
           "formula": "U = IR；I = frac{U}{R}；R = frac{U}{I}",
-          "use": "线性电阻；注意关联参考方向。",
-          "example": "R=10Ω，I=2A，求 U 与 P",
-          "steps": ["U = IR = 2×10 = 20V", "P = UI = 20×2 = 40W"],
-          "answer": "U=20V，P=40W",
-          "wrong": "单位用 V/A/Ω；非线性不能直接用。"
+          "plain": "电阻两端电压等于电流乘电阻。三者知二求一，是电路计算最基础的关系。",
+          "use": "线性电阻电路；已知任意两个量求第三个；注意单位 V、A、Ω 要统一。",
+          "steps": [
+            "已知 R=10Ω，I=2A，求电压 U。",
+            "因为 U = IR，所以 U = 2 × 10。",
+            "所以 U = 20V。"
+          ],
+          "example": "电阻 10Ω，电流 2A，求电阻两端电压。",
+          "answer": "20V",
+          "wrong": "错在公式记成 U=R/I；正确是 U=IR，电压是电流乘电阻。；错在单位混用（mA 不换算成 A）；计算前统一到 V/A/Ω。；错在对非线性元件（二极管）直接用欧姆定律；欧姆定律只适用于线性电阻。",
+          "tip": "口诀：欧姆三角——U 在上，I、R 在下，遮谁求谁。"
         },
         {
           "name": "电功率",
           "formula": "P = UI = I²R = frac{U²}{R}",
-          "use": "三式等价，选数据齐的算。",
-          "example": "U=12V，I=3A，求 P",
-          "steps": ["P = UI = 12×3 = 36W"],
-          "answer": "36W",
-          "wrong": "不要用 U/I；功率不能叠加。"
+          "plain": "功率就是「用电快慢」。电压乘电流最通用；串流相等时用 I²R，并联电压相等时用 U²/R 更快。",
+          "use": "求功率、发热、选电阻功率、比较灯泡亮暗。",
+          "steps": [
+            "已知 U=6V，I=0.5A。",
+            "因为 P = UI，所以 P = 6 × 0.5。",
+            "所以 P = 3W。"
+          ],
+          "example": "某电阻两端 6V，通过电流 0.5A，求功率。",
+          "answer": "3W",
+          "wrong": "错在公式 P=UI 与 P=I²R 混用条件；I²R 要求电流已知或串联。；错在把电功与电功率混淆；功率是 W，电功是 J 或 kWh。；错在计算发热时忘记时间；电热 Q=I²Rt 要乘时间。",
+          "tip": "口诀：P=UI 万能，串联想 I²R，并联想 U²/R。"
         },
         {
-          "name": "基尔霍夫定律",
-          "formula": "KCL：ΣI=0（节点）；KVL：ΣU=0（回路）",
-          "use": "列方程前先标参考方向。",
-          "example": "节点流入 3A 与 2A，流出应为多少",
-          "steps": ["KCL：流入=流出", "流出 = 3+2 = 5A"],
-          "answer": "5A",
-          "wrong": "参考方向要一致，否则符号错。"
+          "name": "基尔霍夫电流定律（KCL）",
+          "formula": "任一节点：∑I入 = ∑I出；或 ∑I = 0（流入为正）",
+          "plain": "节点处电流不能凭空堆积：流入多少就必须流出多少，像水管三通一样。",
+          "use": "求节点电流、支路电流；或验证电流分配是否合理。",
+          "steps": [
+            "节点 A：流入 I1=3A，I2=1A，流出 I3。",
+            "因为 ∑I入 = ∑I出，所以 I3 = I1 + I2 = 3+1。",
+            "所以 I3 = 4A。"
+          ],
+          "example": "节点流入 3A 与 1A，求总流出电流。",
+          "answer": "4A",
+          "wrong": "错在写成 I1=I2=I3；KCL 是代数和，不是都相等。；错在方向没标清就列方程；先规定正方向，再代数相加。；错在对闭合面不用；KCL 也适用于任意闭合面（广义节点）。",
+          "tip": "口诀：节点电流，进=出，方向先约定。"
         },
         {
-          "name": "电阻串并联",
-          "formula": "串 R=R₁+R₂；并 frac{1}{R}=frac{1}{R₁}+frac{1}{R₂}（两并 R=frac{R₁R₂}{R₁+R₂}）",
-          "use": "先串后并逐步化简。",
-          "example": "4Ω 与 12Ω 并联，总电阻",
-          "steps": ["R = 4×12 / (4+12) = 48/16 = 3Ω"],
-          "answer": "3Ω",
-          "wrong": "并联总电阻小于任一支路。"
-        },
-        {
-          "name": "分压分流",
-          "formula": "串联 Uₖ=U·frac{Rₖ}{R总}；并联 Iₖ=I·frac{R总}{Rₖ}",
-          "use": "两电阻分压最常考。",
-          "example": "4Ω+6Ω 串接 10V，求 U₄",
-          "steps": ["U₄ = 10 × 4/(4+6) = 4V"],
+          "name": "基尔霍夫电压定律（KVL）",
+          "formula": "任一回路：∑U = 0；或 ∑U升 = ∑U降",
+          "plain": "绕回路一圈，电位升高和降低的总和互相抵消，起点终点电位相同。",
+          "use": "求回路电压、支路电压；列回路方程求未知量。",
+          "steps": [
+            "回路含电源 10V，电阻压降 UR=6V 与 Ux。",
+            "因为 ∑U升 = ∑U降，所以 10 = 6 + Ux。",
+            "所以 Ux = 4V。"
+          ],
+          "example": "回路电源 10V，已知一电阻压降 6V，求另一段电压。",
           "answer": "4V",
-          "wrong": "分压用电阻比，不是等分。"
+          "wrong": "错在绕行方向与电压符号不一致导致正负错；先定绕行方向并统一。；错在漏掉某个元件的电压；回路要闭合，每个元件都要算到。；错在 KCL 与 KVL 用混；KCL 管节点电流，KVL 管回路电压。",
+          "tip": "口诀：绕一圈升=降，先定方向后代数。"
+        },
+        {
+          "name": "串联电阻与分压",
+          "formula": "R串 = R1+R2+…；U_k = frac{R_k}{R_串} · U_总",
+          "plain": "电阻串联像排队，总电阻是相加；电压按电阻大小成比例分掉，谁电阻大谁分得多。",
+          "use": "求总电阻、某电阻上电压；或已知电压求各段分压。",
+          "steps": [
+            "R1=2Ω 与 R2=3Ω 串联，总电压 10V。",
+            "因为 R串=2+3=5Ω，所以 I = U/R = 10/5 = 2A。",
+            "所以 U2 = I·R2 = 2×3 = 6V（也可用分压：3/5×10=6V）。"
+          ],
+          "example": "2Ω 与 3Ω 串联接 10V，求 3Ω 电阻上电压。",
+          "answer": "6V",
+          "wrong": "错在分压写成 U_k=(Rk/R总)·I；分压是对总电压乘电阻比。；错在串联总电阻误用倒数相加；那是并联。；错在分压比分子分母写反；是局部电阻比总电阻。",
+          "tip": "口诀：串联相加分压比，U 分 = R 分 / R 总 × U。"
+        },
+        {
+          "name": "并联电阻与分流",
+          "formula": "frac{1}{R_并} = frac{1}{R_1}+frac{1}{R_2}；两电阻：R_并=frac{R_1 R_2}{R_1+R_2}；I_k = frac{R_并}{R_k} · I_总",
+          "plain": "并联像多车道，总电阻比最小的还小；电流按电阻反比分配，电阻小的支路电流大。",
+          "use": "求等效电阻、支路电流；两电阻并联用乘积除以和最快。",
+          "steps": [
+            "R1=6Ω 与 R2=3Ω 并联。",
+            "因为两电阻并联：R并 = 6×3/(6+3) = 18/9 = 2Ω。",
+            "若总电流 3A，则 I1 = R并/R1 × I = 2/6 × 3 = 1A。"
+          ],
+          "example": "6Ω 与 3Ω 并联，求等效电阻；若总电流 3A，求 6Ω 支路电流。",
+          "answer": "2Ω；1A",
+          "wrong": "错在并联总电阻算成 R1+R2；那是串联。；错在分流比写成 I_k=(Rk/R并)I；电流与电阻成反比，是 R并/Rk。；错在三个以上电阻还用乘积公式；两电阻公式只适用两个，多个用倒数和。",
+          "tip": "口诀：并联倒数和，分流反比；两电阻「乘加除」。"
+        },
+        {
+          "name": "全电路欧姆定律",
+          "formula": "I = frac{E}{R + r}；U = E − Ir",
+          "plain": "电源有电动势 E 和内阻 r，外电路电阻 R 与内阻一起限制电流。端电压会因内阻压降而下降。",
+          "use": "含电源内阻的电路；求电流、端电压；开路/短路特殊情况。",
+          "steps": [
+            "E=12V，r=1Ω，外电阻 R=5Ω。",
+            "因为 I = E/(R+r) = 12/(5+1) = 2A。",
+            "所以端电压 U = E − Ir = 12 − 2×1 = 10V。"
+          ],
+          "example": "电源 E=12V，内阻 r=1Ω，外阻 R=5Ω，求电流与端电压。",
+          "answer": "I=2A，U=10V",
+          "wrong": "错在忽略内阻写成 I=E/R；有内阻时分母是 R+r。；错在开路电流仍算 E/R；开路 I=0，端电压 U=E。；错在端电压写成 Ir；端电压是 E−Ir（放电时）。",
+          "tip": "口诀：全电路 I=E/(R+r)，端电压 U=E−Ir。"
+        },
+        {
+          "name": "叠加定理",
+          "formula": "多电源线性电路：各电源单独作用产生的响应代数和 = 总响应",
+          "plain": "多个电源一起作用时，可以一个一个算，再加起来。电压源不作用就短路，电流源不作用就开路。",
+          "use": "两个及以上独立源的线性电路求某支路电流/电压。",
+          "steps": [
+            "电压源 E 单独作用：电流源开路，算出 I′。",
+            "电流源单独作用：电压源短路，算出 I″。",
+            "因为叠加是代数和，所以 I = I′ + I″（注意参考方向）。"
+          ],
+          "example": "含 10V 电压源与 2A 电流源，用叠加求某支路电流（方法演示）",
+          "answer": "分别求各源单独作用再代数相加",
+          "wrong": "错在对功率也叠加；功率是二次量，不能直接叠加。；错在电压源不作用仍留电压；不作用的电压源应短路（置 0）。；错在电流源不作用被短路；不作用的电流源应开路。",
+          "tip": "口诀：压源短、流源开，响应代数加，功率不能叠。"
         }
       ]
     },
@@ -267,40 +1016,109 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "常考变形",
       "items": [
         {
-          "name": "全电路欧姆定律",
-          "formula": "I = frac{E}{R+r}；U = IR = E − Ir",
-          "use": "有内阻时电流除 (R+r)。",
-          "example": "E=12V，r=1Ω，R=5Ω，求 I、U",
-          "steps": ["I = 12/(5+1) = 2A", "U = 2×5 = 10V（或 12−2×1=10V）"],
-          "answer": "I=2A，U=10V",
-          "wrong": "路端电压 U 不是电源电动势 E。"
-        },
-        {
-          "name": "叠加定理",
-          "formula": "线性电路：各独立源单独作用的响应之和 = 总响应",
-          "use": "电压源短路、电流源开路；只叠加电压电流，不叠加功率。",
-          "example": "两源分别产生 I′=1A、I″=−0.5A，总 I",
-          "steps": ["I = I′ + I″ = 1 + (−0.5) = 0.5A"],
-          "answer": "0.5A",
-          "wrong": "功率不可叠加；源置零方式勿反。"
-        },
-        {
           "name": "戴维南定理",
-          "formula": "等效为 Uoc 串 Req；I = frac{Uoc}{Req+R}",
-          "use": "先求开路电压，再求源置零后的等效电阻。",
-          "example": "Uoc=10V，Req=2Ω，接 R=3Ω，求 I",
-          "steps": ["I = 10/(2+3) = 2A"],
-          "answer": "2A",
-          "wrong": "电压源短路、电流源开路后再求 Req。"
+          "formula": "线性有源二端网络 → 等效电压源：U_oc（开路电压）串联 R_eq（除源后等效内阻）",
+          "plain": "任何复杂的一端口电路，对外都可以换成「一个电压源 + 一个电阻」，方便求负载电流。",
+          "use": "只求某一支路电流/电压；负载变化但网络不变时反复计算。",
+          "steps": [
+            "断开负载，求两端开路电压 U_oc。",
+            "独立源置零（压源短路、流源开路），求等效内阻 R_eq。",
+            "接上负载 RL，I = U_oc / (R_eq + RL)。"
+          ],
+          "example": "若 U_oc=12V，R_eq=2Ω，接 RL=4Ω，求电流。",
+          "answer": "I = 12/(2+4) = 2A",
+          "wrong": "错在求 R_eq 时没有除源；独立源必须置零后再算电阻。；错在开路电压方向与极性搞反；U_oc 正负要与后续负载方向一致。；错在把受控源也置零；受控源不能置零，要用外加电源法。",
+          "tip": "口诀：断负载、求开路、除源求内阻、再接负载算电流。"
         },
         {
-          "name": "反相 / 同相运放",
-          "formula": "反相 uo = −frac{Rf}{R₁}ui；同相 uo = (1+frac{Rf}{R₁})ui",
-          "use": "虚短虚断；反相有负号，同相增益≥1。",
-          "example": "R1=10k，Rf=50k，ui=0.2V，分别求反相/同相输出",
-          "steps": ["反相：uo = −(50/10)×0.2 = −1V", "同相：uo = (1+5)×0.2 = 1.2V"],
-          "answer": "−1V；1.2V",
-          "wrong": "两种接法公式勿混；漏负号。"
+          "name": "诺顿定理",
+          "formula": "等效电流源 I_sc（短路电流）并联 R_eq",
+          "plain": "戴维南的「电流源版本」：对外等效成短路电流并联等效电阻。与戴维南可互相转换。",
+          "use": "求等效电流源模型；或 I_sc 更好求时用诺顿。",
+          "steps": [
+            "将端口短路，求短路电流 I_sc。",
+            "同样除源求 R_eq（与戴维南的 R_eq 相同）。",
+            "诺顿等效：I_sc 与 R_eq 并联；接负载后用分流。"
+          ],
+          "example": "I_sc=3A，R_eq=6Ω，接 RL=3Ω，求负载电压。",
+          "answer": "分流 I_L = 6/(6+3)×3 = 2A，U_L = 2×3 = 6V",
+          "wrong": "错在诺顿内阻与电流源串联；诺顿是并联。；错在 I_sc 与 U_oc 关系写错；U_oc = I_sc × R_eq。；错在把戴维南电压源直接与诺顿电流源并联互换时方向搞反；注意极性与方向。",
+          "tip": "口诀：诺顿=短路电流||内阻；U_oc=I_sc·R_eq。"
+        },
+        {
+          "name": "最大功率传输",
+          "formula": "当 R_L = R_eq 时，负载获得最大功率 P_max = frac{U_oc²}{4 R_eq}",
+          "plain": "负载电阻等于电源等效内阻时，功率最大。注意此时效率只有 50%，不是效率最高。",
+          "use": "求负载为何值时功率最大，或求最大功率值。",
+          "steps": [
+            "已知戴维南 U_oc=10V，R_eq=4Ω。",
+            "因为最大功率条件 RL=R_eq=4Ω。",
+            "所以 P_max = U_oc²/(4R_eq) = 100/(16) = 6.25W。"
+          ],
+          "example": "U_oc=10V，R_eq=4Ω，求最大输出功率及对应 RL。",
+          "answer": "RL=4Ω 时 P_max=6.25W",
+          "wrong": "错在条件写成 RL=2R_eq；匹配条件是相等。；错在公式分母写成 2R_eq 或 4RL；标准式是 U_oc²/(4R_eq)。；错在以为最大功率时效率也最大；匹配时效率只有 50%。",
+          "tip": "口诀：内阻=负载时功率最大，P=U²/(4R)。"
+        },
+        {
+          "name": "RC 暂态（电容充放电）",
+          "formula": "τ=RC；充电：u_C=E(1−e^{−t/τ})；放电：u_C=E e^{−t/τ}；t=3τ~5τ 视为稳态",
+          "plain": "电容电压不能突变，充电按指数上升，放电按指数下降。时间常数 τ=RC 决定快慢。",
+          "use": "开关动作后求某时刻电压电流；或判断暂态过程时间。",
+          "steps": [
+            "已知 R=1kΩ，C=100μF，则 τ=RC=0.1s。",
+            "充电到 t=τ 时，u_C ≈ 0.632E。",
+            "因为 5τ 后基本稳定，所以约 0.5s 后电容视为开路稳态。"
+          ],
+          "example": "R=1kΩ，C=100μF，求时间常数及充电到 63.2% 所需时间。",
+          "answer": "τ=0.1s；t=τ=0.1s 时约 63.2%",
+          "wrong": "错在 τ 单位算错（μF 要换成 F）；100μF=1e−4 F。；错在认为电容电压可以突变；换路定则 u_C(0+)=u_C(0−)。；错在充电公式写成指数衰减；充电是 (1−e^{−t/τ})，放电才是 e^{−t/τ}。",
+          "tip": "口诀：τ=RC，3τ5τ 到稳态，0.632 是一倍 τ 的标志。"
+        },
+        {
+          "name": "RL 暂态（电感通断）",
+          "formula": "τ=L/R；电流：i=I(1−e^{−t/τ}) 通电；i=I e^{−t/τ} 断电",
+          "plain": "电感电流不能突变，电流按指数建立或衰减。τ=L/R，电感越大或电阻越小，越慢。",
+          "use": "含电感电路开关过程；求电流暂态、时间常数。",
+          "steps": [
+            "已知 L=0.1H，R=10Ω，则 τ=L/R=0.01s。",
+            "通电时电流从 0 上升，t=τ 达到约 63.2% 稳态值。",
+            "因为 5τ≈0.05s 后进入稳态，电感相当于短路（直流）。"
+          ],
+          "example": "L=0.1H，R=10Ω，求时间常数及直流稳态时电感表现。",
+          "answer": "τ=0.01s；直流稳态时电感相当于短路",
+          "wrong": "错在 τ 写成 RC；电感是 L/R。；错在认为电感电流可突变；换路定则 i_L(0+)=i_L(0−)。；错在直流稳态把电感当开路；直流稳态电感相当于短路（电容才开路）。",
+          "tip": "口诀：电感 L/R，电容 RC；稳态电感短、电容开。"
+        },
+        {
+          "name": "正弦交流三要素",
+          "formula": "u = U_m sin(ωt + φ)；三要素：最大值 U_m、角频率 ω、初相 φ；有效值 U = frac{U_m}{sqrt{2}}",
+          "plain": "正弦波由「多高、多快、起点在哪」三件事决定。有效值是计算功率时用的等效直流值。",
+          "use": "写瞬时值表达式、求有效值、比较相位差。",
+          "steps": [
+            "已知 U_m=311V，ω=100π，φ=30°。",
+            "因为有效值 U = U_m/√2 ≈ 311/1.414 ≈ 220V。",
+            "所以 u = 311 sin(100π t + 30°) V。"
+          ],
+          "example": "已知最大值 311V、ω=100π、初相 30°，写瞬时式并求有效值。",
+          "answer": "u=311 sin(100π t + 30°) V；U≈220V",
+          "wrong": "错在有效值与最大值混用；功率用电流电压有效值。；错在初相单位混用（度与弧度）；表达式内单位要统一。；错在比较相位差时不化成同频率同函数；不同函数先统一为 sin 或 cos。",
+          "tip": "口诀：有效值=最大值/√2，家用 220 对应 311。"
+        },
+        {
+          "name": "阻抗与相量",
+          "formula": "Z = R + jX；|Z| = sqrt{R²+X²}；X_L=ωL；X_C=frac{1}{ωC}；I = frac{U}{|Z|}",
+          "plain": "交流电路里电阻和电抗合成阻抗。电感抗随频率升，电容抗随频率降，两者可抵消。",
+          "use": "求电流大小、阻抗角、谐振；或 RLC 串联电路计算。",
+          "steps": [
+            "RLC 串联：R=3Ω，X_L=4Ω，X_C=0。",
+            "因为 Z = R + jX_L，模 |Z| = √(3²+4²) = 5Ω。",
+            "若 U=10V，则 I = 10/5 = 2A。"
+          ],
+          "example": "R=3Ω，X_L=4Ω 串联，电压 10V，求电流。",
+          "answer": "|Z|=5Ω，I=2A",
+          "wrong": "错在阻抗模直接 R+X；必须平方和开根号。；错在把 X_L 与 X_C 相加；它们符号相反，串联总电抗 X=X_L−X_C。；错在用有效值还是最大值不统一；交流欧姆定律用有效值或最大值均可但要一致。",
+          "tip": "口诀：阻抗三角 R 与 X，勾股求模；X_L 上、X_C 下。"
         }
       ]
     },
@@ -308,22 +1126,64 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "冷门补充",
       "items": [
         {
-          "name": "最大功率传输",
-          "formula": "RL = R0 时负载功率最大，Pmax = frac{Uoc²}{4R0}",
-          "use": "戴维南后接匹配电阻。",
-          "example": "Uoc=12V，R0=8Ω，求 RL 与 Pmax",
-          "steps": ["RL = 8Ω", "Pmax = 144/(4×8) = 4.5W"],
-          "answer": "RL=8Ω，Pmax=4.5W",
-          "wrong": "此时效率只有 50%。"
+          "name": "有功 / 无功 / 视在功率与功率因数",
+          "formula": "P = UI cosφ（有功，W）；Q = UI sinφ（无功，var）；S = UI（视在，VA）；cosφ = frac{P}{S}",
+          "plain": "有功是真正做功的功率，无功是能量在电源与储能元件间来回交换，视在是电压电流有效值之积。",
+          "use": "求功率因数、无功补偿；比较设备容量（用视在功率 S）。",
+          "steps": [
+            "已知 U=220V，I=5A，cosφ=0.8。",
+            "因为 P=UI cosφ=220×5×0.8=880W。",
+            "所以 S=UI=1100VA，Q=UI sinφ（sinφ=0.6）=660var。"
+          ],
+          "example": "U=220V，I=5A，cosφ=0.8，求 P、S、Q。",
+          "answer": "P=880W，S=1100VA，Q=660var",
+          "wrong": "错在 P 与 S 单位混用；有功用 W，视在用 VA。；错在功率因数写成 P/Q；cosφ=P/S。；错在认为 cosφ 越大无功越大；cosφ 大说明有功占比高、无功占比低。",
+          "tip": "口诀：有功 W 做实功，无功 var 来回跑，cosφ=P/S。"
         },
         {
-          "name": "时间常数与暂态",
-          "formula": "τ = RC（RC）；τ = L/R（RL）；约 5τ 到稳态",
-          "use": "一阶电路充电放电。",
-          "example": "R=1kΩ，C=100μF，求 τ",
-          "steps": ["τ = RC = 1000 × 100×10⁻⁶ = 0.1s"],
-          "answer": "0.1s",
-          "wrong": "RC 与 RL 公式勿反。"
+          "name": "二极管单向导电",
+          "formula": "正偏导通（硅管约 0.7V，锗管约 0.3V）；反偏截止；理想二极管导通压降 0",
+          "plain": "二极管像单向阀：正向超过门槛电压就导通，反向基本不通。",
+          "use": "整流电路、限幅、判断二极管是否导通。",
+          "steps": [
+            "先假设二极管截止，算两端电位差。",
+            "若阳极电位高于阴极（硅超过约 0.7V），则导通。",
+            "导通后硅管压降按 0.7V 代入（理想管按 0V），再求电路量。"
+          ],
+          "example": "理想二极管，阳极 5V、阴极 2V，判断状态并求压降。",
+          "answer": "正偏导通；理想管压降 0V（硅管约 0.7V）",
+          "wrong": "错在不判断偏置直接当电阻；必须先看正偏反偏。；错在硅管导通仍按 0V；实际硅管约 0.7V。；错在反偏仍导通；反偏截止，电流近似 0。",
+          "tip": "口诀：正偏导通反偏断，硅 0.7 锗 0.3，理想当 0。"
+        },
+        {
+          "name": "三极管放大与开关",
+          "formula": "放大区：I_C = β I_B；饱和区：I_C 由外电路决定（管压降小）；截止区：I_C≈0",
+          "plain": "三极管用小基极电流控制大集电极电流。放大区电流是 β 倍；开关状态则在饱和与截止之间。",
+          "use": "求静态工作点、判断工作区；数字电路开关运用。",
+          "steps": [
+            "已知 I_B=20μA，β=50，若处于放大区。",
+            "因为 I_C=β I_B，所以 I_C=50×20μA=1mA。",
+            "若外电路允许最大 I_C 小于 1mA，则进入饱和。"
+          ],
+          "example": "I_B=20μA，β=50，求放大区的 I_C。",
+          "answer": "1mA",
+          "wrong": "错在饱和后仍用 I_C=βI_B；饱和后 β 关系不再成立。；错在把 I_E=I_C+I_B 略去 I_B；精确关系是 I_E=I_C+I_B，β 大时 I_E≈I_C。；错在 NPN/PNP 电流方向搞反；看箭头方向与电源极性。",
+          "tip": "口诀：放大 I_C=βI_B；饱和看外电路；截止 I_C 近 0。"
+        },
+        {
+          "name": "电容与电感基本特性",
+          "formula": "C = frac{Q}{U}；i = C frac{du}{dt}；u = L frac{di}{dt}；W_C=frac{1}{2}CU²；W_L=frac{1}{2}LI²",
+          "plain": "电容存电场能，电压不能突变；电感存磁场能，电流不能突变。两者都储能不耗能（理想）。",
+          "use": "暂态分析、滤波、判断开路短路；能量计算。",
+          "steps": [
+            "电容电压 10V，C=100μF，求储能。",
+            "因为 W_C = ½ C U² = 0.5 × 1e−4 × 100。",
+            "所以 W_C = 0.005 J = 5mJ。"
+          ],
+          "example": "C=100μF，U=10V，求电容储能。",
+          "answer": "5mJ",
+          "wrong": "错在公式用 ½CU 或 ½CU² 写成 CU²；系数 1/2 不能丢。；错在直流稳态把电容当短路；直流稳态电容开路。；错在认为电容电感能耗能；理想 L、C 只储能不耗能，电阻才耗能。",
+          "tip": "口诀：电容压不跳、电感流不跳；储能 ½CV²、½LI²。"
         }
       ]
     },
@@ -331,40 +1191,94 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "大纲补强",
       "items": [
         {
-          "name": "正弦交流三要素与有效值",
-          "formula": "u = Um sin(ωt + φ)；U = Um/√2",
-          "use": "最大值、角频率、初相位；工程用有效值。",
-          "example": "Um=311V，求有效值 U",
-          "steps": ["U = 311/√2 ≈ 220V"],
-          "answer": "约 220V",
-          "wrong": "有效值不是最大值。"
+          "name": "运算放大器（反相放大）",
+          "formula": "A_u = −frac{R_f}{R_1}；虚短：u+ = u−；虚断：i+ = i− ≈ 0",
+          "plain": "反相输入时输出与输入反号，放大倍数只由两个电阻比决定。负反馈下用「虚短虚断」分析。",
+          "use": "运放线性应用：放大、加法、积分（均在负反馈下）。",
+          "steps": [
+            "反相端通过 R1 接输入，反馈电阻 Rf 接输出。",
+            "因为虚断，反相端电流为 0；又虚短使 u−=u+=0（虚地）。",
+            "所以 i1=Ui/R1=If=−Uo/Rf，得 Uo = −(Rf/R1)Ui。"
+          ],
+          "example": "R1=10kΩ，Rf=100kΩ，Ui=0.2V，求反相放大输出。",
+          "answer": "A_u=−10，Uo=−2V",
+          "wrong": "错在漏负号；反相放大输出极性相反。；错在正反馈也用虚短；虚短成立前提是深度负反馈线性区。；错在虚短理解成真正短路；是电位近似相等，电流并不真的流入。",
+          "tip": "口诀：反相倍数 = −Rf/R1；虚短虚断两把钥匙。"
         },
         {
-          "name": "阻抗与功率因数",
-          "formula": "Z=R+jX；P=UI cosφ；cosφ=R/|Z|",
-          "use": "RLC 串联算阻抗与有功。",
-          "example": "U=220V，I=10A，cosφ=0.8，求 P",
-          "steps": ["P = UI cosφ = 220×10×0.8", "P = 1760W"],
-          "answer": "1760W",
-          "wrong": "P 不是 UI；无功 Q=UI sinφ。"
+          "name": "运算放大器（同相放大）",
+          "formula": "A_u = 1 + frac{R_f}{R_1}；电压跟随器：A_u ≈ 1",
+          "plain": "信号从同相端输入，输出与输入同号，放大倍数至少为 1。电压跟随器常作缓冲隔离。",
+          "use": "同相放大、电压跟随；需要高输入阻抗时选同相结构。",
+          "steps": [
+            "输入接 u+，反馈网络 R1、Rf 从输出回到 u−。",
+            "因为虚短 u−=u+=Ui，且 R1 上电流等于 Rf 上电流。",
+            "所以 Uo = (1 + Rf/R1) Ui；R1 开路或 Rf=0 时为跟随器。"
+          ],
+          "example": "R1=10kΩ，Rf=90kΩ，Ui=0.1V，求同相输出。",
+          "answer": "A_u=1+9=10，Uo=1V",
+          "wrong": "错在写成 A_u=Rf/R1（那是反相幅度）；同相要加 1。；错在跟随器仍放大；跟随器增益≈1，只隔离不放大。；错在同相端直接接地仍称同相放大；输入要接同相端。",
+          "tip": "口诀：同相 1+Rf/R1，跟随器是 1，输出同号。"
         },
         {
-          "name": "换路定律与三要素",
-          "formula": "uc(0+)=uc(0−)；iL(0+)=iL(0−)；f(t)=f(∞)+[f(0+)−f(∞)]e^{−t/τ}",
-          "use": "一阶暂态通用解。",
-          "example": "电容从 0 充到 U，写 uc(t)",
-          "steps": ["uc(0+)=0，uc(∞)=U，τ=RC", "uc = U + (0−U)e^{−t/RC} = U(1−e^{−t/RC})"],
-          "answer": "uc = U(1−e^{−t/RC})",
-          "wrong": "电容电压、电感电流不能突变。"
+          "name": "电压比较器",
+          "formula": "u+ > u− → 输出高电平；u+ < u− → 输出低电平；开环或正反馈",
+          "plain": "比较器把两个电压比大小，输出在高、低电平之间跳变，不做线性放大。",
+          "use": "波形整形、过零检测、电平判别；可加正反馈构成滞回比较器。",
+          "steps": [
+            "反相端接参考电压 2V，同相端接输入 Ui。",
+            "因为比较器开环：Ui>2V 时 u+>u−。",
+            "所以输出跳到高电平；Ui<2V 时输出低电平。"
+          ],
+          "example": "参考电压 2V 接反相端，输入 3V 时输出是高还是低？",
+          "answer": "高电平（同相输入 3V > 2V）",
+          "wrong": "错在用虚短分析比较器；比较器通常开环/正反馈，虚短不成立。；错在认为输出与输入线性放大；比较器输出是饱和高/低电平。；错在阈值方向看反；谁高谁低要对应 u+ 与 u−。",
+          "tip": "口诀：u+ 赢则输出高，u− 赢则输出低。"
         },
         {
-          "name": "三极管与比较器",
-          "formula": "Ie=Ic+Ib；放大区 Ic≈βIb；比较器 u+>u− 输出高",
-          "use": "静态工作点与运放开环。",
-          "example": "Ib=20μA，β=50，求 Ic",
-          "steps": ["Ic = βIb = 50×20μA = 1mA"],
-          "answer": "1mA",
-          "wrong": "饱和区 Ic 不再受 Ib 控制。"
+          "name": "逻辑代数基本公式",
+          "formula": "A+0=A；A·1=A；A+A=A；A·A=A；A+ A̅ =1；A· A̅ =0；德摩根：overline{A+B}=overline{A}·overline{B}",
+          "plain": "逻辑变量只有 0 和 1。加是或，乘是与，上横线是非。化简全靠这些恒等式。",
+          "use": "化简逻辑表达式、证明等式、设计电路。",
+          "steps": [
+            "化简 Y = A + A·B。",
+            "因为吸收律 A + A·B = A（提取 A：A(1+B)=A）。",
+            "所以 Y = A。"
+          ],
+          "example": "化简 Y = A + A B",
+          "answer": "Y = A",
+          "wrong": "错在把逻辑加当算术加；A+A=A 而不是 2A。；错在德摩根只否定一部分；整体取反要变号并逐项取反。；错在与普通代数运算律混；逻辑无减法除法，分配律形式有差异。",
+          "tip": "口诀：或加与乘非横杠；吸收 A+AB=A；德摩根变号逐项反。"
+        },
+        {
+          "name": "组合逻辑分析与设计",
+          "formula": "由真值表 → 写表达式 → 化简 → 画门电路；常见：编码器、译码器、加法器、多路选择器",
+          "plain": "组合电路输出只由当前输入决定，没有记忆。分析是「门→表→式」，设计是「表→式→门」。",
+          "use": "分析给定门电路功能；按要求设计三人表决、比较器等。",
+          "steps": [
+            "列出真值表（输入所有组合与对应输出）。",
+            "写出输出为 1 的最小项之和：Y = m1 + m2 + …。",
+            "化简表达式并用与非/或非等门实现。"
+          ],
+          "example": "设计：两输入一致时输出 1（同或）。",
+          "answer": "Y = A ⊙ B = AB + A̅ B̅",
+          "wrong": "错在组合与时序概念混；组合无反馈无记忆，时序才有触发器。；错在最小项写漏；每个输出为 1 的行都要有对应乘积项。；错在化简前后真值表不等价；化简必须保持逻辑功能不变。",
+          "tip": "口诀：先真值表后表达式，化简看卡诺图，功能验证回代。"
+        },
+        {
+          "name": "触发器（基本 RS / JK / D）",
+          "formula": "RS：约束 RS=0；JK：J=K=1 时翻转；D：Q^{n+1}=D；触发沿：上升/下降",
+          "plain": "触发器是能存 1 位二进制的记忆单元。不同触发器输入激励不同，但都能保持状态。",
+          "use": "时序电路、计数器、寄存器；判断次态、画波形。",
+          "steps": [
+            "D 触发器：现态 Q=0，输入 D=1。",
+            "因为 Q^{n+1}=D，所以上升沿到来后 Q 变 1。",
+            "JK 触发器 J=1、K=0 则置 1；J=K=1 则每沿翻转。"
+          ],
+          "example": "D 触发器，D=1，上升沿到来后次态是什么？",
+          "answer": "Q^{n+1}=1",
+          "wrong": "错在 D 触发器以为会翻转；D 是跟随输入，不是翻转。；错在忽略触发沿；同步时序只在时钟沿改变状态。；错在 RS 触发器 R=S=1；这是约束/非法状态，不能出现。",
+          "tip": "口诀：D 跟随、JK 齐 1 翻、RS 禁 11。"
         }
       ]
     }
@@ -374,40 +1288,109 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "高频必背",
       "items": [
         {
-          "name": "整除与取模",
-          "formula": "7/2 = 3；7 % 3 = 1；整数除丢小数",
-          "use": "两整数相除得整数；% 只用于整数。",
-          "example": "int a = 7/2; double b = 7.0/2; 的值",
-          "steps": ["a = 3（整除）", "b = 3.5（浮点除）"],
-          "answer": "a=3，b=3.5",
-          "wrong": "要得小数必须用浮点数参与运算。"
+          "name": "数据类型与运算",
+          "formula": "int/float/double/char；算术 % 整除取余；赋值 += -=；关系 > < == !=；逻辑 && || !",
+          "plain": "先认清类型再运算。% 只能用于整数；== 判断相等，= 是赋值；&& 与 || 连接条件。",
+          "use": "表达式求值题、类型溢出、% 的符号、== 与 = 写错。",
+          "steps": [
+            "7 / 2 是整数除法，结果为 3（丢掉小数）。",
+            "因为 7 % 2 求余，所以结果为 1。",
+            "7.0 / 2 有浮点参与，结果为 3.5。"
+          ],
+          "example": "求 7/2、7%2、7.0/2 的值。",
+          "answer": "3；1；3.5",
+          "wrong": "错在 7/2 写成 3.5；两整数相除仍是整数。；错在 % 用于浮点；取余要求两侧都是整数。；错在 if(a=1) 判相等；= 是赋值，判相等用 ==。",
+          "tip": "口诀：整数除丢小数，% 要整型，判等两等号。"
         },
         {
           "name": "自增自减",
-          "formula": "i++ 先用后加；++i 先加后用",
-          "use": "单独成句相同，表达式里不同。",
-          "example": "i=1; a=i++; 然后 b=++i;",
-          "steps": ["a = i++：a 得 1，i 变 2", "b = ++i：i 先变 3，b 得 3"],
-          "answer": "a=1，b=3",
-          "wrong": "顺序勿混。"
+          "formula": "i++ 先用后加；++i 先加后用；i-- / --i 同理",
+          "plain": "自增让变量加 1。放在前面先加再参与运算，放在后面先把原值拿去用再加。",
+          "use": "表达式求值、for 循环、输出顺序题。",
+          "steps": [
+            "设 i=3，执行 a = i++。",
+            "因为 i++ 是先用后加，所以 a 得到 3，随后 i 变 4。",
+            "若 a = ++i，则 i 先变 4，a 也得 4。"
+          ],
+          "example": "int i=3, a; a=i++; 之后 a 和 i 分别是多少？",
+          "answer": "a=3，i=4",
+          "wrong": "错在把 i++ 也当先加后用；后缀是先用后加。；错在同一表达式多次自增同一变量；结果依赖求值顺序，属未定义行为。；错在 i++ 当独立语句又当值用混；单独成句时 ++ 位置不影响结果。",
+          "tip": "口诀：符号在前先加，符号在后后加。"
         },
         {
-          "name": "逻辑短路",
-          "formula": "&& 左假不判右；|| 左真不判右",
-          "use": "可避免除零等错误。",
-          "example": "x!=0 && 10/x>2 在 x=0 时",
-          "steps": ["左边 x!=0 为假", "右边不再执行", "不会除零"],
-          "answer": "安全短路",
-          "wrong": "不是位运算 & |。"
+          "name": "逻辑运算与短路",
+          "formula": "&&：左假则右不执行；||：左真则右不执行；! 取反",
+          "plain": "短路现象：&& 左边已经是假，右边没必要算；|| 左边已经是真，右边也不算。会影响副作用。",
+          "use": "表达式求值、防止除零/空指针、for/if 条件。",
+          "steps": [
+            "设 a=0，b=2，计算 a && (b=5)。",
+            "因为 a 为 0（假），&& 短路，右边 b=5 不执行。",
+            "所以 b 仍是 2，表达式值为 0。"
+          ],
+          "example": "int a=0,b=2; a && (b=5); 问 b 的值？",
+          "answer": "2（右边未执行）",
+          "wrong": "错在认为 b 一定被赋成 5；短路时不执行右边。；错在 && 与 & 混；& 不短路且可作位运算。；错在条件写反导致除零；应把安全判断放左边，如 p!=0 && 1/p。",
+          "tip": "口诀：&& 假则停，|| 真则停；安全判断放左边。"
         },
         {
-          "name": "循环与累加",
-          "formula": "for (i=0; i<n; i++) sum += a[i];",
-          "use": "遍历 n 个元素。",
-          "example": "求 1 到 100 的和",
-          "steps": ["sum=0", "for(i=1;i<=100;i++) sum+=i", "sum=5050"],
-          "answer": "5050",
-          "wrong": "i<=n 多跑一趟时用 i<n。"
+          "name": "if / else 配对",
+          "formula": "if (条件) 语句；else 就近配对；悬垂 else 属于最近的 if",
+          "plain": "else 总是和最近的还没配对的 if 结合。加大括号能避免歧义。",
+          "use": "读程序输出、找逻辑错误、嵌套 if 题。",
+          "steps": [
+            "看嵌套：if (a) if (b) x=1; else x=2;",
+            "因为 else 就近配对内层 if (b)，所以只有 b 为假才执行 x=2。",
+            "若想 else 配外层，必须给内层 if 加 {}。"
+          ],
+          "example": "a=1,b=0; 执行 if(a) if(b) x=1; else x=2; 后 x 是？",
+          "answer": "2",
+          "wrong": "错在以为 else 配外层 if；悬垂 else 属于最近 if。；错在 if 后加分号；if(x); 会使后面语句永远执行。；错在条件判断写成 if(x=0)；赋值不是比较。",
+          "tip": "口诀：else 跟最近 if，想改配对就加括号。"
+        },
+        {
+          "name": "switch 语句",
+          "formula": "switch(整型表达式){ case 常量: … break; default: … }",
+          "plain": "按整型/字符值分流。每个 case 后建议 break，否则会「贯穿」继续执行后面的 case。",
+          "use": "多分支菜单、成绩等级、字符分类。",
+          "steps": [
+            "switch(2) 匹配 case 2。",
+            "因为该 case 后没有 break，会贯穿到 case 3。",
+            "所以继续执行 case 3 的语句，直到 break 或结束。"
+          ],
+          "example": "x=2; switch(x){case 1: y=10; case 2: y=20; case 3: y=30; break; default: y=0;} 问 y？",
+          "answer": "30",
+          "wrong": "错在漏 break 导致贯穿；要跳出必须写 break。；错在 case 后写变量或表达式；case 只能是常量。；错在 switch 用浮点型；switch 只能整型、字符型等。",
+          "tip": "口诀：case 必须常量，break 防贯穿。"
+        },
+        {
+          "name": "三种循环",
+          "formula": "for(初始化; 条件; 迭代)；while(条件)；do…while(先执行后判断)",
+          "plain": "for 适合已知次数；while 先判断后执行可能 0 次；do-while 至少执行 1 次。",
+          "use": "读程序求输出、改错、循环次数计算。",
+          "steps": [
+            "for(i=0;i<3;i++) 执行 i=0,1,2 共 3 次。",
+            "因为条件在 i<3，i 到 3 时退出。",
+            "do-while 先做一次再判断，即便条件一开始为假也至少 1 次。"
+          ],
+          "example": "for(i=0;i<3;i++) 循环体执行几次？",
+          "answer": "3 次",
+          "wrong": "错在边界写成 i<=3 成了 4 次；看清 < 还是 <=。；错在 do-while 漏分号；while(cond); 的分号不能少。；错在 for 三段写错顺序；for(初始化; 条件; 迭代)。",
+          "tip": "口诀：for 知次数，while 可零次，do-while 至少一次。"
+        },
+        {
+          "name": "常见算法模板：累加 / 最值",
+          "formula": "累加：s=0; s+=a[i]；最值：max=a[0]; 逐个比较更新",
+          "plain": "累加从 0 开始加；求最大值先假设第一个最大，再不断被更大的替换。",
+          "use": "求和、平均分、最大最小值、计数统计。",
+          "steps": [
+            "求最大值：设 max = a[0]。",
+            "因为后面每个元素都可能更大，所以逐个 if(a[i]>max) max=a[i]。",
+            "循环结束后 max 即最大值。"
+          ],
+          "example": "数组 3,7,2,9，用模板求最大值。",
+          "answer": "9",
+          "wrong": "错在 max 初值设 0；若全为负数会错，应设 a[0]。；错在累加变量未初始化；s 未置 0 结果随机。；错在更新后没把下标也记下；要位置时同步记录下标。",
+          "tip": "口诀：累加先置 0，最大先设 a[0]。"
         }
       ]
     },
@@ -416,30 +1399,108 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "items": [
         {
           "name": "数组与下标",
-          "formula": "a[i] ≡ *(a+i)；合法下标 0..n-1",
-          "use": "二维按行优先。",
-          "example": "int a[5] = {6,9,12,15,18}; 求 a[0]+a[3]",
-          "steps": ["a[0]=6，a[3]=15", "和为 21"],
-          "answer": "21",
-          "wrong": "越界 a[5] 不报编译错但会出错。"
+          "formula": "int a[N]；下标 0..N-1；a[i] == *(a+i)",
+          "plain": "数组是一段连续内存。下标从 0 开始，越界访问是大忌。数组名是指向首元素的指针常量。",
+          "use": "遍历、排序、查找、越界判断；数组与指针关系题。",
+          "steps": [
+            "int a[5] 合法下标 0 到 4。",
+            "因为长度是 5，所以 a[5] 越界，行为未定义。",
+            "遍历写 for(i=0;i<5;i++) 保证不越界。"
+          ],
+          "example": "int a[5]; 合法下标范围？a[5] 合法吗？",
+          "answer": "0~4；a[5] 越界不合法",
+          "wrong": "错在以为下标从 1 开始；C 数组从 0 开始。；错在 a[i] 与 *(a+i) 混用时搞错指针类型；a[i] 是元素，a 是首地址。；错在数组长度用变量（C89）；部分编译器要求常量长度，C99 才有 VLA。",
+          "tip": "口诀：n 个元素 0 到 n-1，越界无保护。"
         },
         {
-          "name": "字符串与 \\0",
-          "formula": "以 '\\0' 结束；strlen 不算 '\\0'",
-          "use": "遍历到 '\\0'。",
-          "example": "\"ab\" 的 strlen 与占内存",
-          "steps": ["strlen=2", "实际占 3 字节（含 \\0）"],
-          "answer": "2；3 字节",
-          "wrong": "结束符不是 \\n。"
+          "name": "字符串与字符数组",
+          "formula": "以 \\0 结尾；strcpy/sprintf/strlen；字符串常量不可改",
+          "plain": "C 字符串是「字符数组 + 尾零」。strlen 不算 \\0；strcpy 会连 \\0 一起拷。",
+          "use": "求长度、拷贝、连接、比较；字符数组初始化题。",
+          "steps": [
+            "char s[]=\"hello\"; 实际占 6 字节（含 \\0）。",
+            "因为 strlen(s) 不计 \\0，所以是 5。",
+            "sizeof(s) 是 6；strcpy 也会复制 \\0。"
+          ],
+          "example": "char s[]=\"hello\"; 求 strlen(s) 与 sizeof(s)。",
+          "answer": "5；6",
+          "wrong": "错在 strlen 与 sizeof 混；strlen 是有效字符数，sizeof 是占用空间。；错在用 = 给字符数组赋值；要用 strcpy，数组名不可整体赋值。；错在越界写 \\0；缓冲区要足够大。",
+          "tip": "口诀：字符串看尾零，strlen 不含 \\0，拷贝用 strcpy。"
         },
         {
-          "name": "指针传参",
-          "formula": "值传递；改实参传地址 int *p；*p 取值",
-          "use": "swap 必须传指针。",
-          "example": "void add(int *n){ (*n)++; } 调用 add(&x);",
-          "steps": ["传入 x 的地址", "*n 即 x", "x 加 1"],
-          "answer": "实参 x 被修改",
-          "wrong": "改形参本身不影响实参。"
+          "name": "函数传参（值传递）",
+          "formula": "实参值拷贝给形参；改形参不影响实参；改指针指向的内容才会影响",
+          "plain": "C 都是值传递。想改实参，就要传地址（指针），在函数里通过指针改目标。",
+          "use": "交换两数、修改数组、返回多个结果。",
+          "steps": [
+            "void f(int x){ x=10; } 调用 f(a) 后 a 不变。",
+            "因为形参是实参的副本，改的是副本。",
+            "若 void f(int *x){ *x=10; } 调用 f(&a)，a 才会变 10。"
+          ],
+          "example": "int a=1; f(a) 与 f(&a) 在函数内分别改值，问 a 是否变化？",
+          "answer": "传值不变；传地址被修改",
+          "wrong": "错在以为传数组名是传整个数组；实际传首地址，函数内改元素会影响原数组。；错在交换函数没用指针；swap(int a,int b) 改不了外面。；错在返回局部变量地址；局部变量随函数结束失效。",
+          "tip": "口诀：想改实参传地址，解引用再赋值。"
+        },
+        {
+          "name": "指针基础",
+          "formula": "int *p = &a；*p 取值；p++ 按类型步进；指针可指向数组元素",
+          "plain": "指针存地址。* 是取内容，& 是取地址。指针加 1 不是地址 +1 字节，而是 +1 个元素大小。",
+          "use": "地址运算、数组遍历、函数传参、动态内存。",
+          "steps": [
+            "int a=5; int *p=&a; 则 p 存 a 的地址。",
+            "因为 *p 解引用取 a 的值，所以 *p 是 5。",
+            "*p = 8 会把 a 改成 8。"
+          ],
+          "example": "int a=5,*p=&a; *p=8; 问 a？",
+          "answer": "8",
+          "wrong": "错在 *p 与 p 混；p 是地址，*p 是内容。；错在未初始化就解引用；野指针非常危险。；错在 p+1 以为 +1 字节；应按 sizeof(*p) 步进。",
+          "tip": "口诀：& 取址，* 取值；p+1 走一个元素。"
+        },
+        {
+          "name": "结构体",
+          "formula": "struct S{…}；成员用 .；指针用 ->；可整体赋值",
+          "plain": "结构体把多个不同类型打包成一个自定义类型。普通变量用点，指针用箭头。",
+          "use": "学生信息、复杂数据、链表节点。",
+          "steps": [
+            "struct Point { int x,y; } p; 访问 p.x。",
+            "struct Point *q = &p; 访问 q->x（等价 (*q).x）。",
+            "结构体变量可以整体赋值：p2 = p1。"
+          ],
+          "example": "struct Point{int x,y;} p={1,2}, *q=&p; 写出访问 x 的两种方式。",
+          "answer": "p.x；q->x",
+          "wrong": "错在指针用 . 访问；指针要用 ->。；错在结构体大小算错存在对齐；sizeof 可能大于成员之和。；错在函数返回结构体却当指针用；看类型是否带 *。",
+          "tip": "口诀：变量点、指针箭头、可整体赋值。"
+        },
+        {
+          "name": "递归",
+          "formula": "递归 = 出口 + 把问题化小调用自身",
+          "plain": "函数调用自己。必须有终止条件，否则栈溢出。适合阶乘、斐波那契、汉诺塔。",
+          "use": "阶乘、斐波那契、二叉树、分治问题。",
+          "steps": [
+            "fact(n)：若 n==0 返回 1（出口）。",
+            "否则返回 n * fact(n-1)（化小）。",
+            "fact(3)=3*fact(2)=3*2*fact(1)=3*2*1*fact(0)=6。"
+          ],
+          "example": "写阶乘递归并求 fact(3)。",
+          "answer": "fact(3)=6",
+          "wrong": "错在没有出口；无限递归导致崩溃。；错在递归化小方向错；必须向出口靠近。；错在递归当循环乱用效率；重复计算多时考虑递推/记忆化。",
+          "tip": "口诀：先写出口再化小，测 n=0、n=1。"
+        },
+        {
+          "name": "排序与查找模板",
+          "formula": "冒泡：相邻比较交换；顺序查找逐个比；二分查找前提是有序",
+          "plain": "冒泡把大的往后「冒」；二分每次砍一半，但必须有序。",
+          "use": "排序算法复杂度、二分边界、查找次数比较。",
+          "steps": [
+            "冒泡外层控制轮数，内层比较 a[j] 与 a[j+1]。",
+            "因为逆序就交换，所以一轮后最大值沉到最后。",
+            "二分：lo=0, hi=n-1, mid=(lo+hi)/2，按大小收缩边界。"
+          ],
+          "example": "对 3,1,2 冒泡一轮后数组是？",
+          "answer": "1,2,3（一轮后最大到末尾）",
+          "wrong": "错在二分 mid 写成 (lo+hi)/2 在 lo+hi 可能溢出；可用 lo+(hi-lo)/2。；错在二分边界写成 lo<=hi 或 lo<hi 出错；要统一模板并测边界。；错在无序数组直接二分；必须先排序或本来就有序。",
+          "tip": "口诀：冒泡相邻换，二分有序砍一半。"
         }
       ]
     },
@@ -447,22 +1508,79 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "冷门补充",
       "items": [
         {
-          "name": "递归",
-          "formula": "必须有出口；否则用更小规模表达",
-          "use": "阶乘、斐波那契。",
-          "example": "写 n! 递归",
-          "steps": ["fact(n) = 1 若 n==0", "否则 n * fact(n-1)"],
-          "answer": "fact(n)= n==0?1:n*fact(n-1)",
-          "wrong": "无出口会栈溢出。"
+          "name": "交换 / 逆序模板",
+          "formula": "交换：t=a; a=b; b=t; 逆序：双指针 i,j 相向交换",
+          "plain": "交换必须借助第三变量（或异或/加减技巧，但易错）。逆序用首尾指针往中间靠。",
+          "use": "排序内核、字符串逆序、数组反转。",
+          "steps": [
+            "交换 a 与 b：先 t=a 保存 a。",
+            "再 a=b，最后 b=t，完成互换。",
+            "逆序数组时 i 从 0，j 从 n-1，交换后 i++、j-- 直到相遇。"
+          ],
+          "example": "a=3,b=5，用三变量法交换。",
+          "answer": "a=5，b=3",
+          "wrong": "错在写成 a=b; b=a；两个都会变成 b 的值。；错在异或交换时 a、b 同一地址；a^=a 会变 0。；错在逆序边界没停；i<j 循环，避免再换回来。",
+          "tip": "口诀：交换先备份 t=a；逆序两头往中间。"
         },
         {
-          "name": "二分查找",
-          "formula": "mid = (lo+hi)/2；有序表 O(log n)",
-          "use": "有序数组查找。",
-          "example": "在有序 a[] 中找 x",
-          "steps": ["lo=0, hi=n-1", "比较 a[mid] 与 x 调整半区", "lo>hi 则未找到"],
-          "answer": "有序才能二分",
-          "wrong": "无序不能二分。"
+          "name": "文件读写",
+          "formula": "fopen/fclose；fscanf/fprintf；fgetc/fputc；fread/fwrite；模式 r/w/a/+",
+          "plain": "文件是外部数据。打开→读写→关闭。r 只读，w 覆盖写，a 追加，+ 表示可读写。",
+          "use": "文件读入数组、保存成绩、文本处理题。",
+          "steps": [
+            "FILE *fp = fopen(\"data.txt\",\"r\"); 打开读取。",
+            "若 fp==NULL 打开失败，必须检查。",
+            "用完 fclose(fp) 关闭，否则可能丢数据。"
+          ],
+          "example": "以只读方式打开 data.txt 并检查失败。",
+          "answer": "fp=fopen(\"data.txt\",\"r\"); if(fp==NULL){/*报错*/}",
+          "wrong": "错在 w 模式当追加；w 会清空原文件，追加要用 a。；错在忘 fclose；资源泄漏且缓冲可能未写入。；错在读写模式与格式串不匹配；%d 对应 int，%s 对应字符数组。",
+          "tip": "口诀：打开必检查，用完就 fclose；w 清 a 追加。"
+        },
+        {
+          "name": "预处理与宏",
+          "formula": "#define 常量/带参宏；#include；宏只是文本替换，有副作用要小心",
+          "plain": "预处理在编译前做文本替换。带参宏没有类型检查，容易因优先级出错。",
+          "use": "常量定义、条件编译、宏函数求值题。",
+          "steps": [
+            "#define SQ(x) x*x，求 SQ(1+2)。",
+            "因为是文本替换，展开成 1+2*1+2=5，不是 9。",
+            "正确写法应是 #define SQ(x) ((x)*(x))。"
+          ],
+          "example": "#define SQ(x) x*x 求 SQ(1+2)。",
+          "answer": "5（易错，因未加括号）",
+          "wrong": "错在宏参数不加括号；优先级会被改变。；错在宏里写自增参数；SQ(i++) 会展开两次。；错在把宏当函数有类型检查；宏无类型、无求值一次保证。",
+          "tip": "口诀：宏参数两边都加括号，别带副作用。"
+        },
+        {
+          "name": "变量作用域与存储类别",
+          "formula": "局部/全局；static 静态保留值；auto 寄存器/自动；extern 外部声明",
+          "plain": "局部变量函数内有效；全局全文件有效；static 局部变量走出函数值还在，但只在该函数内可见。",
+          "use": "读程序看变量是否保留；多文件用 extern。",
+          "steps": [
+            "函数内 static int c=0; c++;",
+            "因为 static 变量只初始化一次且保留值。",
+            "多次调用后 c 依次 1,2,3… 而不是每次都 1。"
+          ],
+          "example": "static int c=0; c++; 函数连续调用 3 次，c 输出几次？",
+          "answer": "1, 2, 3",
+          "wrong": "错在以为 static 局部每次调用重新为 0；只第一次初始化。；错在全局变量滥用造成耦合；能局部就局部。；错在多文件重复定义全局变量；应一份定义其余 extern 声明。",
+          "tip": "口诀：static 值不丢；extern 只声明不分配。"
+        },
+        {
+          "name": "动态内存",
+          "formula": "malloc/calloc/realloc/free；free 后指针置 NULL",
+          "plain": "在堆上分配空间。用完必须 free，否则内存泄漏。free 的必须是 malloc 来的。",
+          "use": "变长数组、链表、大数据缓冲。",
+          "steps": [
+            "int *p = malloc(n * sizeof(int)); 申请 n 个 int。",
+            "必须判断 p 是否为 NULL。",
+            "用完 free(p); p=NULL; 防止野指针。"
+          ],
+          "example": "动态申请 10 个 int 并释放。",
+          "answer": "int *p=malloc(10*sizeof(int)); … free(p); p=NULL;",
+          "wrong": "错在 free 栈上变量或重复 free；只能 free 堆指针一次。；错在 sizeof(int) 写成 sizeof(p)；要按元素类型大小算。；错在用后不置空；p 仍指向已释放内存。",
+          "tip": "口诀：malloc 查空，free 置 NULL。"
         }
       ]
     },
@@ -470,31 +1588,94 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "大纲补强",
       "items": [
         {
-          "name": "结构体",
-          "formula": "struct S {…}；s.a；p->a ≡ (*p).a",
-          "use": "封装一组数据。",
-          "example": "struct P { int x,y; }; P p={1,2}; p.x",
-          "steps": ["定义结构体", "变量 p 的 x 成员为 1"],
-          "answer": "1",
-          "wrong": "p->a 必须 p 是指针。"
+          "name": "类型转换",
+          "formula": "自动提升（char→int→float→double）；强制 (type)expr；整数/浮点混合运算",
+          "plain": "不同类型一起运算会自动往「大」的转。强制转换能改变表达式类型，但不改变原变量。",
+          "use": "混合运算结果类型、除法是否为整数、精度丢失。",
+          "steps": [
+            "3/2 都是 int，结果 1。",
+            "(double)3/2 或 3.0/2 才是 1.5。",
+            "int x=(int)3.9 后 x=3（截断，不四舍五入）。"
+          ],
+          "example": "求 (double)3/2 与 (int)3.9。",
+          "answer": "1.5；3",
+          "wrong": "错在 (double)(3/2)；强制在结果之后仍是 1.0。；错在 (int) 当四舍五入；是向零截断。；错在 signed/unsigned 比较；无符号符号位解释会变大数。",
+          "tip": "口诀：强制写在表达式前；除法先保证有浮点。"
         },
         {
-          "name": "文件读写",
-          "formula": "fopen(\"a.txt\",\"r/w\")；fscanf/fprintf；fclose",
-          "use": "文本文件操作。",
-          "example": "打开写入再关闭",
-          "steps": ["fp=fopen(\"data.txt\",\"w\")", "fprintf(fp,\"%d\",10)", "fclose(fp)"],
-          "answer": "写入 10",
-          "wrong": "不 fclose 会丢缓冲；模式 r/w 勿混。"
+          "name": "位运算",
+          "formula": "& | ^ ~ << >>；常用 x&1 判奇偶；x&(x-1) 清最低位 1",
+          "plain": "按二进制位运算。与清零、或置 1、异或翻转、移位相当于乘除 2 的幂（注意符号位）。",
+          "use": "标志位、权限位、快速运算、算法题。",
+          "steps": [
+            "5 & 3：5=101，3=011，按位与得 001=1。",
+            "因为 <<1 相当于乘 2，所以 5<<1=10。",
+            "判断奇偶：x&1 为 1 是奇数，0 是偶数。"
+          ],
+          "example": "求 5&3、5|3、5<<1。",
+          "answer": "1；7；10",
+          "wrong": "错在 & 与 && 混；& 是位运算不短路。；错在负数右移补位规则；算术右移补符号位，实现有关。；错在移位超过位宽；行为依赖实现，应避免。",
+          "tip": "口诀：与清或置异或翻；左移乘 2 右移除 2。"
         },
         {
-          "name": "switch 穿透",
-          "formula": "case 后不写 break 会继续执行下一 case",
-          "use": "多分支。",
-          "example": "case 1 后无 break 会怎样",
-          "steps": ["执行完 case 1 体", "继续执行后续 case 直到 break"],
-          "answer": "发生穿透",
-          "wrong": "每个分支后要 break（除非有意穿透）。"
+          "name": "多维数组",
+          "formula": "int a[R][C]；行优先存储；a[i][j] 与 *(*(a+i)+j)",
+          "plain": "二维数组就是「数组的数组」。内存按行连续存放，遍历通常先行后列。",
+          "use": "矩阵转置、求和、二维遍历、与指针关系。",
+          "steps": [
+            "int a[2][3] 共 2 行 3 列 6 个元素。",
+            "下标 a[0][0] 到 a[1][2]，行列都从 0 开始。",
+            "行优先：a[0][0],a[0][1],a[0][2],a[1][0]… 连续存放。"
+          ],
+          "example": "int a[2][3]; 合法元素个数与 a[1][2] 是否合法？",
+          "answer": "6 个；合法",
+          "wrong": "错在行列写反成 a[3][2] 却按 2 行 3 访问；定义与使用要一致。；错在 a[i] 以为是元素；二维时 a[i] 是第 i 行首地址。；错在传参形参维度写错；第二维大小通常要写明。",
+          "tip": "口诀：二维行优先，遍历先行后列。"
+        },
+        {
+          "name": "运算符优先级与结合性",
+          "formula": "算术 > 移位 > 关系 > 位 > 逻辑 > 条件 > 赋值；单目右结合，赋值右结合",
+          "plain": "不确定优先级就加括号。常考：== 高于 & 和 |；赋值优先级很低。",
+          "use": "复杂表达式求值、改错、宏定义。",
+          "steps": [
+            "a = b + c * d；乘法优先于加法。",
+            "x = y == z；先比较后赋值。",
+            "a & b == c 实际是 a & (b==c)，因为 == 高于 &。"
+          ],
+          "example": "解释 a & b == c 的运算顺序。",
+          "answer": "先 b==c，再与 a 做按位与",
+          "wrong": "错在以为 & 高于 ==；关系运算符优先级更高。；错在靠背全部优先级；不确定就加括号。；错在赋值表达式当语句值用混乱；赋值结果是被赋的值。",
+          "tip": "口诀：拿不准就加括号；== 比 & | 优先。"
+        },
+        {
+          "name": "常见输入输出格式",
+          "formula": "scanf(\"%d\",&a)；printf(\"%d\\n\",a)；%c %s %lf；%5d 指定宽度",
+          "plain": "scanf 必须取地址，printf 不用。格式串与参数类型必须匹配。",
+          "use": "输入输出题、格式控制、缓冲残留。",
+          "steps": [
+            "读入整数：scanf(\"%d\",&a)——注意 &。",
+            "输出浮点：%f 对 float/double 均可，%lf 常用于 double。",
+            "读字符前若缓冲有换行，需要清缓冲再 %c。"
+          ],
+          "example": "正确写出读入 double 变量 x 的语句。",
+          "answer": "scanf(\"%lf\", &x);",
+          "wrong": "错在 scanf 漏 &；会传值进去导致崩溃或未定义。；错在 %d 读 double；类型不匹配会读错。；错在 printf 也写 &；printf 传值，不需要 &。",
+          "tip": "口诀：scanf 要 &，printf 不要；类型与格式一一对应。"
+        },
+        {
+          "name": "程序结构与编译链接",
+          "formula": "预处理→编译→汇编→链接；一个项目一个 main；多文件用头文件声明",
+          "plain": "源码先展开宏和头文件，再编译成目标文件，最后链接成可执行文件。",
+          "use": "理解报错阶段、头文件作用、extern/static。",
+          "steps": [
+            "语法错多在编译阶段报；未定义引用在链接阶段报。",
+            "头文件放声明，.c 放定义。",
+            "重复包含可用 #ifndef 防止重复定义。"
+          ],
+          "example": "链接错误 undefined reference to `foo` 最可能缺什么？",
+          "answer": "缺 foo 的定义/目标文件未一起链接",
+          "wrong": "错在头文件里直接定义大数组/函数造成重复定义；头文件应声明。；错在把语法错误当成链接错误；看报错阶段。；错在多个 main；一个可执行只能有一个 main。",
+          "tip": "口诀：宏和头文件预处理，语法看编译，符号看链接。"
         }
       ]
     }
@@ -504,161 +1685,109 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "高频必背",
       "items": [
         {
-          "name": "OSI / TCP-IP",
-          "formula": "OSI 七层；TCP/IP 四层：网络接口-网际-传输-应用",
-          "use": "协议归属题。",
-          "example": "IP、TCP、HTTP 各在哪一层",
-          "steps": ["IP 网际/网络层", "TCP 传输层", "HTTP 应用层"],
-          "answer": "网络层 / 传输层 / 应用层",
-          "wrong": "TCP/IP 无会话层、表示层。"
+          "name": "网络体系结构",
+          "formula": "OSI 七层：物数网传会应表（物理/数据链路/网络/传输/会话/表示/应用）；TCP/IP 四层：网络接口-网际-传输-应用",
+          "plain": "分层就像寄快递：每层只管自己的事，层层打包。考试常考「哪层干什么、PDU 叫什么」。",
+          "use": "选择题问层次、功能、设备对应层；或协议属于哪层。",
+          "steps": [
+            "先记每层关键词：物理管比特，链路管帧，网络管分组/路由，传输管端到端。",
+            "因为交换机在链路层、路由器在网络层，所以设备题先定位层。",
+            "所以 HTTP 在应用层，IP 在网络层，TCP 在传输层。"
+          ],
+          "example": "路由器工作在 OSI 哪一层？HTTP 属于哪层？",
+          "answer": "路由器：网络层；HTTP：应用层",
+          "wrong": "错在把七层顺序记反；自下而上是物理到应用。；错在认为 HTTP 在传输层；HTTP 是应用层协议，用 TCP 传输。；错在 TCP/IP 与 OSI 层数混答；看清题目问哪套模型。",
+          "tip": "口诀：物数网传会应表；交换机二层，路由器三层。"
         },
         {
-          "name": "网络与广播地址",
-          "formula": "网络 = IP ∧ 掩码；广播 = 网络 ∨ ¬掩码",
-          "use": "掩码 1 是网络位。",
-          "example": "192.168.1.77/26 求网络与广播",
-          "steps": ["/26 块大小 64", "77 在 64~127", "网络 .64，广播 .127"],
-          "answer": "192.168.1.64；192.168.1.127",
-          "wrong": "网络地址不是最小主机 .65。"
+          "name": "IP 地址分类",
+          "formula": "A:0.0.0.0–127.255.255.255（/8）；B:128–191（/16）；C:192–223（/24）；D 组播 224–239；E 保留 240–255",
+          "plain": "看 IP 第一个字节就知道类别。A 类大网络少，C 类小网络多，考试最爱考默认掩码。",
+          "use": "判断网络类别、默认子网掩码、网络/主机数计算。",
+          "steps": [
+            "看首字节 192，落在 192–223，是 C 类。",
+            "因为 C 类默认掩码是 255.255.255.0（/24）。",
+            "所以网络位 24 位，主机位 8 位，可有 2⁸−2=254 台主机。"
+          ],
+          "example": "IP 192.168.1.10 是哪类？默认掩码？可用主机数？",
+          "answer": "C 类；255.255.255.0；254",
+          "wrong": "错在看后三段判断类别；只看第一个字节。；错在主机数用 2ⁿ 不减 2；要去掉网络号和广播号。；错在 127 当 A 类可用网络；127 是环回测试用。",
+          "tip": "口诀：A1B2C3 记默认掩码；主机数 = 2^主机位 − 2。"
         },
         {
-          "name": "主机数与子网",
-          "formula": "可用主机 = 2^(32−n) − 2；借位划分子网",
-          "use": "先满足主机数再借位。",
-          "example": "192.168.1.0/24 借 2 位划分子网",
-          "steps": ["借 2 位 ⇒ /26", "子网数 2²=4", "网络 .0 .64 .128 .192", "每个子网可用主机 2⁶−2=62"],
-          "answer": "/26，4 个子网，各 62 台",
-          "wrong": "可用主机要减 2。"
+          "name": "网络号 / 广播号 / 主机数",
+          "formula": "网络号 = IP AND 掩码；广播号 = 网络号 OR NOT 掩码；可用主机 = 2^h − 2",
+          "plain": "网络号是「网段身份」，广播号是「叫醒全网」的地址，中间才是普通主机能用的。",
+          "use": "给 IP 与掩码求网络地址、广播地址、可容纳主机数。",
+          "steps": [
+            "IP 192.168.1.100/24：掩码 255.255.255.0。",
+            "因为网络号 = IP AND 掩码，所以 192.168.1.0。",
+            "广播号 = 192.168.1.255，可用主机 1–254，共 254 个。"
+          ],
+          "example": "求 192.168.1.100/24 的网络号、广播号、可用主机数。",
+          "answer": "192.168.1.0；192.168.1.255；254",
+          "wrong": "错在网络号写成主机位保留；网络位以外全 0 才是网络号。；错在广播号写成主机位全 1 之外的数；必须全 1。；错在不减 2 直接 2ⁿ；两端保留。",
+          "tip": "口诀：AND 得网络，OR 反码得广播，主机减 2。"
         },
         {
-          "name": "常用端口",
-          "formula": "HTTP 80，HTTPS 443，SSH 22，FTP 21，DNS 53，SMTP 25，DHCP 67/68",
-          "use": "服务与端口配对。",
-          "example": "网页、域名解析、文件传输端口",
-          "steps": ["网页 80/443", "DNS 53", "FTP 21"],
-          "answer": "80/443；53；21",
-          "wrong": "FTP 控制 21，数据 20。"
-        }
-      ]
-    },
-    {
-      "key": "常考变形",
-      "items": [
+          "name": "子网划分",
+          "formula": "借主机位作子网位：掩码变长；子网数 = 2^借位；每子网主机 = 2^剩余位 − 2",
+          "plain": "把一个大网段切成多个小子网，就是从主机位里「借」几位当网络位。",
+          "use": "划分部门子网、求新掩码、每子网主机数。",
+          "steps": [
+            "原 C 类 /24 借 2 位当子网位，新掩码 /26。",
+            "因为子网数 = 2² = 4，每子网主机位剩 6 位。",
+            "所以每子网 2⁶−2 = 62 台主机。"
+          ],
+          "example": "192.168.1.0/24 借 2 位划分子网，求子网数、新掩码、每子网主机数。",
+          "answer": "4 个子网；255.255.255.192（/26）；每子网 62 台",
+          "wrong": "错在借位后仍用 2⁸−2 算主机；主机位变少了。；错在子网位与主机位搞反；借的位归网络。；错在忘记每子网头尾保留；仍要 −2。",
+          "tip": "口诀：借 1 位两子网，借 n 位 2ⁿ 子网；剩余位算主机再减 2。"
+        },
+        {
+          "name": "端口号",
+          "formula": "知名端口：FTP 20/21，SSH 22，Telnet 23，SMTP 25，DNS 53，HTTP 80，HTTPS 443，POP3 110；动态端口 49152+",
+          "plain": "端口是应用在主机上的「门牌号」。知名端口 0–1023，注册端口 1024–49151。",
+          "use": "协议与端口匹配题；防火墙策略；抓包识别应用。",
+          "steps": [
+            "看到网页默认端口，联想到 HTTP=80，HTTPS=443。",
+            "因为 DNS 用 53，所以域名解析题记 53。",
+            "FTP 控制 21、数据 20，也常考。"
+          ],
+          "example": "HTTP、DNS、HTTPS 默认端口分别是？",
+          "answer": "80；53；443",
+          "wrong": "错在 HTTP 与 HTTPS 端口混；80 是 HTTP，443 是 HTTPS。；错在以为 DNS 是 80；DNS 是 53。；错在 FTP 只记一个端口；控制 21、数据 20 都要记。",
+          "tip": "口诀：80 网页 443 加密，53 解析 21/20 传文件。"
+        },
         {
           "name": "TCP 与 UDP",
-          "formula": "TCP 可靠面向连接；UDP 尽力交付",
-          "use": "文件/网页 TCP；视频/查询 UDP。",
-          "example": "DNS 查询、文件下载分别用什么",
-          "steps": ["DNS 常用 UDP", "文件下载用 TCP"],
-          "answer": "UDP；TCP",
-          "wrong": "IP 本身不可靠。"
+          "formula": "TCP：面向连接、可靠、字节流、流量/拥塞控制；UDP：无连接、不可靠、报文、快、开销小",
+          "plain": "TCP 像打电话（先建立、可靠、按序），UDP 像寄明信片（快但可能丢）。",
+          "use": "应用选传输层协议；比较优缺点；看场景选 TCP/UDP。",
+          "steps": [
+            "场景要可靠文件传输，选 TCP。",
+            "因为 TCP 需要握手确认、重传、排序，所以可靠但慢。",
+            "视频通话/游戏实时要求高、容忍丢包，选 UDP。"
+          ],
+          "example": "文件传输、DNS 查询、视频直播分别常用什么传输协议？",
+          "answer": "文件传输 TCP；DNS 常用 UDP；直播常用 UDP",
+          "wrong": "错在说 UDP 也有三次握手；无连接，没有握手。；错在以为 TCP 不会丢任何应用数据；可靠指尽量恢复，极端仍可能失败。；错在 DNS 只用 UDP；查询常用 UDP，区域传送可用 TCP。",
+          "tip": "口诀：TCP 可靠慢有连接，UDP 快不可靠无连接。"
         },
         {
-          "name": "三次握手与挥手",
-          "formula": "建立：SYN → SYN+ACK → ACK；释放常为 4 次",
-          "use": "简答按序写。",
-          "example": "为什么建立是 3 次",
-          "steps": ["客户端发 SYN", "服务端回 SYN+ACK", "客户端再 ACK"],
-          "answer": "双方确认初始序号",
-          "wrong": "勿与挥手次数混。"
-        },
-        {
-          "name": "ARP / DNS / DHCP",
-          "formula": "ARP IP→MAC；DNS 域名→IP；DHCP 分配 IP",
-          "use": "填空选缩写。",
-          "example": "访问网站前如何得到 IP",
-          "steps": ["浏览器查 DNS 缓存/服务器", "得到 IP 后再路由访问"],
-          "answer": "DNS 解析域名",
-          "wrong": "DNS 解析的不是 MAC。"
-        }
-      ]
-    },
-    {
-      "key": "冷门补充",
-      "items": [
-        {
-          "name": "邮件协议",
-          "formula": "SMTP 25 发送；POP3 110 / IMAP 143 接收",
-          "use": "配置邮箱。",
-          "example": "发信用什么收信用什么",
-          "steps": ["发 SMTP", "收 POP3/IMAP"],
-          "answer": "SMTP；POP3/IMAP",
-          "wrong": "勿把 SMTP 当接收。"
-        }
-      ]
-    },
-    {
-      "key": "大纲补强",
-      "items": [
-        {
-          "name": "路由最长前缀匹配",
-          "formula": "匹配前缀最长的路由条目优先",
-          "use": "多条路由时选更精确网段。",
-          "example": "去 10.1.1.1，表项 10.0.0.0/8 与 10.1.1.0/24",
-          "steps": ["/24 比 /8 前缀更长", "选 10.1.1.0/24"],
-          "answer": "10.1.1.0/24",
-          "wrong": "不是选「最近」接口。"
-        },
-        {
-          "name": "TCP 拥塞控制",
-          "formula": "慢启动 → 拥塞避免 → 快重传 → 快恢复",
-          "use": "发送窗口调整。",
-          "example": "cwnd 如何增长",
-          "steps": ["慢启动指数涨到 ssthresh", "拥塞避免线性涨"],
-          "answer": "指数→线性",
-          "wrong": "拥塞控制是全局，流量控制是端到端。"
-        },
-        {
-          "name": "IPv6 要点",
-          "formula": "128 位地址；首部 40 字节；无校验和；用组播代替广播",
-          "use": "对比 IPv4。",
-          "example": "IPv6 地址长度与是否广播",
-          "steps": ["128 位", "不支持广播"],
-          "answer": "128 位；无广播",
-          "wrong": "IPv6 仍有路由与分层结构。"
-        }
-      ]
-    }
-  ],
-  "英语": [
-    {
-      "key": "高频必背",
-      "items": [
-        {
-          "name": "时态对照",
-          "formula": "一般现在 do/does；进行 be+doing；完成 have/has+done；过去 did",
-          "use": "看时间状语选时态。",
-          "example": "I ___ (live) here for 3 years.",
-          "steps": ["for 3 years 是完成时标志", "主语 I 用 have", "have lived"],
-          "answer": "have lived",
-          "wrong": "for/since 用完成时，不用过去时。"
-        },
-        {
-          "name": "被动语态",
-          "formula": "be + 过去分词（+ by…）",
-          "use": "主语是承受者。",
-          "example": "The bridge will ___ (build) next year.",
-          "steps": ["will 后加 be", "build 过去分词 built", "will be built"],
-          "answer": "will be built",
-          "wrong": "漏 be。"
-        },
-        {
-          "name": "三大从句",
-          "formula": "定语 who/which/that；宾语 that/if/wh-；状语 because/if/when",
-          "use": "先判从句类型。",
-          "example": "the man ___ is standing there",
-          "steps": ["修饰 man，定语从句", "指人用 who/that"],
-          "answer": "who / that",
-          "wrong": "宾语从句用陈述语序。"
-        },
-        {
-          "name": "非谓语",
-          "formula": "to do 目的/将来；doing 主动；done 被动",
-          "use": "记动词搭配。",
-          "example": "enjoy ___ ；want ___",
-          "steps": ["enjoy + doing", "want + to do"],
-          "answer": "reading；to go",
-          "wrong": "look forward to + doing（to 是介词）。"
+          "name": "三次握手 / 四次挥手",
+          "formula": "握手：SYN → SYN+ACK → ACK；挥手：FIN → ACK → FIN → ACK（可合并）",
+          "plain": "建立连接要三次（双方确认彼此收发能力），断开要四次（半关闭）。",
+          "use": "画握手状态图、解释 SYN/FIN、防 SYN 攻击。",
+          "steps": [
+            "客户端发 SYN（我要连）。",
+            "服务器回 SYN+ACK（我同意，你确认吗）。",
+            "客户端回 ACK，连接建立，进入 ESTABLISHED。"
+          ],
+          "example": "三次握手各步标志位是什么？",
+          "answer": "SYN；SYN+ACK；ACK",
+          "wrong": "错在以为两次就够；两次无法确认客户端收得到。；错在挥手与握手步数混；挥手是四次（可三报文合并变三）。；错在 SYN 与 ACK 顺序颠倒；顺序要背清。",
+          "tip": "口诀：握手 SYN-SYNACK-ACK；挥手 FIN-ACK-FIN-ACK。"
         }
       ]
     },
@@ -666,31 +1795,109 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "常考变形",
       "items": [
         {
-          "name": "比较级句型",
-          "formula": "比较级+than；the more…, the more…",
-          "use": "对比两者。",
-          "example": "The harder you work, the ___ you get.",
-          "steps": ["the + 比较级…, the + 比较级", "more"],
-          "answer": "more",
-          "wrong": "more better 不用。"
+          "name": "ARP 协议",
+          "formula": "IP → MAC；广播 ARP 请求，单播 ARP 应答；ARP 缓存表",
+          "plain": "通信最终要靠 MAC 地址。ARP 就是「用 IP 问出 MAC」的协议。",
+          "use": "同一局域网通信过程、ARP 欺骗、地址解析。",
+          "steps": [
+            "主机知道目标 IP 但不知道 MAC，发 ARP 请求（广播）。",
+            "目标主机单播回复自己的 MAC。",
+            "发送方把 IP-MAC 写入 ARP 缓存，后续直接用。"
+          ],
+          "example": "ARP 解析的是什么地址到什么地址？请求是广播还是单播？",
+          "answer": "IP→MAC；请求广播，应答单播",
+          "wrong": "错在说 ARP 解析域名；那是 DNS。；错在以为 ARP 工作在跨网；ARP 只在本广播域。；错在 ARP 应答也广播；应答是单播更安全高效。",
+          "tip": "口诀：ARP：IP 找 MAC；请求广播，回应单播。"
         },
         {
-          "name": "固定搭配",
-          "formula": "be good at；be proud of；prefer A to B",
-          "use": "单选与写作。",
-          "example": "I prefer tea ___ coffee.",
-          "steps": ["prefer A to B", "填 to"],
-          "answer": "to",
-          "wrong": "prefer 不用 than。"
+          "name": "DNS 协议",
+          "formula": "域名 → IP；递归查询 / 迭代查询；根-顶级-权威；端口 53",
+          "plain": "DNS 是互联网的「电话簿」，把好记的域名翻译成 IP。",
+          "use": "域名解析过程、DNS 配置错误、CDN 解析。",
+          "steps": [
+            "本地先查 hosts 与 DNS 缓存。",
+            "没有则问本地 DNS 服务器（可递归）。",
+            "再向根、顶级域、权威服务器迭代查询，得到 IP。"
+          ],
+          "example": "www.example.com 解析成 IP 用什么协议？默认端口？",
+          "answer": "DNS；53",
+          "wrong": "错在 DNS 与 DHCP 混；DNS 解析域名，DHCP 分配 IP。；错在以为 DNS 用 80；80 是 HTTP。；错在递归与迭代混；主机到本地 DNS 常递归，本地到各级常迭代。",
+          "tip": "口诀：DNS 查 IP 端口 53；先缓存后查询。"
         },
         {
-          "name": "so…that / such…that",
-          "formula": "so + adj/adv + that；such + (a/an) + n + that",
-          "use": "结果状语。",
-          "example": "It is ___ easy that I can do it.",
-          "steps": ["easy 是形容词", "用 so"],
-          "answer": "so",
-          "wrong": "such 后接名词短语。"
+          "name": "DHCP 协议",
+          "formula": "自动分配 IP/掩码/网关/DNS；租约；DORA：Discover-Offer-Request-Ack",
+          "plain": "插上网线就能上网，多半是 DHCP 在背后发地址。",
+          "use": "IP 配置获取、租约续期、静态与动态对比。",
+          "steps": [
+            "客户端广播 DHCP Discover。",
+            "服务器发 Offer（提供地址）。",
+            "客户端 Request，服务器 Ack，配置生效并有租期。"
+          ],
+          "example": "DHCP 的四步简写是什么？",
+          "answer": "DORA：Discover、Offer、Request、Ack",
+          "wrong": "错在 DHCP 与 DNS 职责搞反；DHCP 发 IP，DNS 解析域名。；错在以为必须手动配 IP；可静态可动态。；错在租约过期不续；租期到一半通常会申请续租。",
+          "tip": "口诀：DORA 四步拿地址；租约到期要续。"
+        },
+        {
+          "name": "交换机与路由器",
+          "formula": "交换机：二层、MAC 转发、隔离冲突域；路由器：三层、IP 选路、隔离广播域",
+          "plain": "交换机在局域网里按 MAC 转帧；路由器在不同网段之间按 IP 找路。",
+          "use": "选设备、广播域/冲突域题、默认网关作用。",
+          "steps": [
+            "同一 VLAN/网段互通，用交换机即可。",
+            "跨网段通信必须经过路由器（或三层交换）。",
+            "主机把非本网流量发给默认网关（路由器接口）。"
+          ],
+          "example": "隔离广播域用交换机还是路由器？",
+          "answer": "路由器（三层设备）",
+          "wrong": "错在说交换机隔离广播域；普通二层交换机不隔离广播域。；错在路由器每个接口同网段；路由器接口必须不同网段（否则需特殊配置）。；错在集线器当交换机；集线器共享冲突域，是物理层。",
+          "tip": "口诀：交换机看 MAC，路由器看 IP；广播域靠路由隔。"
+        },
+        {
+          "name": "私网 IP 地址",
+          "formula": "A:10.0.0.0/8；B:172.16.0.0/12；C:192.168.0.0/16；NAT 转换私网到公网",
+          "plain": "私网地址不能直接上公网，家里/公司内网用，出口靠 NAT 转换成公网 IP。",
+          "use": "判断是否私网、NAT 作用、节省公网 IP。",
+          "steps": [
+            "看 192.168.1.1：属于 192.168.0.0/16，是私网 C 类私有段。",
+            "10.1.2.3 是 A 类私有；172.16.x.x 是 B 类私有。",
+            "内网访问外网时，路由器做 NAT 把源 IP 换成公网 IP。"
+          ],
+          "example": "10.0.0.1、172.16.0.1、192.168.0.1 分别是哪类私网？",
+          "answer": "A 私有；B 私有；C 私有",
+          "wrong": "错在把 127.0.0.1 当私网；那是环回。；错在私网地址可直接路由到公网；公网路由会丢弃。；错在 NAT 只改端口不改地址；NAT 改地址，PAT 还改端口。",
+          "tip": "口诀：10 / 172.16–31 / 192.168 是私网；出口要 NAT。"
+        },
+        {
+          "name": "以太网帧",
+          "formula": "以太网帧：目的 MAC、源 MAC、类型、数据、FCS；最短 64 字节，MTU 一般 1500",
+          "plain": "局域网里数据链路层的「包裹单」，靠 MAC 地址投递，带校验防止出错。",
+          "use": "帧结构题、冲突检测、MTU 分片原因。",
+          "steps": [
+            "交换机读目的 MAC 查表转发。",
+            "因为以太网帧有最大数据载荷（MTU 1500），所以大 IP 分组要分片。",
+            "FCS 校验错误帧会被丢弃。"
+          ],
+          "example": "以太网帧中用于校验的字段是？",
+          "answer": "FCS（帧校验序列）",
+          "wrong": "错在把 IP 地址写进以太网帧当转发依据；二层看 MAC。；错在以为 MTU 是帧总长；MTU 是数据部分常见上限。；错在忽略最小帧长；过短会补 PAD 以满足 64 字节。",
+          "tip": "口诀：二层帧看 MAC，FCS 校验，MTU1500 要分片。"
+        },
+        {
+          "name": "路由最长前缀匹配",
+          "formula": "多条路由匹配时，选掩码最长（最具体）的那条",
+          "plain": "路由表可能有多条都能匹配目标 IP，选「说的最细」的那条，也就是前缀最长的。",
+          "use": "路由表查表题、默认路由与明细路由竞争。",
+          "steps": [
+            "目标 IP 同时匹配 10.0.0.0/8 和 10.1.0.0/16。",
+            "因为 /16 比 /8 更具体（前缀更长）。",
+            "所以按最长前缀匹配，选 10.1.0.0/16。"
+          ],
+          "example": "目标 10.1.2.3，表中有 10.0.0.0/8 与 10.1.0.0/16，选哪条？",
+          "answer": "10.1.0.0/16",
+          "wrong": "错在选掩码短的；应选长的。；错在默认路由 0.0.0.0/0 抢先；默认只在无更优匹配时用。；错在比较网络号不比较前缀长度；关键是最长前缀。",
+          "tip": "口诀：谁细选谁，掩码长者胜。"
         }
       ]
     },
@@ -698,13 +1905,79 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "冷门补充",
       "items": [
         {
-          "name": "应用文写作骨架",
-          "formula": "点题 → First / Second / Finally → In short",
-          "use": "不少于 80 词的应用文。",
-          "example": "写「如何学好英语」开头与结尾",
-          "steps": ["开头点题：Here are my suggestions.", "中间用连接词列 2–3 点", "结尾：In short, practice makes perfect."],
-          "answer": "三段式清晰结构",
-          "wrong": "无连接词、无结尾。"
+          "name": "拥塞控制",
+          "formula": "慢启动、拥塞避免、快重传、快恢复；cwnd 与 ssthresh",
+          "plain": "TCP 发现网络堵车就会降速，避免把路由器缓冲挤爆。窗口先指数涨，到阈值后线性涨。",
+          "use": "解释网络卡顿、TCP 性能、抓包看窗口变化。",
+          "steps": [
+            "慢启动：cwnd 从 1 起指数增大。",
+            "达到 ssthresh 后进入拥塞避免，线性增加。",
+            "丢包/超时则降窗（快重传/快恢复或回慢启动）。"
+          ],
+          "example": "拥塞窗口增长阶段由快变慢的转折点叫什么？",
+          "answer": "ssthresh（慢开始门限）",
+          "wrong": "错在把流量控制与拥塞控制混；流量控制看接收方，拥塞控制看网络。；错在以为 UDP 有拥塞控制；通常由应用层自己处理。；错在慢启动仍线性；慢启动是指数。",
+          "tip": "口诀：慢启指数到门限，避免线性；丢包降窗。"
+        },
+        {
+          "name": "IPv6 基础",
+          "formula": "128 位地址；冒号十六进制；2001:0db8::1；无广播，用组播/任播；SLAAC 自动配置",
+          "plain": "IPv6 解决地址不够用，地址超长，还简化了报头、去掉了广播。",
+          "use": "与 IPv4 对比、地址书写、过渡技术。",
+          "steps": [
+            "看地址长度：IPv4 32 位，IPv6 128 位。",
+            "IPv6 用冒号分段，可省略前导 0 与连续 0 段（::）。",
+            "无广播概念，常用组播替代。"
+          ],
+          "example": "IPv6 地址位数是？还有广播吗？",
+          "answer": "128 位；没有广播（用组播等）",
+          "wrong": "错在 IPv6 用点分十进制；是冒号十六进制。；错在 :: 可多次出现；每地址最多压缩一次。；错在以为 IPv6 不需要 NAT 就完全安全；安全靠 IPsec 等机制，不是自动免疫。",
+          "tip": "口诀：128 位冒号写，:: 压零；广播退役组播上。"
+        },
+        {
+          "name": "CIDR 与路由聚合",
+          "formula": "无类域间路由：a.b.c.d/n；聚合连续前缀减少路由条目",
+          "plain": "不再死板按 A/B/C 类，而是用「IP/前缀长度」表示网段，还能把多条小路由合成大路由。",
+          "use": "写网段、聚合路由、计算地址块。",
+          "steps": [
+            "200.20.0.0/24 与 200.20.1.0/24 可聚合成 200.20.0.0/23。",
+            "因为前缀缩 1 位可覆盖 2 个 /24。",
+            "聚合后路由表更小，转发更快。"
+          ],
+          "example": "192.168.0.0/24 与 192.168.1.0/24 聚合后前缀是？",
+          "answer": "192.168.0.0/23",
+          "wrong": "错在聚合不连续的网段；必须前缀对齐且连续。；错在 /23 以为只含一个 /24；/23 含两个 /24。；错在聚合后主机数算错；按新前缀算主机位。",
+          "tip": "口诀：前缀缩一位合两块；对齐才聚合。"
+        },
+        {
+          "name": "ICMP 与 ping/traceroute",
+          "formula": "ICMP 差错与查询报文；ping 用 Echo 请求/应答；traceroute 利用 TTL 超时",
+          "plain": "ping 测连通，traceroute 看路径。它们都建立在 ICMP 之上。",
+          "use": "排障题、TTL 含义、目的不可达类型。",
+          "steps": [
+            "ping 发送 Echo Request，目标回 Echo Reply。",
+            "traceroute 逐步增大 TTL，每跳超时返回 Time Exceeded。",
+            "于是能列出路径上的路由器。"
+          ],
+          "example": "ping 使用 ICMP 的哪对报文？",
+          "answer": "Echo Request / Echo Reply",
+          "wrong": "错在 ping 当应用层自研协议；本质是 ICMP。；错在 traceroute 用 ARP；它用 TTL+ICMP。；错在忽略防火墙可能禁 ICMP 导致 ping 不通但仍可上网。",
+          "tip": "口诀：ping 用 Echo，路径看 TTL 超时。"
+        },
+        {
+          "name": "流量控制与滑动窗口",
+          "formula": "接收窗口 rwnd 通告可收数据量；发送窗口不得超 rwnd；窗口为 0 则暂停发送",
+          "plain": "防止发送方把接收方冲垮：接收方会说「我还能收多少」，发送方按这个上限发。",
+          "use": "解释 TCP 为什么不会淹没接收方、与拥塞控制对比。",
+          "steps": [
+            "接收方在 ACK 中携带 rwnd 值。",
+            "因为发送窗口 ≤ rwnd，所以发送方不能超过对方缓冲能力。",
+            "当 rwnd=0 时发送方暂停，待窗口更新后再继续（零窗口保护）。"
+          ],
+          "example": "流量控制主要防止哪一方被淹没？由哪个字段实现？",
+          "answer": "防止接收方被淹没；由接收窗口 rwnd 实现",
+          "wrong": "错在流量控制与拥塞控制混为一谈；一个管接收能力，一个管网络拥塞。；错在以为 UDP 有接收窗口机制；UDP 无此机制，靠应用自理。；错在窗口为 0 还继续狂发；应停止并等待窗口更新。",
+          "tip": "口诀：rwnd 管对方缓冲，cwnd 管网络；谁小听谁的。"
         }
       ]
     },
@@ -712,31 +1985,94 @@ window.STUDY_DATA.FORMULA_BOOK = {
       "key": "大纲补强",
       "items": [
         {
-          "name": "虚拟语气（if）",
-          "formula": "与现在相反：If + 过去式, would/could + 原形",
-          "use": "建议/不可能假设。",
-          "example": "If I ___ (be) you, I ___ (go).",
-          "steps": ["if 从句过去式 were", "主句 would + 原形"],
-          "answer": "were；would go",
-          "wrong": "if 从句不用 would。"
+          "name": "HTTP / HTTPS",
+          "formula": "HTTP：无状态、明文、80；HTTPS=HTTP+TLS/SSL、443、加密与证书",
+          "plain": "网页用 HTTP 传内容；加了 TLS 就是 HTTPS，更安全，浏览器会显示小锁。",
+          "use": "请求方法、状态码、加密必要性、端口。",
+          "steps": [
+            "请求行：GET /index.html HTTP/1.1。",
+            "响应状态码：200 成功，404 未找到，500 服务器错。",
+            "HTTPS 在 TCP 建立后先 TLS 握手，再加密传 HTTP。"
+          ],
+          "example": "HTTPS 默认端口？与 HTTP 的核心差别？",
+          "answer": "443；多了 TLS/SSL 加密与身份认证",
+          "wrong": "错在 HTTPS 完全不走 TCP；仍基于 TCP。；错在 301 与 200 混；301 是重定向。；错在无状态等于不能登录；会话靠 Cookie/Token 等保持。",
+          "tip": "口诀：80 明文 443 加密；200 成功 404 找不到。"
         },
         {
-          "name": "主谓一致",
-          "formula": "each/every + 单数；a number of + 复数；the number of + 单数",
-          "use": "语法单选。",
-          "example": "The number of students ___ rising.",
-          "steps": ["the number of + 单数谓语", "is"],
-          "answer": "is",
-          "wrong": "a number of 用复数谓语。"
+          "name": "FTP / SMTP / POP3 / IMAP",
+          "formula": "FTP 20/21 传文件；SMTP 25 发邮件；POP3 110 收（下载）；IMAP 143 在线管理",
+          "plain": "FTP 管文件传输，邮件协议分发送（SMTP）和接收（POP3/IMAP）。",
+          "use": "应用层协议与端口、场景匹配题。",
+          "steps": [
+            "上传网页到服务器，常用 FTP。",
+            "发邮件走 SMTP，收邮件可用 POP3 或 IMAP。",
+            "POP3 偏「下载到本地」，IMAP 偏「服务器上管理多端同步」。"
+          ],
+          "example": "发邮件用什么协议？收邮件两种常见协议？",
+          "answer": "SMTP 发；POP3 / IMAP 收",
+          "wrong": "错在用 SMTP 收信；SMTP 主要发。；错在 FTP 只用 20；控制连接 21，数据 20。；错在 IMAP 与 POP3 都以为离线删信；IMAP 更可同步多设备。",
+          "tip": "口诀：25 发信 110 收；FTP 21 管 20 传。"
         },
         {
-          "name": "冠词",
-          "formula": "a/an 看音素；the 特指；零冠词泛指复数",
-          "use": "单选高频。",
-          "example": "___ university；___ hour",
-          "steps": ["university 辅音音素 /j/ → a", "hour 元音音素 → an"],
-          "answer": "a；an",
-          "wrong": "按发音不按字母。"
+          "name": "传输层 PDU 与封装",
+          "formula": "封装：数据→段/报文（TCP/UDP）→包（IP）→帧（以太网）→比特",
+          "plain": "发送时逐层加「信封」，接收时逐层拆。每层 PDU 名字常考。",
+          "use": "封装顺序题、MTU 分片、各层地址。",
+          "steps": [
+            "应用数据到传输层，TCP 加头部成「段」。",
+            "到网络层加 IP 头成「包/分组」。",
+            "到链路层加 MAC 头成「帧」，最后比特上线。"
+          ],
+          "example": "TCP 的 PDU 叫什么？IP 的呢？",
+          "answer": "TCP：段（segment）；IP：包/分组（packet）",
+          "wrong": "错在把帧归网络层；帧是链路层。；错在解封装顺序反了；从外到内拆。；错在每层都加同样头部；每层加自己协议的头（+部分加尾）。",
+          "tip": "口诀：传段、网包、链帧、物比特。"
+        },
+        {
+          "name": "应用层常见协议场景",
+          "formula": "Telnet/SSH 远程；SNMP 管理；TFTP 简单文件；RDP 远程桌面；NTP 对时",
+          "plain": "应用层协议多，按「干什么」记最牢：远程、管理、传文件、对时间。",
+          "use": "协议辨认题、端口辅助记忆、场景选择。",
+          "steps": [
+            "要远程登录设备，可 SSH（22）或 Telnet（23，明文不安全）。",
+            "网络设备监控用 SNMP。",
+            "简单小文件可用 TFTP，标准对时用 NTP。"
+          ],
+          "example": "远程加密登录常用协议？明文远程的老协议？",
+          "answer": "SSH（22）；Telnet（23）",
+          "wrong": "错在 SSH 与 HTTPS 混；SSH 是远程登录，HTTPS 是网页加密。；错在 Telnet 当安全协议；它是明文，已少用。；错在 TFTP 与 FTP 都当完整文件协议；TFTP 更简单、UDP 为主。",
+          "tip": "口诀：22 加密登录，23 明文登录；SNMP 管理 NTP 对时。"
+        },
+        {
+          "name": "VLAN 与 NAT 概念",
+          "formula": "VLAN：隔离广播域（二层逻辑分组）；NAT：私网↔公网地址转换",
+          "plain": "VLAN 在交换机上把口划分成不同「虚拟局域网」；NAT 让内网多个设备共用公网 IP 上网。",
+          "use": "广播域划分、内网共享上网、PAT 端口复用。",
+          "steps": [
+            "不同 VLAN 之间默认二层不通，需三层路由。",
+            "内网主机出网时路由器做源地址转换。",
+            "端口地址转换（PAT）用不同端口区分多台内网主机。"
+          ],
+          "example": "VLAN 能隔离什么？NAT 主要解决什么？",
+          "answer": "VLAN 隔离广播域；NAT 解决公网 IP 不足/内网共享上网",
+          "wrong": "错在 VLAN 隔离冲突域当主要目的；每交换机口已隔离冲突域。；错在 NAT 属于应用层；主要是网络层/边界转换。；错在以为 VLAN 能代替防火墙；安全策略仍需单独做。",
+          "tip": "口诀：VLAN 切广播，NAT 换地址；不同 VLAN 要路由。"
+        },
+        {
+          "name": "子网划分综合例题",
+          "formula": "需求 N 个子网、每子网 M 台主机 → 借位数满足 2^s≥N，剩余位满足 2^h−2≥M",
+          "plain": "做题先定「要几个网、每网几台机」，再倒推借几位主机位、掩码是多少。",
+          "use": "大题/计算题；给需求求掩码与地址规划。",
+          "steps": [
+            "需求 6 个子网，因 2²=4<6，2³=8≥6，故借 3 位。",
+            "原 /24 借 3 位变为 /27，每子网主机位 5 位。",
+            "每子网可有 2⁵−2=30 台，掩码 255.255.255.224。"
+          ],
+          "example": "192.168.10.0/24 划分为 6 个子网，求新掩码与每子网主机数。",
+          "answer": "/27（255.255.255.224）；每子网 30 台",
+          "wrong": "错在借位数只按每子网主机算忽略子网数；两条件都要满足。；错在 2^s≥N 忘了边界；正好等于也可。；错在主机数不减 2；网络/广播地址不可分配。",
+          "tip": "口诀：子网看借位 2^s，主机看剩余 2^h−2；/27 是 30 台。"
         }
       ]
     }

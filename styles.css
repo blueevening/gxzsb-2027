@@ -1641,3 +1641,16 @@ html.qa-modal-open { overflow: hidden; }
   background: color-mix(in srgb, var(--success) 16%, transparent);
   color: var(--success);
 }
+
+.f-tag.plain {
+  background: color-mix(in srgb, var(--primary, #2D5BFF) 14%, transparent);
+  color: var(--primary, #2D5BFF);
+}
+.f-tag.tip {
+  background: color-mix(in srgb, var(--warning, #d69e2e) 18%, transparent);
+  color: var(--warning, #b45f06);
+}
+.f-card {
+  margin-bottom: 14px;
+}
+.f-row { align-items: flex-start; }
