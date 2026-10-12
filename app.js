@@ -979,14 +979,32 @@
       )
     );
 
-    const typePill = (arr) =>
-      (arr || [])
+    const typePill = (items) =>
+      (items || [])
         .map(
           (s) =>
-            `<span class="type-pill"><b>${esc(s.label || s.key)}</b><i>${s.n || "?"}题 · ${s.target || s.each ? (s.target || (s.n * s.each)) : "?"}分</i></span>`
+            `<span class="type-pill"><b>${esc(s.label)}</b><i>${esc(s.desc)}</i></span>`
         )
         .join("");
-
+    const SYL_MATH = [
+      { label: "����ѡ��", desc: "10 �� �� 5 �� = 50 ��" },
+      { label: "���", desc: "4 �� �� 5 �� = 20 ��" },
+      { label: "���", desc: "7 �� �� 8 �� = 56 ��" },
+      { label: "Ӧ��", desc: "2 �� �� 12 �� = 24 ��" }
+    ];
+    const SYL_EN = [
+      { label: "�ʻ����﷨��ѡ", desc: "20 �� = 40 ��" },
+      { label: "�Ķ����ⵥѡ", desc: "50 ��" },
+      { label: "�Ķ����", desc: "5 �� = 10 �֣��Ķ��ϼ� 60��" },
+      { label: "����", desc: "Ӣ�뺺ѡ�� 8 �� 24 + ����Ӣ 1 �� 8 = 32 ��" },
+      { label: "д��Ӧ����", desc: "1 �� = 18 ��" }
+    ];
+    const SYL_MAJ = [
+      { label: "����ѡ��", desc: "30 �� = 120 ��" },
+      { label: "�ж�", desc: "15 �� = 45 ��" },
+      { label: "���", desc: "30 �� = 60 ��" },
+      { label: "Ӧ��", desc: "6 �� = 75 ��" }
+    ];
     function outlineCard(opt) {
       return `
         <article class="outline-card">
