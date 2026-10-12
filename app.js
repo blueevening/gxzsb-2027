@@ -424,14 +424,32 @@
     const d = load("gxzsb.daily30", null);
     const key = dayKey();
     if (!d || d.date !== key || !Array.isArray(d.ids)) return 0;
-    const set = new Set(d.ids);
+    const set = new Set(d.ids.map(String));
     const day = new Date().toDateString();
     const done = new Set();
     state.attempts.forEach((a) => {
-      if (!a || !set.has(a.questionId)) return;
+      if (!a || a.questionId == null) return;
+      if (!set.has(String(a.questionId))) return;
       if (new Date(a.at || 0).toDateString() !== day) return;
-      done.add(a.questionId);
+      done.add(String(a.questionId));
     });
+    // 当前每日会话里已作答的也计入（防止 attempts 尚未落库时计数不动）
+    if (state.session && state.session.daily && state.session.results) {
+      Object.keys(state.session.results).forEach((id) => {
+        if (set.has(String(id))) done.add(String(id));
+      });
+    }
+    try {
+      const raw = localStorage.getItem("gxzsb.dailySession");
+      if (raw) {
+        const ds = JSON.parse(raw);
+        if (ds && ds.date === day && ds.results) {
+          Object.keys(ds.results).forEach((id) => {
+            if (set.has(String(id))) done.add(String(id));
+          });
+        }
+      }
+    } catch (e) {}
     return Math.min(done.size, 30);
   }
 
@@ -1106,6 +1124,8 @@
       s.submitted = true;
       s.results[q.id] = true;
       s.showExp = true;
+      // 主观题也算完成今日任务进度
+      record(q, true);
     } else {
       const box = document.getElementById("fillInput");
       const val = (box ? box.value : s.sel || "").trim();
