@@ -440,6 +440,7 @@
   function resetLearningData() {
     STUDY_KEYS.forEach((k) => localStorage.removeItem(k));
     localStorage.removeItem("gxzsb.session");
+    localStorage.removeItem("gxzsb.dailySession");
     localStorage.removeItem("gxzsb.daily30");
     const resetAt = Date.now();
     save("gxzsb.resetAt", resetAt);
@@ -854,7 +855,7 @@
       i: 0,
       sel: null,
       submitted: false,
-      results: {},
+      results: opts.results || {},
       flags: {},
       showExp: false,
       start: Date.now(),
@@ -863,6 +864,13 @@
       ordered: !!opts.ordered,
       daily: !!opts.daily,
     };
+    // 若已有预填结果，从第一道未做题开始
+    if (state.session.results && Object.keys(state.session.results).length) {
+      const doneSet = state.session.results;
+      const idx = pool.findIndex(function (q) { return !(q.id in doneSet); });
+      state.session.i = idx >= 0 ? idx : 0;
+      state.session.submitted = idx < 0;
+    }
     state.last = { title: opts.title, subject: opts.subject, at: Date.now() };
     save(LS.last, state.last);
     saveSession();
@@ -874,17 +882,39 @@
     if (!state.session) return;
     try {
       var s = state.session;
-      localStorage.setItem("gxzsb.session", JSON.stringify({
+      var payload = {
         title: s.title, ids: s.q.map(function(q){return q.id;}), i: s.i,
         sel: s.sel, submitted: s.submitted, results: s.results,
         ordered: !!s.ordered, daily: !!s.daily,
         date: new Date().toDateString()
-      }));
+      };
+      var raw = JSON.stringify(payload);
+      // 每日 30 题单独存放，避免被题库/其它练习覆盖
+      if (s.daily) localStorage.setItem("gxzsb.dailySession", raw);
+      else localStorage.removeItem("gxzsb.dailySession");
+      localStorage.setItem("gxzsb.session", raw);
     } catch(e) {}
   }
 
-  function restoreSession() {
+  function restoreSession(onlyDaily) {
     try {
+      if (onlyDaily) {
+        var rawD = localStorage.getItem("gxzsb.dailySession");
+        if (!rawD) return false;
+        var dd = JSON.parse(rawD);
+        if (!dd.daily) return false;
+        if (dd.date !== new Date().toDateString()) return false;
+        if (dd.results && dd.ids && Object.keys(dd.results).length >= dd.ids.length) return false;
+        var qsD = dd.ids.map(qById).filter(Boolean);
+        if (!qsD.length) return false;
+        state.session = {
+          title: dd.title, q: qsD, i: Math.min(dd.i, qsD.length - 1),
+          sel: dd.sel, submitted: dd.submitted, results: dd.results || {},
+          flags: {}, showExp: false, start: Date.now(), end: null, exam: null,
+          ordered: !!dd.ordered, daily: true
+        };
+        return true;
+      }
       var raw = localStorage.getItem("gxzsb.session");
       if (!raw) return false;
       var d = JSON.parse(raw);
@@ -2521,10 +2551,19 @@ function formulaFilter() {
     } else if (act === "learn-mark") {
       t.textContent = "已学 \u2713";
     } else if (act === "daily") {
-      // 今天已开始过就继续（恢复同一题序）
-      if (restoreSession()) { go("practice"); render(); return; }
+      // 只恢复「每日 30 题」本身，绝不能把题库练习误当成每日任务
+      if (restoreSession(true)) { go("practice"); render(); return; }
       const dailyIds = getDaily30();
-      startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true });
+      // 今天已答过的题保留进度，避免计数卡住 / 重复作答
+      const day = new Date().toDateString();
+      const pre = {};
+      state.attempts.forEach(function (a) {
+        if (!a || !a.questionId) return;
+        if (new Date(a.at || 0).toDateString() !== day) return;
+        if (dailyIds.indexOf(a.questionId) === -1) return;
+        pre[a.questionId] = !!a.correct;
+      });
+      startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true, results: pre });
     }
     else if (act === "due") startSession({ dueOnly: true, onlyWrong: true, limit: 15, title: "到期错题" });
     else if (act === "practice-wrong-all") {
