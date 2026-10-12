@@ -539,7 +539,9 @@
   const TAB_NAV = NAV.filter(function(n){ return TAB_NAV_IDS.indexOf(n.id) >= 0; });
   function renderNav() {
     var showNav = state.user && !state.user.isGuest ? true : true;
-    if (!state.user) {
+    // 登录页不显示导航；其余页面一律恢复底部 tab / 侧栏
+    const isLoginRoute = state.route === "login" || (!state.user && sb);
+    if (isLoginRoute) {
       $("#tabbar").innerHTML = "";
       $("#sideNav").innerHTML = "";
       return;
@@ -2496,6 +2498,10 @@ function formulaFilter() {
       app.innerHTML = viewHome();
     }
     renderNav();
+    // 防呆：非登录页底部导航被误清空时自动补回
+    if (state.route !== "login" && state.user && $("#tabbar") && !$("#tabbar").innerHTML) {
+      renderNav();
+    }
     if (state.route === "formula") formulaFilter();
     if (route === "search") {
       const el = document.getElementById("searchInput");
