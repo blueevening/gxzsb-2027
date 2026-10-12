@@ -47,7 +47,11 @@
 
   const load = (k, fb) => {
     try {
-      return JSON.parse(localStorage.getItem(k)) ?? fb;
+      const raw = localStorage.getItem(k);
+      if (raw == null) return fb;
+      const v = JSON.parse(raw);
+      if (v === null || v === undefined) return fb;
+      return v;
     } catch (e) {
       return fb;
     }
@@ -58,6 +62,148 @@
     } catch (e) {}
   };
 
+  /* __QA_PURE_BEGIN__ — 纯函数，供 scripts/smoke.js 抽取单测 */
+  function localDayKey(d) {
+    const dt = d || new Date();
+    return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+  }
+  function normalizeHashPath(hash) {
+    let raw = String(hash == null ? "" : hash);
+    if (raw.charAt(0) === "#") raw = raw.slice(1);
+    raw = raw.replace(/^\/+/, "");
+    return raw || "home";
+  }
+  function normalizeFilters(f) {
+    const fb = { diff: [], type: [], status: [], kind: [] };
+    if (!f || typeof f !== "object" || Array.isArray(f)) return fb;
+    return {
+      diff: Array.isArray(f.diff) ? f.diff.slice() : [],
+      type: Array.isArray(f.type) ? f.type.slice() : [],
+      status: Array.isArray(f.status) ? f.status.slice() : [],
+      kind: Array.isArray(f.kind) ? f.kind.slice() : [],
+    };
+  }
+  function normAns(s) {
+    return String(s ?? "")
+      .replace(/\s+/g, "")
+      .replace(/[，,；;：:！!？?（）()【】[\]'"‘’“”、]/g, "")
+      .toLowerCase();
+  }
+  function extractSmartPoints(q) {
+    const pts = [];
+    const push = (s) => {
+      String(s || "")
+        .split(/[，,；;、\n\r|/]+/)
+        .map((x) => String(x).replace(/^\s*[•\-–—*\d.、（）()【】\[\]]+\s*/, "").trim())
+        .filter((x) => x && x.length >= 1 && x.length <= 48)
+        .forEach((x) => pts.push(x));
+    };
+    if (q && q.answer) push(Array.isArray(q.answer) ? q.answer.join("，") : q.answer);
+    (q && q.accept ? q.accept : []).forEach(push);
+    (q && q.scorePoints ? q.scorePoints : []).forEach(push);
+    const skipHead = /^(秒懂考点|保姆口诀|第[一二三四五六七八九十]+步|结论|考点|一步步怎么算|认清敌人|回忆武器|举一反三|选项逐个分析|避坑|答案|题目|范文|译文|评分要点)/;
+    const fromBrackets = (txt) => {
+      const br = String(txt || "").match(/【([^】]+)】/g) || [];
+      br.forEach((b) => {
+        const t = b.replace(/^【|】$/g, "").trim();
+        if (!t || skipHead.test(t)) return;
+        if (t.length >= 2 && t.length <= 40) pts.push(t);
+      });
+    };
+    fromBrackets(q && q.sample);
+    fromBrackets(q && q.hint);
+    fromBrackets(q && q.analysis);
+    fromBrackets(q && q.explain);
+    return Array.from(new Set(pts)).slice(0, 16);
+  }
+  function smartGrade(q, userText) {
+    const u = normAns(userText);
+    if (!u) return 0;
+    const points = extractSmartPoints(q);
+    if (!points.length) return 0;
+    const userRaw = String(userText || "").toLowerCase();
+    let hit = 0;
+    points.forEach((p) => {
+      const pn = normAns(p);
+      if (!pn) return;
+      if (u.indexOf(pn) >= 0 || userRaw.indexOf(String(p).toLowerCase()) >= 0) hit++;
+      else if (pn.length >= 4 && u.indexOf(pn.slice(0, Math.ceil(pn.length * 0.7))) >= 0) hit++;
+    });
+    return Math.max(0, Math.min(1, hit / points.length));
+  }
+  /* T9–T12 纯函数 */
+  function isImportKey(k) {
+    return typeof k === "string" && /^gxzsb\./.test(k);
+  }
+  function filterImportKeys(obj) {
+    const out = {};
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return out;
+    Object.keys(obj).forEach(function (k) {
+      if (isImportKey(k) && obj[k] != null) out[k] = obj[k];
+    });
+    return out;
+  }
+  function collectExportData(storage) {
+    const out = {};
+    if (!storage) return out;
+    try {
+      for (let i = 0; i < storage.length; i++) {
+        const k = storage.key(i);
+        if (!k || !isImportKey(k)) continue;
+        try {
+          const v = JSON.parse(storage.getItem(k));
+          out[k] = v === undefined ? null : v;
+        } catch (e) {
+          out[k] = null;
+        }
+      }
+    } catch (e) {}
+    ["gxzsb.filters", "gxzsb.session", "gxzsb.dailySession", "gxzsb.daily30", "gxzsb.resetAt"].forEach(function (k) {
+      if (!(k in out)) out[k] = null;
+    });
+    return out;
+  }
+  function guessWrongReason(q) {
+    if (!q || typeof q !== "object") return "concept";
+    const type = String(q.type || "");
+    const stem = String(q.stem || "");
+    const ans = Array.isArray(q.answer) ? q.answer.join(" ") : String(q.answer || "");
+    const all = stem + " " + ans + " " + String(q.analysis || "") + " " + String(q.hint || "");
+    if (/frac\{|\\frac\{|\blim\b|∫|∑|√|求导|积分|导数|公式/.test(all) || type === "calc") return "formula";
+    if (type === "fill" || type === "apply" || /计算|求解|解方程|证明|化简/.test(stem)) return "calc";
+    if (stem.length >= 60 || /阅读|材料|不正确|不符合|except|NOT/i.test(stem)) return "read";
+    return "concept";
+  }
+  function fileExtOf(name) {
+    const s = String(name == null ? "" : name);
+    const i = s.lastIndexOf(".");
+    return i >= 0 && i < s.length - 1 ? s.slice(i + 1).toLowerCase() : "";
+  }
+  /* __QA_PURE_END__ */
+
+  /* 主题持久化：主 key 异常时读备份 key */
+  function loadThemeSafe() {
+    try {
+      const t = load(LS.theme, null);
+      if (t === "dark" || t === "light") return t;
+    } catch (e) {}
+    try {
+      const b = load("gxzsb.themeBak", null);
+      if (b === "dark" || b === "light") return b;
+    } catch (e) {}
+    return "light";
+  }
+  function saveThemeSafe(t) {
+    const v = t === "dark" ? "dark" : "light";
+    try {
+      save(LS.theme, v);
+      save("gxzsb.themeBak", v);
+    } catch (e) {
+      try { save("gxzsb.themeBak", v); } catch (e2) {}
+    }
+    return v;
+  }
+
   const state = {
     route: "home",
     params: {},
@@ -66,13 +212,13 @@
     fav: load(LS.fav, {}),
     notes: load(LS.notes, {}),
     marks: load(LS.marks, {}),
-    theme: load(LS.theme, "light"),
+    theme: loadThemeSafe(),
     last: load(LS.last, null),
     streak: load(LS.streak, { d: null, n: 0, today: 0 }),
     history: load(LS.history, []),
     reports: load(LS.reports, []),
     session: null, wrongTab: "wrong",
-    filters: load('gxzsb.filters', { diff: [], type: [], status: [], kind: [] }),
+    filters: normalizeFilters(load('gxzsb.filters', null)),
     formulaTab: "高等数学",
     searchQ: "",
   };
@@ -213,6 +359,12 @@
     return out;
   }
 
+  function enqueueSync(payload) {
+    try {
+      save("gxzsb.syncQueue", { at: Date.now(), data: payload || gatherLocal() });
+    } catch (e2) {}
+  }
+
   async function pushProgress(data, attempt) {
     const u = activeUser();
     if (!u) return;
@@ -225,14 +377,16 @@
       );
       if (error) {
         console.warn("sync push:", error.message);
+        // 服务端返回 error：一律入队 + 轻提示
+        enqueueSync(payload);
+        toastLite("进度暂存本地，稍后自动同步");
         if (n < 2) setTimeout(() => pushProgress(data, n + 1), 1500 * (n + 1));
       }
     } catch (e) {
-      // 离线/失败：排队稍后重试
+      // 离线/网络失败：入队 + 轻提示
+      enqueueSync(payload);
+      toastLite("网络异常，进度已暂存");
       if (n < 2) setTimeout(() => pushProgress(data, n + 1), 2000 * (n + 1));
-      else {
-        try { save("gxzsb.syncQueue", { at: Date.now(), data: payload }); } catch (e2) {}
-      }
     }
   }
 
@@ -313,6 +467,208 @@
   const qById = (id) => Q_BY_ID.get(id) || Q.find((x) => x.id === id);
   const daysLeft = () => Math.max(0, Math.ceil((EXAM_DAY - Date.now()) / 86400000));
 
+  let actionLockUntil = 0;
+  function lockAction(ms) {
+    const now = Date.now();
+    if (now < actionLockUntil) return false;
+    actionLockUntil = now + (ms || 250);
+    return true;
+  }
+
+  function toastLite(msg) {
+    try {
+      var el = document.getElementById("qaToast");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "qaToast";
+        el.className = "qa-toast";
+        el.setAttribute("role", "status");
+        document.body.appendChild(el);
+      }
+      el.textContent = String(msg || "");
+      el.classList.add("is-on");
+      clearTimeout(el._t);
+      el._t = setTimeout(function () { el.classList.remove("is-on"); }, 2800);
+    } catch (e) {}
+  }
+  function fallbackCopy(txt) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = String(txt || "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toastLite("已复制");
+    } catch (e) {
+      toastLite("复制失败，请手动选择文本");
+    }
+  }
+
+  /* ===== 轻量弹窗：点遮罩关闭；主题跟随 data-theme ===== */
+  function closeModal() {
+    const m = document.getElementById("qaModal");
+    if (m) {
+      if (m._themeObserver) {
+        try { m._themeObserver.disconnect(); } catch (e) {}
+        m._themeObserver = null;
+      }
+      if (m.parentNode) m.parentNode.removeChild(m);
+    }
+    document.documentElement.classList.remove("qa-modal-open");
+  }
+  function openModal(opts) {
+    opts = opts || {};
+    closeModal();
+    const mask = document.createElement("div");
+    mask.id = "qaModal";
+    mask.className = "qa-modal-mask";
+    mask.setAttribute("data-theme", state.theme);
+    mask.addEventListener("click", function (e) {
+      if (e.target === mask) closeModal();
+    });
+    const box = document.createElement("div");
+    box.className = "qa-modal-box";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    const title = document.createElement("div");
+    title.className = "qa-modal-title";
+    title.textContent = String(opts.title || "提示");
+    const body = document.createElement("div");
+    body.className = "qa-modal-body";
+    if (opts.html) body.innerHTML = opts.html;
+    else body.textContent = String(opts.body || "");
+    const acts = document.createElement("div");
+    acts.className = "qa-modal-actions";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "btn btn-ghost";
+    cancel.textContent = opts.cancelText || "取消";
+    cancel.addEventListener("click", function () {
+      closeModal();
+      if (opts.onCancel) opts.onCancel();
+    });
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "btn btn-primary";
+    ok.textContent = opts.okText || "确定";
+    ok.addEventListener("click", function () {
+      closeModal();
+      if (opts.onOk) opts.onOk();
+    });
+    if (opts.hideCancel) cancel.style.display = "none";
+    acts.appendChild(cancel);
+    acts.appendChild(ok);
+    box.appendChild(title);
+    box.appendChild(body);
+    box.appendChild(acts);
+    mask.appendChild(box);
+    document.body.appendChild(mask);
+    document.documentElement.classList.add("qa-modal-open");
+    // 主题切换时弹窗跟随
+    const mo = new MutationObserver(function () {
+      mask.setAttribute("data-theme", document.documentElement.getAttribute("data-theme") || "light");
+    });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    mask._themeObserver = mo;
+    return mask;
+  }
+  function confirmModal(title, body, onOk, opts) {
+    openModal(Object.assign({ title: title, body: body, onOk: onOk }, opts || {}));
+  }
+
+  /* ========== 账号安全：超时 / 失败锁定 / 密码不落盘 / 闲置登出 ========== */
+  function withTimeout(promise, ms, onTimeout) {
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      var t = setTimeout(function () {
+        if (done) return;
+        done = true;
+        if (onTimeout) onTimeout();
+        reject(new Error("timeout"));
+      }, ms || 15000);
+      Promise.resolve(promise).then(function (v) {
+        if (done) return;
+        done = true;
+        clearTimeout(t);
+        resolve(v);
+      }, function (e) {
+        if (done) return;
+        done = true;
+        clearTimeout(t);
+        reject(e || new Error("auth error"));
+      });
+    });
+  }
+  function getLoginLock() {
+    return load("gxzsb.loginLock", { fails: 0, until: 0 }) || { fails: 0, until: 0 };
+  }
+  function loginLocked() {
+    var l = getLoginLock();
+    if (l.until && Date.now() < l.until) return Math.ceil((l.until - Date.now()) / 1000);
+    return 0;
+  }
+  function noteLoginFail() {
+    var l = getLoginLock();
+    l.fails = (l.fails || 0) + 1;
+    if (l.fails >= 5) {
+      l.until = Date.now() + 60000;
+      l.fails = 0;
+    }
+    save("gxzsb.loginLock", l);
+    return l;
+  }
+  function clearLoginFails() {
+    save("gxzsb.loginLock", { fails: 0, until: 0 });
+  }
+  function scrubPasswords() {
+    try {
+      var kill = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k) continue;
+        var lk = String(k).toLowerCase();
+        if (
+          lk.indexOf("password") >= 0 ||
+          lk.indexOf("passwd") >= 0 ||
+          lk.indexOf("pwd") >= 0 ||
+          lk.indexOf("secret") >= 0
+        ) {
+          // 不误删主题/学习键：仅当键名像密码
+          if (lk.indexOf("gxzsb") === 0 || lk.indexOf("user") >= 0 || lk.indexOf("auth") >= 0 || lk.indexOf("login") >= 0 || lk.indexOf("account") >= 0 || lk.indexOf("password") >= 0 || lk.indexOf("passwd") >= 0 || lk.indexOf("pwd") >= 0) {
+            kill.push(k);
+          }
+        }
+      }
+      // 明确的历史键
+      ["gxzsb.password", "gxzsb.pwd", "gxzsb.passwd", "password", "pwd"].forEach(function (k) {
+        if (localStorage.getItem(k) != null) kill.push(k);
+      });
+      Array.from(new Set(kill)).forEach(function (k) {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
+    } catch (e) {}
+  }
+
+  const IDLE_LOGOUT_MS = 2 * 60 * 60 * 1000; // 2h
+  let idleTimer = null;
+  function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (!state.user || state.user.isGuest) return;
+    idleTimer = setTimeout(function () {
+      if (!state.user || state.user.isGuest) return;
+      try { if (sb) sb.auth.signOut(); } catch (e) {}
+      state.user = null;
+      stopRealtime();
+      toastLite("闲置超过 2 小时，已自动退出登录");
+      alert("因闲置超过 2 小时，已自动退出登录。学习记录仍保存在本机，请重新登录。");
+      go("login");
+      render();
+    }, IDLE_LOGOUT_MS);
+  }
+
   function subjOf(name) {
     return SUBJ[name] || { cls: "", short: name, color: "#64748B", group: "major", score: 100, order: 9 };
   }
@@ -374,11 +730,11 @@
   }
 
   function touchStreak() {
-    const t = new Date().toISOString().slice(0, 10);
+    const t = localDayKey();
     const s = state.streak;
     if (s.d === t) s.today = (s.today || 0) + 1;
     else {
-      const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const y = localDayKey(new Date(Date.now() - 86400000));
       s.n = s.d === y ? (s.n || 0) + 1 : 1;
       s.d = t;
       s.today = 1;
@@ -388,8 +744,7 @@
 
   /* ========== 每日 30 题（按日锁定题组） ========== */
   function dayKey(d) {
-    const dt = d || new Date();
-    return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+    return localDayKey(d);
   }
   function seededPick(ids, seedStr, n) {
     let h = 2166136261;
@@ -422,15 +777,14 @@
   }
   function todayDoneCount() {
     const d = load("gxzsb.daily30", null);
-    const key = dayKey();
+    const key = localDayKey();
     if (!d || d.date !== key || !Array.isArray(d.ids)) return 0;
     const set = new Set(d.ids.map(String));
-    const day = new Date().toDateString();
     const done = new Set();
     state.attempts.forEach((a) => {
       if (!a || a.questionId == null) return;
       if (!set.has(String(a.questionId))) return;
-      if (new Date(a.at || 0).toDateString() !== day) return;
+      if (localDayKey(new Date(a.at || 0)) !== key) return;
       done.add(String(a.questionId));
     });
     // 当前每日会话里已作答的也计入（防止 attempts 尚未落库时计数不动）
@@ -443,7 +797,7 @@
       const raw = localStorage.getItem("gxzsb.dailySession");
       if (raw) {
         const ds = JSON.parse(raw);
-        if (ds && ds.date === day && ds.results) {
+        if (ds && ds.date === key && ds.results) {
           Object.keys(ds.results).forEach((id) => {
             if (set.has(String(id))) done.add(String(id));
           });
@@ -500,7 +854,8 @@
       const n = (prev.n || 0) + 1;
       // 第1次错立刻到期（今天就能复习）；之后1天、3天、7天、15天
       const gap = n === 1 ? 0 : [1, 3, 7, 15][Math.min(n - 2, 3)] * 86400000;
-      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap };
+      const reason = prev.reason || guessWrongReason(q);
+      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason };
     } else if (prev.n) {
       const n = Math.max(prev.n - 1, 0);
       if (!n) delete state.wrong[q.id];
@@ -513,16 +868,25 @@
     touchStreak();
     scheduleSync();
   }
+  function setWrongReason(qid, reason) {
+    if (!qid || !reason) return;
+    const w = state.wrong[qid];
+    if (!w) return;
+    w.reason = reason;
+    save(LS.wrong, state.wrong);
+    scheduleSync();
+  }
 
   /* ========== 路由 ========== */
   function parseHash() {
-    const raw = (location.hash || "#/home").replace(/^#\//, "");
-    const [page, ...rest] = raw.split("/");
-    return { route: page || "home", params: rest };
+    const raw = normalizeHashPath(location.hash || "#/home");
+    const parts = raw.split("/").filter(Boolean).map((p) => p);
+    const page = parts[0] || "home";
+    return { route: page, params: parts.slice(1) };
   }
 
   function go(path) {
-    location.hash = "#/" + path.replace(/^\//, "");
+    location.hash = "#/" + String(path || "home").replace(/^\/+/, "");
   }
 
   const NAV = [
@@ -538,7 +902,6 @@
   const TAB_NAV_IDS = ["home","bank","words","wrong","me"];
   const TAB_NAV = NAV.filter(function(n){ return TAB_NAV_IDS.indexOf(n.id) >= 0; });
   function renderNav() {
-    var showNav = state.user && !state.user.isGuest ? true : true;
     // 登录页不显示导航；其余页面一律恢复底部 tab / 侧栏
     const isLoginRoute = state.route === "login" || (!state.user && sb);
     if (isLoginRoute) {
@@ -876,11 +1239,14 @@
       sel: null,
       submitted: false,
       results: opts.results || {},
+      scores: {},
       flags: {},
       showExp: false,
       start: Date.now(),
       end: opts.minutes ? Date.now() + opts.minutes * 60000 : null,
       exam: opts.exam || null,
+      examSubmitted: false,
+      lastSeenAt: Date.now(),
       ordered: !!opts.ordered,
       daily: !!opts.daily,
     };
@@ -902,11 +1268,23 @@
     if (!state.session) return;
     try {
       var s = state.session;
+      touchSeen();
       var payload = {
         title: s.title, ids: s.q.map(function(q){return q.id;}), i: s.i,
         sel: s.sel, submitted: s.submitted, results: s.results,
+        scores: s.scores || null,
+        answers: s.answers || null,
         ordered: !!s.ordered, daily: !!s.daily,
-        date: new Date().toDateString()
+        start: s.start || Date.now(),
+        end: s.end || null,
+        exam: s.exam ? {
+          planId: s.exam.planId || null,
+          scoreOf: s.exam.scoreOf || null,
+          sectionOf: s.exam.sectionOf || null
+        } : null,
+        examSubmitted: !!s.examSubmitted,
+        lastSeenAt: s.lastSeenAt || Date.now(),
+        date: localDayKey()
       };
       var raw = JSON.stringify(payload);
       // 每日 30 题单独存放，避免被题库/其它练习覆盖
@@ -916,21 +1294,32 @@
     } catch(e) {}
   }
 
+  function touchSeen() {
+    const s = state.session;
+    if (!s) return;
+    const now = Date.now();
+    s.lastSeenAt = Math.max(Number(s.lastSeenAt) || 0, now);
+  }
+
   function restoreSession(onlyDaily) {
     try {
       if (onlyDaily) {
         var rawD = localStorage.getItem("gxzsb.dailySession");
         if (!rawD) return false;
         var dd = JSON.parse(rawD);
-        if (!dd.daily) return false;
-        if (dd.date !== new Date().toDateString()) return false;
+        if (!dd || !dd.daily) return false;
+        if (dd.date !== localDayKey()) return false;
         if (dd.results && dd.ids && Object.keys(dd.results).length >= dd.ids.length) return false;
         var qsD = dd.ids.map(qById).filter(Boolean);
         if (!qsD.length) return false;
         state.session = {
-          title: dd.title, q: qsD, i: Math.min(dd.i, qsD.length - 1),
+          title: dd.title, q: qsD, i: Math.min(dd.i || 0, qsD.length - 1),
           sel: dd.sel, submitted: dd.submitted, results: dd.results || {},
-          flags: {}, showExp: false, start: Date.now(), end: null, exam: null,
+          scores: dd.scores || null,
+          answers: dd.answers || null,
+          flags: {}, showExp: false, start: dd.start || Date.now(), end: dd.end || null, exam: null,
+          examSubmitted: !!dd.examSubmitted,
+          lastSeenAt: dd.lastSeenAt || Date.now(),
           ordered: !!dd.ordered, daily: true
         };
         return true;
@@ -938,18 +1327,108 @@
       var raw = localStorage.getItem("gxzsb.session");
       if (!raw) return false;
       var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.ids)) return false;
       // 已做完就不恢复
       if (d.results && Object.keys(d.results).length >= d.ids.length) return false;
       var qs = d.ids.map(qById).filter(Boolean);
       if (!qs.length) return false;
+      var examRestored = null;
+      if (d.exam) {
+        var plans = (D.EXAM_PLANS || {});
+        examRestored = {
+          planId: d.exam.planId || null,
+          plan: (d.exam.planId && plans[d.exam.planId]) || d.exam.plan || null,
+          scoreOf: d.exam.scoreOf || null,
+          sectionOf: d.exam.sectionOf || null
+        };
+      }
       state.session = {
-        title: d.title, q: qs, i: Math.min(d.i, qs.length-1),
+        title: d.title, q: qs, i: Math.min(d.i || 0, qs.length-1),
         sel: d.sel, submitted: d.submitted, results: d.results || {},
-        flags: {}, showExp: false, start: Date.now(), end: null, exam: null,
+        scores: d.scores || null,
+        answers: d.answers || null,
+        flags: {}, showExp: false, start: d.start || Date.now(),
+        end: d.end || null, exam: examRestored,
+        examSubmitted: !!d.examSubmitted,
+        lastSeenAt: d.lastSeenAt || Date.now(),
         ordered: !!d.ordered, daily: !!d.daily
       };
       return true;
     } catch(e) { return false; }
+  }
+
+  /* ========== 模拟考倒计时 / 交卷 ========== */
+  let examTimerId = null;
+  function stopExamTimer() {
+    if (examTimerId) { clearInterval(examTimerId); examTimerId = null; }
+  }
+  function examRemainMs() {
+    const s = state.session;
+    if (!s || !s.end) return null;
+    // 系统时间回拨：以 max(now, lastSeenAt) 对齐，剩余时间不会被“变多”
+    const nowEff = Math.max(Date.now(), Number(s.lastSeenAt) || 0);
+    return s.end - nowEff;
+  }
+  function formatMMSS(ms) {
+    const sec = Math.max(0, Math.ceil(ms / 1000));
+    return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0");
+  }
+  function tickExamTimer() {
+    const s = state.session;
+    if (!s || !s.end) { stopExamTimer(); return; }
+    touchSeen();
+    const remain = examRemainMs();
+    const el = document.getElementById("examTimer");
+    if (remain == null || remain <= 0) {
+      stopExamTimer();
+      if (s.exam && !s.examSubmitted) {
+        submitExam(true);
+      } else {
+        s.end = null;
+        saveSession();
+      }
+      return;
+    }
+    if (el) {
+      el.textContent = formatMMSS(remain);
+      if (remain <= 5 * 60000) el.classList.add("is-warn");
+      else el.classList.remove("is-warn");
+    }
+  }
+  function ensureExamTimer() {
+    stopExamTimer();
+    const s = state.session;
+    if (s && s.end && !s.examSubmitted) {
+      tickExamTimer();
+      if (state.session && state.session.end && !state.session.examSubmitted) {
+        examTimerId = setInterval(tickExamTimer, 1000);
+      }
+    }
+  }
+  function submitExam(auto) {
+    const s = state.session;
+    if (!s || !s.exam) return false;
+    if (s.examSubmitted) return true;
+    if (!auto) {
+      if (!confirm("确认交卷？未作答题目将按错误计分。")) return false;
+    }
+    let unfilled = 0;
+    s.q.forEach((q) => {
+      if (!(q.id in s.results)) {
+        s.results[q.id] = false;
+        unfilled++;
+        record(q, false);
+      }
+    });
+    s.examSubmitted = true;
+    s.end = null;
+    stopExamTimer();
+    saveExamHistory(s);
+    saveSession();
+    if (auto) toastLite("考试时间到，已自动交卷" + (unfilled ? "（" + unfilled + " 道未答按错）" : ""));
+    go("report");
+    render();
+    return true;
   }
 
   function viewPractice() {
@@ -978,7 +1457,7 @@
       </div>
       <div class="row-between" style="margin:4px 0 8px">
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
-        <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? " · 计时中" : ""}${q.score ? " · " + q.score + " 分" : ""}</span>
+        <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}</span>
       </div>
 
       <div class="practice-wrap">
@@ -1003,16 +1482,51 @@
                 })
                 .join("")
             : q.type === "translate" || q.type === "write"
-            ? `<div class="mistake-box">主观题：先自己作答，再展开范文与评分要点自评。</div>
-               ${done ? `<div class="feedback ok">✓ 已标记已自评</div>` : ""}`
+            ? `<div class="mistake-box">主观题：先自己作答，提交后可看智能评分与参考答案，再自评「我答对了 / 需加强」。</div>
+               <textarea class="input subj-input" id="subjInput" style="margin:8px 0;min-height:96px;width:100%" ${s.submitted ? "disabled" : ""} placeholder="在此写下你的答案…">${esc(s.sel || "")}</textarea>`
             : `<label class="muted" style="font-size:12px;font-weight:650">${q.type === "fill" ? "填写答案" : "填写最终结果"}</label>
-               <input class="input" id="fillInput" style="margin:8px 0" ${s.submitted ? "disabled" : ""} value="${attr(s.sel || "")}" />
-               ${done ? `<div class="feedback ${s.results[q.id] ? "ok" : "bad"}">${s.results[q.id] ? "✓ 比对通过" : "✕ 参考：" + esc(q.answer)}</div>` : ""}`
+               <input class="input" id="fillInput" style="margin:8px 0" ${s.submitted ? "disabled" : ""} value="${attr(s.sel || "")}" />`
         }
 
         ${
           done
-            ? `<div class="feedback ${s.results[q.id] ? "ok" : "bad"}">${s.results[q.id] ? "✓ 回答正确" : "✕ 回答错误，正确答案是 " + esc(String(q.answer).slice(0, 40))}</div>`
+            ? (function () {
+                const ok = !!s.results[q.id];
+                const isSubj = q.type === "translate" || q.type === "write";
+                const sc = s.scores && s.scores[q.id] != null ? s.scores[q.id] : null;
+                // 填空若智能评分有值，同样展示，与 S2「部分 fill」对齐
+                const showSmart = isSubj || (sc != null && sc > 0);
+                let extra = "";
+                if (showSmart) {
+                  const pct = sc == null ? (ok ? 100 : 0) : Math.round(sc * 100);
+                  extra =
+                    `<div class="smart-grade">智能评分 <b>${pct}%</b></div>` +
+                    `<div class="ref-answer"><b>参考答案：</b>${esc(String(q.sample || q.answer || "—").slice(0, 220))}</div>`;
+                } else if (!ok) {
+                  extra = `<div class="ref-answer"><b>参考答案：</b>${esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
+                }
+                const bar = showSmart
+                  ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
+                  : `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}</div>`;
+                const selfBtns = showSmart
+                  ? `<div class="self-assess">
+                      <button class="btn btn-primary btn-sm" data-act="self-ok" type="button">我答对了</button>
+                      <button class="btn btn-ghost btn-sm" data-act="self-bad" type="button">需加强</button>
+                    </div>`
+                  : "";
+                let reasonUi = "";
+                if (!ok && state.wrong[q.id]) {
+                  const curR = state.wrong[q.id].reason || "";
+                  const labels = { concept: "概念不清", calc: "计算失误", read: "审题偏差", formula: "公式记错" };
+                  reasonUi =
+                    '<div class="reason-pick"><span class="muted" style="font-size:12px">错因</span>' +
+                    Object.keys(labels).map(function (r) {
+                      return '<button class="chip' + (curR === r ? " is-active" : "") + '" data-act="set-reason" data-r="' + r + '" data-id="' + attr(q.id) + '" type="button">' + labels[r] + "</button>";
+                    }).join("") +
+                    "</div>";
+                }
+                return bar + extra + selfBtns + reasonUi;
+              })()
             : ""
         }
 
@@ -1048,6 +1562,7 @@
                 <button class="btn btn-primary btn-sm" data-act="ai-deepseek" data-id="${attr(q.id)}" type="button">DeepSeek 解析</button>
                 <button class="btn btn-ghost btn-sm" data-act="ai-doubao" data-id="${attr(q.id)}" type="button">豆包解析</button>
                 <button class="btn btn-ghost btn-sm" data-act="ai-copy" data-id="${attr(q.id)}" type="button">复制题目</button>
+                <button class="btn btn-ghost btn-sm" data-act="copy-exp" type="button">一键复制解析</button>
               </div>
               <p class="muted" style="font-size:12px;margin-top:6px">静态解析不够细时，用外部 AI 按题干生成逐步讲解。</p>
             </div>
@@ -1066,17 +1581,24 @@
         </div>
       </div>
 
-      <div class="q-actions" style="flex-direction:column;gap:10px">
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-ghost" data-act="prev" type="button" style="flex:1">上一题</button>
-          <button class="btn btn-ghost" data-act="fav" type="button" style="flex:1">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
-          <button class="btn btn-ghost" data-act="next" type="button" style="flex:1">下一题</button>
+      <div class="q-actions">
+        <div class="q-nav-row">
+          <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
+          <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
+          <button class="btn btn-ghost" data-act="next" type="button">下一题</button>
         </div>
         ${
           !s.submitted
             ? `<button class="btn btn-primary btn-block" data-act="submit" type="button">提交答案</button>`
             : `<button class="btn btn-primary btn-block" data-act="next" type="button">下一题 →</button>`
         }
+        ${
+          s.exam && !s.examSubmitted
+            ? `<button class="btn btn-ghost btn-block" data-act="submit-exam" type="button">交卷</button>
+               <button class="btn btn-ghost btn-block" data-act="exit-exam" type="button">退出考试</button>`
+            : ""
+        }
+        <button class="btn btn-ghost btn-block btn-sm" data-act="show-shortcuts" type="button" style="opacity:.75">答题快捷键</button>
       </div>
       </div>
       <aside class="answer-card-panel card" style="padding:12px">
@@ -1094,13 +1616,6 @@
       </aside>
       </div>
     `;
-  }
-
-  function normAns(s) {
-    return String(s ?? "")
-      .replace(/\s+/g, "")
-      .replace(/[，,；;：:！!？?（）()【】[\]'"‘’“”、]/g, "")
-      .toLowerCase();
   }
 
   function matchAns(q, user) {
@@ -1123,22 +1638,39 @@
       s.showExp = true;
       record(q, ok);
     } else if (t === "translate" || t === "write") {
+      const box = document.getElementById("subjInput");
+      const val = (box ? box.value : (s.sel || "")).trim();
+      s.sel = val;
+      const score = smartGrade(q, val);
+      s.scores = s.scores || {};
+      s.scores[q.id] = score;
+      const provisionalOk = score >= 0.5;
       s.submitted = true;
-      s.results[q.id] = true;
+      s.results[q.id] = provisionalOk;
       s.showExp = true;
-      // 主观题也算完成今日任务进度
-      record(q, true);
+      record(q, provisionalOk);
     } else {
       const box = document.getElementById("fillInput");
       const val = (box ? box.value : s.sel || "").trim();
       if (!val) return alert("请先填写答案");
       s.sel = val;
-      const ok = matchAns(q, val);
+      let ok = matchAns(q, val);
+      let score = ok ? 1 : 0;
+      // 部分主观填空：精确比对失败时用要点覆盖率给分，但仍以比对结果为主
+      if (!ok && val.length >= 8) {
+        const sg = smartGrade(q, val);
+        if (sg > 0) score = sg;
+      }
+      s.scores = s.scores || {};
+      s.scores[q.id] = score;
       s.submitted = true;
       s.results[q.id] = ok;
       s.showExp = true;
       record(q, ok);
     }
+    s.answers = s.answers || {};
+    if (s.sel != null && q && q.id != null) s.answers[q.id] = s.sel;
+    saveSession();
     render();
   }
 
@@ -1146,13 +1678,21 @@
     const s = state.session;
     if (!s) return;
     if (s.i >= s.q.length - 1) {
+      // 模拟考最后一步统一走交卷：未答按错并写入历史
+      if (s.exam && !s.examSubmitted) {
+        submitExam(false);
+        return;
+      }
       saveExamHistory(s);
       go("report");
       render();
       return;
     }
     s.i++;
-    s.sel = null;
+    // 保留每题作答文本，回看/刷新不丢
+    s.answers = s.answers || {};
+    if (s.sel != null && s.q[s.i - 1]) s.answers[s.q[s.i - 1].id] = s.sel;
+    s.sel = s.answers[s.q[s.i].id] != null ? s.answers[s.q[s.i].id] : null;
     s.submitted = s.q[s.i].id in s.results;
     s.showExp = false;
     render();
@@ -1178,7 +1718,7 @@
         ok: ok,
         total: ids.length,
         answered: answered.length,
-        acc: answered.length ? Math.round((ok / answered.length) * 100) : 0,
+        acc: ids.length ? Math.round((ok / ids.length) * 100) : 0,
         score: got,
         fullScore: full,
       };
@@ -1190,8 +1730,10 @@
   function prevQ() {
     const s = state.session;
     if (!s || s.i === 0) return;
+    s.answers = s.answers || {};
+    if (s.sel != null && s.q[s.i]) s.answers[s.q[s.i].id] = s.sel;
     s.i--;
-    s.sel = null;
+    s.sel = s.answers[s.q[s.i].id] != null ? s.answers[s.q[s.i].id] : null;
     s.submitted = s.q[s.i].id in s.results;
     s.showExp = false;
     render();
@@ -1203,35 +1745,41 @@
     setTitle("练习报告", true);
     const s = state.session;
     if (!s) return `<div class="empty">暂无报告</div>`;
-    const ids = Object.keys(s.results);
-    const ok = ids.filter((id) => s.results[id]).length;
-    const acc = ids.length ? Math.round((ok / ids.length) * 100) : 0;
+    const allIds = s.q.map((q) => q.id);
+    const answeredIds = allIds.filter((id) => id in s.results);
+    const ok = answeredIds.filter((id) => s.results[id]).length;
+    // 未答计入总分母与错题
+    const total = allIds.length;
+    const wrongN = allIds.filter((id) => !(id in s.results) || !s.results[id]).length;
+    const unansN = total - answeredIds.length;
+    const acc = total ? Math.round((ok / total) * 100) : 0;
     const sec = Math.round((Date.now() - s.start) / 1000);
     const mm = String(Math.floor(sec / 60)).padStart(2, "0");
     const ss = String(sec % 60).padStart(2, "0");
 
     // 题型 / 科目
     const by = {};
-    ids.forEach((id) => {
+    allIds.forEach((id) => {
       const q = qById(id);
       if (!q) return;
       const k = s.exam && s.exam.sectionOf && s.exam.sectionOf[id] ? s.exam.sectionOf[id].sectionLabel : q.typeLabel;
       by[k] = by[k] || { n: 0, ok: 0, got: 0, full: 0 };
       by[k].n++;
-      if (s.results[id]) by[k].ok++;
+      const isOk = id in s.results && !!s.results[id];
+      if (isOk) by[k].ok++;
       const sc = (s.exam && s.exam.scoreOf && s.exam.scoreOf[id]) || q.score || 1;
       by[k].full += sc;
-      if (s.results[id]) by[k].got += sc;
+      if (isOk) by[k].got += sc;
     });
 
     return `
       <div class="card">
         <div class="row-between"><strong>${esc(s.title)}</strong><span class="muted" style="font-size:12px">${mm}:${ss}</span></div>
         <div class="stat-grid" style="margin-top:12px">
-          <div class="stat-box"><div class="n">${ok}/${ids.length}</div><div class="l">正确 / 已答</div></div>
+          <div class="stat-box"><div class="n">${ok}/${total}</div><div class="l">正确 / 总题</div></div>
           <div class="stat-box"><div class="n">${acc}%</div><div class="l">正确率</div></div>
           <div class="stat-box"><div class="n">${mm}:${ss}</div><div class="l">用时</div></div>
-          <div class="stat-box"><div class="n">${ids.filter((id) => !s.results[id]).length}</div><div class="l">错题</div></div>
+          <div class="stat-box"><div class="n">${wrongN}</div><div class="l">错题（含未答 ${unansN}）</div></div>
         </div>
       </div>
 
@@ -1310,10 +1858,10 @@
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000);
-      days.push({ key: dayKey(d), label: (d.getMonth() + 1) + "/" + d.getDate(), date: d.toDateString() });
+      days.push({ key: localDayKey(d), label: (d.getMonth() + 1) + "/" + d.getDate(), date: localDayKey(d) });
     }
     const dayStat = days.map((d) => {
-      const at = state.attempts.filter((a) => new Date(a.at || 0).toDateString() === d.date);
+      const at = state.attempts.filter((a) => localDayKey(new Date(a.at || 0)) === d.date);
       const ok = at.filter((a) => a.correct).length;
       return { ...d, n: at.length, ok, acc: at.length ? Math.round((ok / at.length) * 100) : 0 };
     });
@@ -1454,14 +2002,15 @@
             const w = kind === "wrong" ? it.w : null;
             const isDue = kind === "wrong" && it.due;
             if (kind === "wrong") {
+              const reasonLabel = { concept: "概念不清", calc: "计算失误", read: "审题偏差", formula: "公式记错" }[w && w.reason] || "";
               return (
                 '<div class="list-row" style="display:flex;align-items:center;gap:4px">' +
                 '<button data-act="open-q" data-id="' + attr(q.id) + '" type="button" style="flex:1;text-align:left;background:none;border:none;display:flex;align-items:center;gap:10px;padding:12px 16px">' +
                 '<span class="dot" style="background:' + (subjOf(q.subject).color || "#2563EB") + ';flex-shrink:0"></span>' +
                 '<span class="main" style="flex:1;min-width:0"><span class="t" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(String(q.stem).slice(0, 38)) + '</span>' +
-                '<span class="s" style="display:block;font-size:12px;color:#888;margin-top:2px">' + esc(q.typeLabel || "题") + " · " + esc(q.subject) + " · 错" + (w ? w.n : 1) + "次" + (isDue ? " · 到期" : "") + '</span></span>' +
+                '<span class="s" style="display:block;font-size:12px;color:#888;margin-top:2px">' + esc(q.typeLabel || "题") + " · " + esc(q.subject) + " · 错" + (w ? w.n : 1) + "次" + (reasonLabel ? " · " + reasonLabel : "") + (isDue ? " · 到期" : "") + '</span></span>' +
                 '</button>' +
-                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" style="background:none;border:none;color:#ef4444;font-size:18px;padding:8px 12px;cursor:pointer">✕</button>' +
+                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" type="button" style="background:none;border:none;color:#ef4444;font-size:18px;padding:8px 12px;cursor:pointer">✕</button>' +
                 '</div>'
               );
             }
@@ -1506,7 +2055,8 @@
         '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
         "</div>" +
         '<div class="section-title">错题列表（点题看解析，✕移除已掌握）</div>' + rows(pageItems, "wrong") +
-        (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "");
+        (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "") +
+        (items.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">清空错题本</button></div>' : "");
     } else if (tab === "fav") {
       body =
         '<div class="section-title">我的收藏</div>' +
@@ -1736,42 +2286,52 @@ function ensureExplain(q) {
     function viewSchool() {
     setTitle("真题库", true);
     const assets = (D.schoolAssets && D.schoolAssets.assets) || [];
+    const schoolAll = Q.filter((q) => q.source === "school");
+    const countPaper = (subj, yearTag) =>
+      schoolAll.filter((q) => {
+        if (subj !== "全部" && q.subject !== subj) return false;
+        return (q.tags || []).some((t) => String(t).indexOf(yearTag) >= 0);
+      }).length;
     // 按年份和科目分组统计题目
     const exams = [
-      { year: "2025年", title: "2025年 高等数学 完整卷", subj: "高等数学", tag: "完整真题", color: "#3b82f6" },
-      { year: "2025年", title: "2025年 大学英语 完整卷", subj: "英语", tag: "完整真题", color: "#8b5cf6" },
-      { year: "2025年", title: "2025年 电工电子技术基础 真题卷", subj: "电工电子技术基础", tag: "真题精选", color: "#f97316" },
-      { year: "2025年", title: "2025年 C语言程序设计 真题卷", subj: "C语言程序设计", tag: "真题精选", color: "#10b981" },
-      { year: "2025年", title: "2025年 计算机网络基础 真题卷", subj: "计算机网络基础", tag: "真题精选", color: "#06b6d4" },
-      { year: "2026年", title: "2026年 全真模拟卷（五科合卷）", subj: "全部", tag: "模拟预测", color: "#ef4444" }
-    ];
+      { year: "2025年", title: "2025年 高等数学 完整卷", subj: "高等数学", tag: "完整真题", color: "#3b82f6", yearTag: "2025" },
+      { year: "2025年", title: "2025年 大学英语 完整卷", subj: "英语", tag: "完整真题", color: "#8b5cf6", yearTag: "2025" },
+      { year: "2025年", title: "2025年 电工电子技术基础 真题卷", subj: "电工电子技术基础", tag: "真题精选", color: "#f97316", yearTag: "2025" },
+      { year: "2025年", title: "2025年 C语言程序设计 真题卷", subj: "C语言程序设计", tag: "真题精选", color: "#10b981", yearTag: "2025" },
+      { year: "2025年", title: "2025年 计算机网络基础 真题卷", subj: "计算机网络基础", tag: "真题精选", color: "#06b6d4", yearTag: "2025" },
+      { year: "2026年", title: "2026年 全真模拟卷（五科合卷）", subj: "全部", tag: "模拟预测", color: "#ef4444", yearTag: "2026" }
+    ].map((e) => ({ ...e, n: countPaper(e.subj, e.yearTag) }));
+    const practiceLimit = 20;
     return `
       <div class="section-title">真题试卷</div>
       <div class="card" style="padding:0">
         ${exams.map((e, i) => `
-          <div class="list-row" data-act="start-exam-paper" data-idx="${i}" style="cursor:pointer">
+          <div class="list-row" data-act="${e.n ? "start-exam-paper" : ""}" data-idx="${i}" style="cursor:${e.n ? "pointer" : "default"};${e.n ? "" : "opacity:.55"}">
             <span class="dot" style="background:${e.color}"></span>
             <span class="main">
               <span class="t">${e.title}</span>
-              <span class="s">${e.year} · ${e.tag}</span>
+              <span class="s">${e.year} · ${e.tag} · ${e.n} 题${e.n ? "" : "（整理中）"}</span>
             </span>
-            <span class="end">开始 ›</span>
+            <span class="end">${e.n ? "开始 ›" : "暂无"}</span>
           </div>
         `).join("")}
       </div>
       <div style="margin-top:16px">
-        <button class="btn btn-ghost btn-block" data-act="school-practice" type="button">随机刷全部真题（85题）</button>
+        <button class="btn btn-ghost btn-block" data-act="school-practice" type="button"${schoolAll.length ? "" : " disabled"}>随机刷真题（每次 ${Math.min(practiceLimit, schoolAll.length)} 题 / 共 ${schoolAll.length} 题）</button>
       </div>
 
       <div class="section-title" style="margin-top:20px">资料下载</div>
       <div class="card" style="padding:0">
         ${assets
           .map(
-            (a) => `<div class="list-row" style="cursor:default">
+            (a) => {
+              const ext = (fileExtOf(a.file) || "bin");
+              return `<div class="list-row" style="cursor:default">
               <span class="dot"></span>
-              <span class="main"><span class="t">${esc(a.name)}</span><span class="s">${esc(a.kind)} · PDF</span></span>
-              <a class="btn btn-ghost btn-sm" href="${encodeURIComponent(a.file)}" download="${attr(a.name)}.pdf">下载</a>
-            </div>`
+              <span class="main"><span class="t">${esc(a.name)}</span><span class="s">${esc(a.kind)} · ${esc(ext.toUpperCase())}</span></span>
+              <a class="btn btn-ghost btn-sm" href="${attr(a.file)}" download="${attr(a.name)}.${attr(ext)}">下载</a>
+            </div>`;
+            }
           )
           .join("")}
       </div>
@@ -1838,6 +2398,7 @@ function ensureExplain(q) {
           </div>`:''}
           <button type="button" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" class="login-msg"></div>
+          ${mode==='login'?`<button type="button" class="login-forgot" data-act="forgot-pwd">忘记密码？</button>`:""}
         </div>
         <button type="button" class="login-guest" data-act="guest">先逛逛，稍后登录</button>
       </div>
@@ -1893,7 +2454,10 @@ function ensureExplain(q) {
       </div>
 
       <div class="disclaimer">
-        本站为个人 AI 辅助整理的广西专升本备考工具，非广西招生考试院官方平台。所有题目与内容仅供参考，请以官方发布的考试大纲为准。本站所有数据仅保存在你本机浏览器中，不上传任何服务器。
+        本站为个人 AI 辅助整理的广西专升本备考工具，非广西招生考试院官方平台。所有题目与内容仅供参考，请以官方发布的考试大纲为准。
+        ${activeUser()
+          ? "你当前已登录，学习进度会同步到云端账号；若在多设备登录，以最近一次同步为准。"
+          : "你当前是游客/未登录模式，所有数据仅保存在你本机浏览器中，不上传任何服务器。"}
         <br/><br/><a href="https://www.gxeea.cn/zsb/tzgg.htm" target="_blank" rel="noopener" style="color:#6366f1">官方信息：广西招生考试院专升本公告 ›</a>
         <br/><br/>版本 v3.0 · 3000核心词 · 五科1500+题
       </div>
@@ -1919,7 +2483,7 @@ function ensureExplain(q) {
                 (q) => `<button class="list-row" data-act="open-q" data-id="${attr(q.id)}" type="button">
                   <span class="dot" style="background:${subjOf(q.subject).color}"></span>
                   <span class="main">
-                    <span class="t">${esc(q.stem).slice(0, 40)}</span>
+                    <span class="t">${renderMath(String(q.stem).slice(0, 80))}</span>
                     <span class="s">${subjOf(q.subject).short} · ${esc(q.chapter || "")} · ${esc(q.difficultyLabel)}</span>
                   </span>
                   <span class="end">›</span>
@@ -1968,93 +2532,20 @@ function formulaFilter() {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
   }
-  /** \frac{a}{b} → 上下分式；纯文本 a/b 尽量识别 */
+  /** 兼容 frac{...}{...} 与 \frac{...}{...} → 上下分式 */
   function renderMath(expr) {
-    if (expr == null) return "";
-    let t = String(expr);
-    // 递归解析 rac{...}{...}
-    function parse(str) {
-      const idx = str.indexOf("\\frac");
-      if (idx < 0) return escKeep(str).replace(/\n/g, "<br/>");
-      let before = str.slice(0, idx);
-      let rest = str.slice(idx + 5); // after \\frac  — wait
-      return "";
-    }
-    // 简化实现：单遍替换 rac{x}{y}
-    function fracToHtml(src) {
-      let out = "";
-      let i = 0;
-      while (i < src.length) {
-        if (src.startsWith("\\frac{", i) || src.startsWith("\\frac{", i)) {
-          // not used
-        }
-        if (src[i] === "\\" && src.slice(i, i + 6) === "\\frac{") {
-          i += 6;
-          // parse numerator braces
-          let depth = 1, num = "";
-          while (i < src.length && depth > 0) {
-            if (src[i] === "{") depth++;
-            else if (src[i] === "}") {
-              depth--;
-              if (depth === 0) { i++; break; }
-            }
-            if (depth > 0) num += src[i];
-            i++;
-          }
-          if (src[i] === "{") {
-            i++;
-            depth = 1;
-            let den = "";
-            while (i < src.length && depth > 0) {
-              if (src[i] === "{") depth++;
-              else if (src[i] === "}") {
-                depth--;
-                if (depth === 0) { i++; break; }
-              }
-              if (depth > 0) den += src[i];
-              i++;
-            }
-            out += '<span class="frac"><span class="num">' + fracToHtml(num) + '</span><span class="den">' + fracToHtml(den) + "</span></span>";
-          }
-          continue;
-        }
-        out += src[i];
-        i++;
-      }
-      return out;
-    }
-    // 实际传入用单反斜杠写在 JS 字符串里是 \\frac → 文件里是 \frac → 运行时是 \frac
-    // 直接匹配字符序列 backslash frac
-    const re = /\\frac\{([^{}]*)\}\{([^{}]*)\}/g;
-    // 上面太绕：用字符串替换循环
-    let html = String(expr);
-    // 匹配 \frac{a}{b} 在 JS 源里是 \\frac —— 运行时字符串若来自 JSON 是 \\frac 或 \frac
-    for (let n = 0; n < 8; n++) {
-      const m = html.match(/\frac\{([^{}]*)\}\{([^{}]*)\}/);
-      if (!m) break;
-      const rep =
-        '<span class="frac"><span class="num">' +
-        escKeep(m[1]) +
-        '</span><span class="den">' +
-        escKeep(m[2]) +
-        "</span></span>";
-      html = html.replace(m[0], rep);
-    }
-    // 简单斜杠分式：数字/数字 或 变量式/变量式（无空格）
-    html = html.replace(/(^|[^\w])([A-Za-z0-9^²³⁺⁻()]+)\/([A-Za-z0-9^²³⁺⁻()]+)/g, function (mm, p, a, b) {
-      return p + '<span class="frac"><span class="num">' + a + '</span><span class="den">' + b + "</span></span>";
-    });
-    html = escKeep(html);
-    // 上一步会把标签转义，改为分段
-    return html;
+    return mathHtml(expr);
   }
   function mathHtml(expr) {
     const raw = String(expr == null ? "" : expr);
     let out = "";
     let i = 0;
     while (i < raw.length) {
-      if (raw.startsWith("frac{", i)) {
-        i += 5;
+      let skip = 0;
+      if (raw.startsWith("\\frac{", i)) skip = 6;
+      else if (raw.startsWith("frac{", i)) skip = 5;
+      if (skip) {
+        i += skip;
         let depth = 1, num = "";
         while (i < raw.length && depth) {
           const ch = raw[i];
@@ -2077,6 +2568,8 @@ function formulaFilter() {
           out += '<span class="frac"><span class="num">' + mathHtml(num) + '</span><span class="den">' + mathHtml(den) + "</span></span>";
           continue;
         }
+        out += escKeep(raw.slice(i - skip, i));
+        continue;
       }
       out += escKeep(raw[i]);
       i++;
@@ -2406,7 +2899,7 @@ function formulaFilter() {
   /* ========== 2027 官方考纲 ========== */
   function viewSyllabus(subjId) {
     const S = window.SYLLABUS;
-    if (!S) return '<div class="empty">考纲数据加载中<button class="btn btn-primary" data-nav="home">回首页</button></div>';
+    if (!S) return '<div class="empty">考纲数据加载中<button class="btn btn-primary" data-nav="home" type="button">回首页</button></div>';
     const subs = S.subjects;
     if (!subjId) subjId = subs[0].id;
     const cur = subs.find(function(x){return x.id===subjId}) || subs[0];
@@ -2503,6 +2996,8 @@ function formulaFilter() {
       renderNav();
     }
     if (state.route === "formula") formulaFilter();
+    // 倒计时全局生效：离开练习页也继续，到点自动交卷
+    ensureExamTimer();
     if (route === "search") {
       const el = document.getElementById("searchInput");
       if (el) {
@@ -2581,11 +3076,11 @@ function formulaFilter() {
       if (restoreSession(true)) { go("practice"); render(); return; }
       const dailyIds = getDaily30();
       // 今天已答过的题保留进度，避免计数卡住 / 重复作答
-      const day = new Date().toDateString();
+      const day = localDayKey();
       const pre = {};
       state.attempts.forEach(function (a) {
         if (!a || !a.questionId) return;
-        if (new Date(a.at || 0).toDateString() !== day) return;
+        if (localDayKey(new Date(a.at || 0)) !== day) return;
         if (dailyIds.indexOf(a.questionId) === -1) return;
         pre[a.questionId] = !!a.correct;
       });
@@ -2623,26 +3118,53 @@ function formulaFilter() {
     else if (act === "filter") {
       const kind = t.getAttribute("data-kind");
       const val = t.getAttribute("data-val");
+      if (!Array.isArray(state.filters[kind])) state.filters = normalizeFilters(state.filters);
       const arr = state.filters[kind];
       const i = arr.indexOf(val);
       if (i >= 0) arr.splice(i, 1);
       else arr.push(val);
+      save("gxzsb.filters", state.filters);
       render();
     } else if (act === "clear-filter") {
       state.filters = { diff: [], type: [], status: [], kind: [] };
+      save("gxzsb.filters", state.filters);
       render();
     } else if (act === "pick") {
       const s = state.session;
       if (!s || s.submitted) return;
+      if (!lockAction(180)) return;
       s.sel = t.getAttribute("data-opt");
       saveSession(); render();
-    } else if (act === "submit") { submitQ(); saveSession(); }
+    } else if (act === "submit") {
+      if (!lockAction(350)) return;
+      submitQ();
+    } else if (act === "submit-exam") {
+      if (!lockAction(400)) return;
+      submitExam(false);
+    } else if (act === "self-ok" || act === "self-bad") {
+      const s = state.session;
+      if (!s || !s.submitted) return;
+      const q = s.q[s.i];
+      const ok = act === "self-ok";
+      const prev = s.results[q.id];
+      s.results[q.id] = ok;
+      s.scores = s.scores || {};
+      s.scores[q.id] = ok ? 1 : 0;
+      // 覆盖对错时才纠正错题本，避免与提交时的暂定记录重复计入
+      if (prev !== ok) record(q, ok);
+      s.selfAssessed = s.selfAssessed || {};
+      s.selfAssessed[q.id] = true;
+      saveSession();
+      render();
+    }
     else if (act === "next") { nextQ(); saveSession(); }
     else if (act === "prev") { prevQ(); saveSession(); }
     else if (act === "goto") {
       const s = state.session;
+      s.answers = s.answers || {};
+      if (s.sel != null && s.q[s.i]) s.answers[s.q[s.i].id] = s.sel;
       s.i = +t.getAttribute("data-i");
-      s.sel = null;
+      s.sel = s.answers[s.q[s.i].id] != null ? s.answers[s.q[s.i].id] : null;
       s.submitted = s.q[s.i].id in s.results;
       s.showExp = false;
       saveSession(); render();
@@ -2726,6 +3248,7 @@ function formulaFilter() {
         title: plan.title,
         minutes: plan.minutes,
         exam: {
+          planId: planId,
           plan,
           scoreOf: Object.fromEntries(items.map((x) => [x.id, x.score])),
           sectionOf: Object.fromEntries(items.map((x) => [x.id, x])),
@@ -2735,7 +3258,66 @@ function formulaFilter() {
       const r = t.getAttribute("data-r");
       const ids = Object.keys(state.wrong).filter((id) => state.wrong[id].reason === r);
       if (ids.length) startSession({ ids, limit: 10, title: "按错因补练" });
-      else startSession({ mode: "weak", limit: 8, title: "错因补练" });
+      else { toastLite("暂无该错因的错题"); }
+    } else if (act === "set-reason") {
+      const id = t.getAttribute("data-id");
+      const r = t.getAttribute("data-r");
+      setWrongReason(id, r);
+      render();
+    } else if (act === "clear-wrong") {
+      const n = Object.keys(state.wrong).length;
+      if (!n) { toastLite("错题本是空的"); return; }
+      confirmModal("清空错题本", "确定清空全部 " + n + " 道错题？此操作不可撤销。", function () {
+        state.wrong = {};
+        save(LS.wrong, state.wrong);
+        scheduleSync();
+        toastLite("错题已清空");
+        render();
+      });
+    } else if (act === "show-shortcuts") {
+      openModal({
+        title: "答题快捷键",
+        html:
+          '<div class="shortcut-list">' +
+          "<p>1–4 / A–D：选择选项</p>" +
+          "<p>Enter：提交答案 / 下一题</p>" +
+          "<p>← →：上一题 / 下一题</p>" +
+          "<p>Esc：关闭弹窗</p>" +
+          "</div>",
+        okText: "知道了",
+        hideCancel: true,
+      });
+    } else if (act === "copy-exp") {
+      const s = state.session;
+      const q = s && s.q[s.i];
+      if (!q) return;
+      const exp = ensureExplain(q) || q.analysis || "";
+      const txt =
+        "【题目】" + String(q.stem || "") + "\n" +
+        "【答案】" + String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "") + "\n" +
+        "【解析】\n" + exp;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () {
+          toastLite("解析已复制");
+        }).catch(function () {
+          fallbackCopy(txt);
+        });
+      } else {
+        fallbackCopy(txt);
+      }
+    } else if (act === "exit-exam") {
+      const s = state.session;
+      if (!s || !s.exam || s.examSubmitted) { go("mock"); render(); return; }
+      confirmModal("退出模拟考", "考试尚未交卷。退出后本场不计入成绩，也不会到点自动交卷。确定退出？", function () {
+        // 与文案一致：放弃本场，不写入考试历史
+        s.end = null;
+        s.examSubmitted = true;
+        s.abandoned = true;
+        saveSession();
+        go("mock");
+        render();
+        toastLite("已退出模拟考（本场不计入成绩）");
+      });
     } else if (act === "wrong-tab") {
       state.wrongTab = t.getAttribute("data-v");
       state.wrongPage = 1;
@@ -2768,13 +3350,28 @@ function formulaFilter() {
       var pw = document.getElementById("loginPwd").value;
       var msg = document.getElementById("loginMsg");
       if (!em || !pw) { msg.textContent = "请输入邮箱和密码"; return; }
+      var lockSec = loginLocked();
+      if (lockSec > 0) { msg.textContent = "失败次数过多，请 " + lockSec + " 秒后再试"; return; }
       msg.textContent = "登录中...";
-      sb.auth.signInWithPassword({ email: em, password: pw }).then(function(r) {
-        if (r.error) { msg.textContent = r.error.message; return; }
+      withTimeout(sb.auth.signInWithPassword({ email: em, password: pw }), 15000).then(function(r) {
+        if (r && r.error) {
+          noteLoginFail();
+          var left = loginLocked();
+          msg.textContent = r.error.message + (left > 0 ? "（已锁定 " + left + "s）" : "");
+          return;
+        }
+        clearLoginFails();
         state.user = r.data.user;
         stopRealtime();
         go("home"); render();
         pullAndMerge().then(subscribeRealtime);
+      }).catch(function (err) {
+        if (err && err.message === "timeout") {
+          msg.textContent = "登录超时（15s），请检查网络后重试";
+        } else {
+          noteLoginFail();
+          msg.textContent = "登录失败：" + (err && err.message ? err.message : "网络异常");
+        }
       });
     } else if (act === "do-register") {
       var em2 = document.getElementById("loginEmail").value.trim();
@@ -2785,29 +3382,63 @@ function formulaFilter() {
       if (pw2.length < 6) { msg2.textContent = "密码至少6位"; return; }
       if (pw2b && pw2b.value !== pw2) { msg2.textContent = "两次输入的密码不一致"; return; }
       msg2.textContent = "注册中...";
-      sb.auth.signUp({ email: em2, password: pw2 }).then(function(r) {
-        if (r.error) {
-          if (r.error.message.indexOf("already") >= 0 || r.error.message.indexOf("registered") >= 0) {
+      withTimeout(sb.auth.signUp({ email: em2, password: pw2 }), 15000).then(function(r) {
+        if (r && r.error) {
+          if (String(r.error.message).indexOf("already") >= 0 || String(r.error.message).indexOf("registered") >= 0) {
             msg2.textContent = "该邮箱已注册，请去登录页登录";
           } else {
-            msg2.textContent = r.error.message;
+            msg2.textContent = "注册失败：" + r.error.message;
           }
           return;
         }
         // 新账号隔离：备份并清空本机旧学习数据，避免串号
         backupThenResetLearning();
         // 注册成功，尝试自动登录
-        sb.auth.signInWithPassword({ email: em2, password: pw2 }).then(function(r2) {
-          if (r2.error) {
+        return withTimeout(sb.auth.signInWithPassword({ email: em2, password: pw2 }), 15000).then(function(r2) {
+          if (!r2 || r2.error) {
             msg2.textContent = "注册成功！请去登录页登录";
             return;
           }
           state.user = r2.data.user;
           stopRealtime();
+          msg2.textContent = "注册成功，正在进入...";
           go("home"); render();
           pullAndMerge().then(subscribeRealtime);
         });
+      }).catch(function (err) {
+        if (err && err.message === "timeout") {
+          msg2.textContent = "注册超时（15s），请检查网络后重试；若已注册成功可直接登录";
+        } else {
+          msg2.textContent = "注册失败：" + (err && err.message ? err.message : "网络异常") + "，可重试";
+        }
       });
+    } else if (act === "forgot-pwd") {
+      var emf = "";
+      var emEl = document.getElementById("loginEmail");
+      if (emEl) emf = String(emEl.value || "").trim();
+      var msgf = document.getElementById("loginMsg");
+      if (!emf) {
+        if (msgf) msgf.textContent = "请先填写邮箱，再点「忘记密码」";
+        return;
+      }
+      if (sb && sb.auth && typeof sb.auth.resetPasswordForEmail === "function") {
+        if (msgf) msgf.textContent = "正在发送重置邮件...";
+        withTimeout(sb.auth.resetPasswordForEmail(emf), 15000).then(function (r) {
+          if (r && r.error) {
+            if (msgf) msgf.textContent = "";
+            alert("发送失败：" + r.error.message + "\n可联系管理员重置，或先用游客模式体验。");
+          } else {
+            if (msgf) msgf.textContent = "重置邮件已发送，请查收（若未收到可联系管理员）";
+            alert("重置邮件已发送。若邮箱服务未配置可能收不到，可联系管理员重置，或使用游客模式。");
+          }
+        }).catch(function () {
+          if (msgf) msgf.textContent = "";
+          alert("发送失败（网络异常）。请联系管理员重置密码，或使用游客模式。");
+        });
+      } else {
+        if (msgf) msgf.textContent = "当前环境不支持邮件找回";
+        alert("当前未配置邮箱找回服务。请联系管理员重置密码，或使用游客模式。");
+      }
     } else if (act === "guest") {
       state.user = { isGuest: true };
       go("home"); render();
@@ -2816,33 +3447,47 @@ function formulaFilter() {
       const n = prompt("输入昵称：", cur);
       if (n && n.trim()) { save("gxzsb.nick", n.trim()); render(); }
     } else if (act === "export-all") {
-      const data = {};
-      Object.values(LS).forEach((k) => { data[k] = load(k, null); });
-      data["gxzsb.nick"] = load("gxzsb.nick", null);
+      const data = collectExportData(localStorage);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "gxzsb-backup-" + new Date().toISOString().slice(0,10) + ".json";
+      a.download = "gxzsb-backup-" + localDayKey() + ".json";
       a.click();
+      URL.revokeObjectURL(a.href);
     } else if (act === "import") {
       const inp = document.createElement("input");
-      inp.type = "file"; inp.accept = ".json";
+      inp.type = "file"; inp.accept = ".json,application/json";
       inp.onchange = function() {
         const f = inp.files[0]; if (!f) return;
         const r = new FileReader();
         r.onload = function() {
+          let data;
           try {
-            const data = JSON.parse(r.result);
-            Object.keys(data).forEach((k) => { if (data[k] != null) save(k, data[k]); });
-            alert("导入成功！页面将刷新"); location.reload();
-          } catch(e) { alert("文件格式错误"); }
+            data = JSON.parse(r.result);
+          } catch(e) {
+            alert("备份文件不是合法 JSON，请选择正确的 .json 备份");
+            return;
+          }
+          if (!data || typeof data !== "object" || Array.isArray(data)) {
+            alert("备份文件格式错误：应为 JSON 对象");
+            return;
+          }
+          const picked = filterImportKeys(data);
+          const ignored = Object.keys(data).filter(function (k) { return !isImportKey(k); });
+          if (!Object.keys(picked).length) {
+            alert("未找到可导入的 gxzsb.* 数据" + (ignored.length ? "（已忽略非法 key：" + ignored.slice(0, 5).join(", ") + "）" : ""));
+            return;
+          }
+          Object.keys(picked).forEach(function (k) { save(k, picked[k]); });
+          alert("导入成功！共恢复 " + Object.keys(picked).length + " 项" + (ignored.length ? "，已忽略非法 key " + ignored.length + " 项" : "") + "。页面将刷新");
+          location.reload();
         };
+        r.onerror = function() { alert("读取备份文件失败"); };
         r.readAsText(f);
       };
       inp.click();
     } else if (act === "theme") {
-      state.theme = state.theme === "dark" ? "light" : "dark";
-      save(LS.theme, state.theme);
+      state.theme = saveThemeSafe(state.theme === "dark" ? "light" : "dark");
       document.documentElement.setAttribute("data-theme", state.theme);
     } else if (act === "logout") {
       stopRealtime();
@@ -2882,19 +3527,20 @@ function formulaFilter() {
     else if (act === "start-exam-paper") {
       const idx = parseInt(t.getAttribute("data-idx"));
       const papers = [
-        { subj: "高等数学", title: "2025高数真题卷" },
-        { subj: "英语", title: "2025英语真题卷" },
-        { subj: "电工电子技术基础", title: "2025电工真题卷" },
-        { subj: "C语言程序设计", title: "2025C语言真题卷" },
-        { subj: "计算机网络基础", title: "2025计网真题卷" },
-        { subj: "全部", title: "2026全真模拟卷" }
+        { subj: "高等数学", title: "2025高数真题卷", yearTag: "2025" },
+        { subj: "英语", title: "2025英语真题卷", yearTag: "2025" },
+        { subj: "电工电子技术基础", title: "2025电工真题卷", yearTag: "2025" },
+        { subj: "C语言程序设计", title: "2025C语言真题卷", yearTag: "2025" },
+        { subj: "计算机网络基础", title: "2025计网真题卷", yearTag: "2025" },
+        { subj: "全部", title: "2026全真模拟卷", yearTag: "2026" }
       ];
       const p = papers[idx];
+      if (!p) return;
       let ids;
       if (p.subj === "全部") {
-        ids = Q.filter((q) => q.source === "school" && q.tags && q.tags.includes("2026真题")).map(q => q.id);
+        ids = Q.filter((q) => q.source === "school" && q.tags && q.tags.some((tg) => String(tg).indexOf(p.yearTag) >= 0)).map(q => q.id);
       } else {
-        ids = Q.filter((q) => q.source === "school" && q.subject === p.subj && q.tags && q.tags.some(t => t.includes("2025"))).map(q => q.id);
+        ids = Q.filter((q) => q.source === "school" && q.subject === p.subj && q.tags && q.tags.some(tg => String(tg).indexOf(p.yearTag) >= 0)).map(q => q.id);
       }
       if (ids.length === 0) { alert("这套卷题目还在整理中~"); return; }
       startSession({ ids, limit: ids.length, title: p.title });
@@ -2903,7 +3549,9 @@ function formulaFilter() {
     else if (act === "exam-info") go("exam-info");
     else if (act === "school-practice") {
       const ids = Q.filter((q) => q.source === "school").map((q) => q.id);
-      startSession({ ids, limit: 20, title: "学校题库" });
+      const n = Math.min(20, ids.length);
+      if (!ids.length) { toastLite("真题库暂无题目"); return; }
+      startSession({ ids, limit: n, title: "学校题库" });
     } else if (act === "ai-deepseek" || act === "ai-doubao" || act === "ai-copy") {
       const qq = qById(t.getAttribute("data-id")) || (state.session && state.session.q[state.session.i]);
       if (!qq) return;
@@ -3039,13 +3687,16 @@ function formulaFilter() {
   if ($("#btnSearch")) $("#btnSearch").addEventListener("click", () => go("search"));
   if ($("#btnTheme")) {
     $("#btnTheme").addEventListener("click", () => {
-      state.theme = state.theme === "dark" ? "light" : "dark";
-      save(LS.theme, state.theme);
+      state.theme = saveThemeSafe(state.theme === "dark" ? "light" : "dark");
       document.documentElement.setAttribute("data-theme", state.theme);
     });
   }
 
   document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const m = document.getElementById("qaModal");
+      if (m) { closeModal(); return; }
+    }
     if (e.target && /input|textarea/i.test(e.target.tagName)) return;
     const s = state.session;
     if (state.route !== "practice" || !s) return;
@@ -3055,24 +3706,33 @@ function formulaFilter() {
       const opt = (q.options || [])[+e.key - 1];
       if (opt) {
         s.sel = opt;
+        saveSession();
         render();
       }
     } else if (map[e.key] != null && !s.submitted) {
       const opt = (q.options || [])[map[e.key]];
       if (opt) {
         s.sel = opt;
+        saveSession();
         render();
       }
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (!s.submitted) submitQ();
-      else nextQ();
-    } else if (e.key === "ArrowRight") nextQ();
-    else if (e.key === "ArrowLeft") prevQ();
+      if (!s.submitted) { submitQ(); }
+      else { nextQ(); saveSession(); }
+    } else if (e.key === "ArrowRight") { nextQ(); saveSession(); }
+    else if (e.key === "ArrowLeft") { prevQ(); saveSession(); }
   });
 
   window.addEventListener("hashchange", render);
   document.documentElement.setAttribute("data-theme", state.theme);
+  // 密码不落 localStorage（若历史版本写过则清除）
+  scrubPasswords();
+  // 闲置自动登出：任意交互续期
+  ["click", "keydown", "pointerdown", "touchstart"].forEach(function (ev) {
+    document.addEventListener(ev, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
   // 恢复Supabase session
   if (sb) {
     sb.auth.getSession().then(function(res) {
@@ -3081,10 +3741,12 @@ function formulaFilter() {
         pullAndMerge().then(subscribeRealtime);
       }
       render();
+      resetIdleTimer();
     });
   }
   // 恢复上次答题
   var restored = restoreSession();
-  if (restored && !location.hash) { location.hash = "#practice"; }
+  if (restored && !location.hash) { location.hash = "#/practice"; }
   render();
+  ensureExamTimer();
 })();

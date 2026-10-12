@@ -1,4 +1,4 @@
-/* 简易 smoke：校验题库 API、每日抽题稳定性、顺序语义（不依赖浏览器） */
+/* 基线 smoke + T1–T8 缺陷修复回归（不依赖浏览器） */
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
@@ -54,9 +54,7 @@ function seededPick(idArr, seedStr, n) {
   const arr = idArr.slice();
   for (let i = arr.length - 1; i > 0; i--) {
     const j = (rnd() * (i + 1)) | 0;
-    const tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
   }
   return arr.slice(0, n);
 }
@@ -85,6 +83,215 @@ refs.forEach((r) => {
   if (/^https?:/.test(r)) return;
   ok(fs.existsSync(path.join(root, r)), "引用存在: " + r);
 });
+
+/* ========== T1–T8 回归 ========== */
+const appSrc = fs.readFileSync(path.join(root, "app.js"), "utf8");
+
+console.log("[6] T1 路由规范化");
+ok(/location\.hash\s*=\s*"#\/practice"/.test(appSrc), "恢复会话使用 #/practice");
+ok(!/location\.hash\s*=\s*"#practice"/.test(appSrc), "不再写 #practice（缺斜杠）");
+const hashAssigns = [...appSrc.matchAll(/location\.hash\s*=\s*"([^"]+)"/g)].map((m) => m[1]);
+const badHash = hashAssigns.filter((h) => /^#[^/]/.test(h));
+ok(badHash.length === 0, "全库 location.hash 字面量均以 #/ 开头 (" + hashAssigns.join(", ") + ")");
+
+// 抽取纯函数
+const mBegin = appSrc.indexOf("/* __QA_PURE_BEGIN__");
+const mEnd = appSrc.indexOf("/* __QA_PURE_END__");
+ok(mBegin >= 0 && mEnd > mBegin, "找到 QA 纯函数标记");
+const pureSrc = appSrc.slice(mBegin, mEnd);
+const pureCtx = { console };
+vm.createContext(pureCtx);
+vm.runInContext(pureSrc + "\n;this.__QA = { localDayKey, normalizeHashPath, normalizeFilters, normAns, extractSmartPoints, smartGrade };", pureCtx, { timeout: 5000 });
+const QA = pureCtx.__QA;
+ok(!!QA && typeof QA.normalizeHashPath === "function", "纯函数可抽取");
+
+ok(QA.normalizeHashPath("#practice") === "practice", "#practice → practice");
+ok(QA.normalizeHashPath("#/practice") === "practice", "#/practice → practice");
+ok(QA.normalizeHashPath("#//practice") === "practice", "#//practice → practice");
+ok(QA.normalizeHashPath("") === "home", "空 hash → home");
+ok(QA.normalizeHashPath("#/subject/math") === "subject/math", "#/subject/math → subject/math");
+ok(appSrc.includes("normalizeHashPath") && /parseHash\s*\(\)\s*\{[\s\S]*?normalizeHashPath/.test(appSrc), "parseHash 使用 normalizeHashPath");
+
+console.log("[7] T2 存储兼容 filters / JSON 损坏");
+const emptyF = QA.normalizeFilters(null);
+ok(Array.isArray(emptyF.diff) && Array.isArray(emptyF.kind), "normalizeFilters(null) 全数组");
+const partial = QA.normalizeFilters({ diff: ["基础"] });
+ok(Array.isArray(partial.kind) && partial.kind.length === 0, "缺 kind 补 []");
+ok(Array.isArray(partial.type) && Array.isArray(partial.status), "缺 type/status 补 []");
+const bad = QA.normalizeFilters({ diff: "oops", kind: 1 });
+ok(Array.isArray(bad.diff) && bad.diff.length === 0, "非数组字段回落 []");
+ok(appSrc.includes("normalizeFilters(load("), "filters 读入走 normalizeFilters");
+ok(/const load = \(k, fb\)[\s\S]{0,220}catch/.test(appSrc), "load 捕获 JSON 异常返回默认值");
+
+console.log("[8] T3 模拟考倒计时 / 交卷 / end 持久化");
+ok(/formatMMSS/.test(appSrc) && /examTimer/.test(appSrc), "存在 mm:ss 倒计时 UI");
+ok(/submitExam/.test(appSrc) && /data-act="submit-exam"/.test(appSrc), "存在交卷按钮与 submitExam");
+ok(/未作答题目将按错误计分/.test(appSrc), "交卷确认文案：未答按错");
+ok(/lastSeenAt/.test(appSrc) && /Math\.max\(Date\.now\(\),\s*Number\(s\.lastSeenAt\)/.test(appSrc), "系统时间回拨用 lastSeenAt 保护");
+ok(/end:\s*opts\.minutes/.test(appSrc), "startSession 按 minutes 写 end");
+ok(/end:\s*d\.end\s*\|\|\s*null/.test(appSrc), "restoreSession 恢复 end");
+ok(/examTimerId/.test(appSrc) && /setInterval\(tickExamTimer/.test(appSrc), "倒计时 interval 存在");
+
+console.log("[9] T4 smartGrade 主观题智能评分");
+ok(typeof QA.smartGrade === "function", "smartGrade 存在");
+const qTranslate = {
+  type: "translate",
+  answer: "我们有必要掌握一门外语。",
+  accept: ["我们掌握一门外语是必要的"],
+  sample: "参考译文：我们有必要掌握一门外语。",
+  scorePoints: ["It is necessary for sb to do 结构译对", "master 译为掌握", "语序通顺"],
+};
+const gEmpty = QA.smartGrade(qTranslate, "");
+ok(gEmpty === 0, "空作答 0 分");
+const gFull = QA.smartGrade(qTranslate, "我们有必要掌握一门外语。It is necessary for sb to do, master 掌握，语序通顺");
+ok(gFull > 0.5, "覆盖要点得分>0.5 (got " + gFull + ")");
+const gWeak = QA.smartGrade(qTranslate, "hello");
+ok(gWeak < 0.3, "无关作答低分 (got " + gWeak + ")");
+const g01 = QA.smartGrade(qTranslate, "我们有必要掌握一门外语。");
+ok(g01 >= 0 && g01 <= 1, "得分落在 0–1");
+ok(!/record\(q,\s*true\)/.test(appSrc.match(/translate[\s\S]{0,200}record[\s\S]{0,40}/) ? appSrc.match(/translate[\s\S]{0,200}record[\s\S]{0,40}/)[0] : ""), "translate/write 不再恒 record(true)");
+ok(/smartGrade\(q/.test(appSrc), "submitQ 调用 smartGrade");
+ok(/self-ok/.test(appSrc) && /self-bad/.test(appSrc), "自评按钮 我答对了/需加强");
+ok(/智能评分/.test(appSrc) && /参考答案/.test(appSrc), "UI 显示智能评分与参考答案");
+
+console.log("[10] T5 作答防抖 / 键盘 saveSession / 单反馈 / 未答入分母");
+ok(/lockAction/.test(appSrc), "选项/提交防抖 lockAction");
+ok(/act === "pick"[\s\S]{0,120}lockAction/.test(appSrc), "pick 走防抖");
+const keydownBlock = appSrc.slice(appSrc.indexOf('document.addEventListener("keydown"'));
+ok(/s\.sel = opt;\s*saveSession\(\);/.test(keydownBlock), "键盘选选项后 saveSession");
+ok(/ArrowRight[\s\S]{0,40}saveSession/.test(keydownBlock), "键盘切题后 saveSession");
+// 反馈条：类型分支内不再内嵌 feedback，统一由 done 块输出一次
+const typeBranch = appSrc.slice(appSrc.indexOf('q.type === "translate"'), appSrc.indexOf("const ok = !!s.results[q.id]"));
+ok(!/class="feedback/.test(typeBranch), "题型分支不再内嵌 feedback（单条反馈）");
+ok(/正确 \/ 总题/.test(appSrc) && /含未答/.test(appSrc), "报告未答计入总分与错题");
+
+console.log("[11] T6 本地日界 localDayKey");
+ok(typeof QA.localDayKey === "function", "localDayKey 存在");
+const dk = QA.localDayKey(new Date(2026, 0, 5, 0, 30, 0));
+ok(dk === "2026-01-05", "本地 0 点仍属当日 (got " + dk + ")");
+const dk2 = QA.localDayKey(new Date(2026, 11, 31, 23, 59, 0));
+ok(dk2 === "2026-12-31", "本地月末 (got " + dk2 + ")");
+ok(!/toISOString\(\)\.slice\(0,\s*10\)/.test(appSrc.match(/function touchStreak[\s\S]{0,400}/)[0]), "touchStreak 不用 UTC toISOString 分日");
+ok(!/toDateString\(\)/.test(appSrc.match(/function todayDoneCount[\s\S]{0,600}/)[0]), "todayDoneCount 不用 toDateString 混日界");
+ok(/function dayKey\(d\)\s*\{\s*return localDayKey\(d\);/.test(appSrc), "dayKey 别名到 localDayKey");
+
+console.log("[12] T7 账号：注册反馈 / 无密码 / 忘记密码 / 闲置 / 锁定");
+ok(/withTimeout/.test(appSrc), "存在 withTimeout");
+ok(/注册超时（15s）/.test(appSrc), "注册 15s 超时提示");
+ok(/注册成功/.test(appSrc), "注册成功提示");
+ok(/注册失败/.test(appSrc), "注册失败提示");
+ok(/scrubPasswords/.test(appSrc), "存在密码清扫 scrubPasswords");
+ok(/resetPasswordForEmail/.test(appSrc), "忘记密码走 resetPasswordForEmail");
+ok(/联系管理员/.test(appSrc), "无邮箱服务提示联系管理员/游客");
+ok(/IDLE_LOGOUT_MS/.test(appSrc) && /2 \* 60 \* 60 \* 1000/.test(appSrc), "闲置 2h 自动登出");
+ok(/loginLocked/.test(appSrc) && /noteLoginFail/.test(appSrc), "登录失败锁定计数");
+ok(/Date\.now\(\) \+ 60000/.test(appSrc), "锁定 60s");
+ok(/l\.fails >= 5/.test(appSrc), "失败 5 次触发锁定");
+// 静态确认：localStorage 写入不含 password 字段字面量
+const savePwd = appSrc.match(/localStorage\.setItem\([^)]*password[^)]*\)/gi);
+ok(!savePwd || savePwd.length === 0, "无 localStorage.setItem 存 password");
+
+console.log("[13] T8 云同步失败入队 + 轻提示");
+ok(/enqueueSync/.test(appSrc), "存在 enqueueSync");
+const pushBlock = appSrc.slice(appSrc.indexOf("async function pushProgress"), appSrc.indexOf("function scheduleSync"));
+ok(/if \(error\)/.test(pushBlock) && /enqueueSync/.test(pushBlock), "error 分支也入队");
+ok(/catch \(e\)/.test(pushBlock) && /enqueueSync/.test(pushBlock), "网络 catch 也入队");
+ok(/toastLite/.test(pushBlock), "push 失败有轻提示 toast");
+
+/* ========== T9–T12 回归 ========== */
+const pureSrcFull = appSrc.slice(mBegin, mEnd);
+vm.runInContext(
+  pureSrcFull + "\n;this.__QA2 = { isImportKey, filterImportKeys, collectExportData, guessWrongReason, fileExtOf, smartGrade };",
+  pureCtx,
+  { timeout: 5000 }
+);
+const QA2 = pureCtx.__QA2;
+
+console.log("[14] T9 导出/导入白名单");
+ok(typeof QA2.isImportKey === "function" && typeof QA2.filterImportKeys === "function", "导入白名单纯函数存在");
+ok(QA2.isImportKey("gxzsb.w3") === true, "gxzsb.w3 允许");
+ok(QA2.isImportKey("gxzsb.wb.prog") === true, "gxzsb.wb.prog 允许");
+ok(QA2.isImportKey("gxzsb.filters") === true, "filters 允许");
+ok(QA2.isImportKey("evil.key") === false, "非 gxzsb.* 拒绝");
+ok(QA2.isImportKey("password") === false, "password 拒绝");
+const imported = QA2.filterImportKeys({
+  "gxzsb.a3": [1],
+  "gxzsb.session": { i: 1 },
+  "gxzsb.wb.goal": 20,
+  "gxzsb.daily30": { a: 1 },
+  "gxzsb.resetAt": 123,
+  notAllowed: "x",
+  password: "p",
+});
+ok(Object.keys(imported).length === 5, "仅保留 5 个白名单 key (got " + Object.keys(imported).length + ")");
+ok(!("notAllowed" in imported) && !("password" in imported), "非法 key 被忽略");
+const fakeStorage = {
+  length: 4,
+  _k: ["gxzsb.wb.prog", "gxzsb.filters", "gxzsb.session", "evil"],
+  key(i) { return this._k[i]; },
+  getItem(k) {
+    if (k === "gxzsb.wb.prog") return JSON.stringify({ v0001: 1 });
+    if (k === "gxzsb.filters") return JSON.stringify({ diff: [] });
+    if (k === "gxzsb.session") return JSON.stringify({ i: 2 });
+    return null;
+  },
+};
+const exported = QA2.collectExportData(fakeStorage);
+ok(!!exported["gxzsb.wb.prog"] && !!exported["gxzsb.filters"], "导出含 wb 与 filters");
+ok("gxzsb.session" in exported && "gxzsb.daily30" in exported && "gxzsb.dailySession" in exported, "导出含 session/daily30/dailySession 槽位");
+ok("gxzsb.resetAt" in exported, "导出含 resetAt 槽位");
+ok(!("evil" in exported), "导出不含非法 key");
+ok(/collectExportData/.test(appSrc) && /filterImportKeys/.test(appSrc), "export/import 使用纯函数");
+ok(/坏 JSON|不是合法 JSON|JSON 对象/.test(appSrc), "坏 JSON 有提示");
+ok(/isImportKey/.test(appSrc) && /collectExportData/.test(appSrc), "导出扫描 gxzsb.*（含 wb）");
+ok(QA2.collectExportData(fakeStorage)["gxzsb.wb.prog"] && QA2.isImportKey("gxzsb.wb.goal"), "gxzsb.wb.* 可导出/可导入");
+
+console.log("[15] T10 错因 / 真题文案 / 公式 / 下载");
+ok(typeof QA2.guessWrongReason === "function", "guessWrongReason 存在");
+ok(QA2.guessWrongReason({ type: "calc", stem: "计算下列积分" }) === "formula" || QA2.guessWrongReason({ type: "calc", stem: "计算下列积分" }) === "calc", "计算题给出错因启发");
+ok(QA2.guessWrongReason({ stem: "阅读材料".padEnd(70, "。"), type: "single" }) === "read", "长题干 → read");
+ok(QA2.guessWrongReason({ stem: "概念题", type: "judge" }) === "concept", "默认 concept");
+ok(/reason/.test(appSrc) && /setWrongReason|set-reason/.test(appSrc), "错题记录写 reason，可改");
+ok(/by-reason/.test(appSrc), "按错因补练入口存在");
+ok(/按错因补练/.test(appSrc), "按错因补练文案存在");
+ok(/共 \$\{[^}]+\} 题|共 .* 题/.test(appSrc), "真题库文案含实际题量");
+ok(/schoolAll\.length/.test(appSrc), "真题文案绑定实际 pool 大小");
+ok(/e\.n \? "start-exam-paper" : ""/.test(appSrc) && /暂无/.test(appSrc), "0 题卷禁用按钮");
+ok(/startsWith\("\\\\frac\{"|startsWith\("frac\{"/.test(appSrc) || (appSrc.includes('\\\\frac{') && appSrc.includes('frac{')), "公式兼容 frac{ 与 \\\\frac{");
+ok(/renderMath\(/.test(appSrc), "存在 renderMath");
+const searchBlock = appSrc.slice(appSrc.indexOf("function viewSearch"), appSrc.indexOf("function formulaFilter"));
+ok(/renderMath\(/.test(searchBlock), "搜索列表用 renderMath");
+ok(/fileExtOf/.test(appSrc) && /download="\$\{attr\(a\.name\)\}\.\$\{attr\(ext\)\}"/.test(appSrc), "下载扩展名取自真实资源");
+ok(typeof QA2.fileExtOf === "function" && QA2.fileExtOf("a.bin") === "bin" && QA2.fileExtOf("x.PDF") === "pdf", "fileExtOf 解析扩展名");
+
+console.log("[16] T11 UI P2 弹窗 / 窄屏 / 滚动 / 主题备份");
+ok(/qa-modal-mask/.test(appSrc) && /openModal/.test(appSrc), "自定义弹窗存在");
+ok(/e\.target === mask/.test(appSrc), "点遮罩关闭弹窗");
+ok(/MutationObserver/.test(appSrc) && /data-theme/.test(appSrc.slice(appSrc.indexOf("function openModal"))), "弹窗主题跟随 data-theme");
+ok(/q-nav-row/.test(appSrc), "窄屏 q-actions 导航行结构");
+const cssSrc = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+ok(/q-nav-row/.test(cssSrc), "CSS 含 q-nav-row");
+ok(/flex-direction: column/.test(cssSrc) && /\.q-actions/.test(cssSrc), "q-actions 纵向：提交独占行");
+ok(/max-height: 42vh/.test(cssSrc) && /overflow-y: auto/.test(cssSrc), "长题干可滚动");
+ok(/\.explain-body \{ max-height/.test(cssSrc), "解析可滚动");
+ok(/themeBak|gxzsb\.themeBak/.test(appSrc), "主题备份 key");
+ok(/loadThemeSafe/.test(appSrc) && /saveThemeSafe/.test(appSrc), "主题读写加固");
+
+console.log("[17] T12 死代码 / 免责 / 交互增强");
+ok(!/var showNav =/.test(appSrc), "showNav 死变量已清");
+ok(!/function parse\(str\)/.test(appSrc), "renderMath 死分支 parse 已清");
+ok(!/fracToHtml/.test(appSrc), "renderMath 死分支 fracToHtml 已清");
+const wbSrc = fs.readFileSync(path.join(root, "wordbook.js"), "utf8");
+const genCount = (wbSrc.match(/function genMeaningQuiz/g) || []).length;
+ok(genCount === 1, "wordbook genMeaningQuiz 仅一处定义 (got " + genCount + ")");
+ok(/游客|未登录/.test(appSrc) && /已登录/.test(appSrc), "免责声明区分游客/已登录");
+ok(/一键复制解析|copy-exp/.test(appSrc), "解析一键复制");
+ok(/clear-wrong/.test(appSrc) && /清空错题/.test(appSrc), "错题清空入口");
+ok(/confirmModal\(/.test(appSrc), "清空/退出用确认弹窗");
+ok(/show-shortcuts|答题快捷键/.test(appSrc), "答题快捷键说明");
+ok(/exit-exam/.test(appSrc) && /退出模拟考|退出考试/.test(appSrc), "模拟考退出二次确认");
+const typeless = (appSrc.match(/<button(?![^>]*type=)[^>]*>/g) || []).length;
+ok(typeless === 0, "无 typeless button (got " + typeless + ")");
 
 console.log(failed ? "\nSMOKE FAILED: " + failed : "\nSMOKE PASSED");
 process.exit(failed ? 1 : 0);

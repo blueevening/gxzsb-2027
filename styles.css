@@ -1,4 +1,4 @@
-﻿/* gxzsb UI — 全站布局规范 */
+/* gxzsb UI — 全站布局规范 */
 :root {
   --bg: #F7F8FA;
   --card: #FFFFFF;
@@ -345,6 +345,83 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
 .feedback.ok { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
 .feedback.bad { background: color-mix(in srgb, var(--error) 12%, transparent); color: var(--error); }
 
+.exam-timer {
+  display: inline-block;
+  min-width: 3.2em;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  font-weight: 700;
+}
+.exam-timer.is-warn {
+  background: color-mix(in srgb, var(--error) 16%, transparent);
+  color: var(--error);
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.smart-grade {
+  margin: 8px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.smart-grade b { font-size: 20px; }
+.ref-answer {
+  margin: 6px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.self-assess {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.self-assess .btn { flex: 1; min-height: 40px; }
+.subj-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--card);
+  color: var(--text);
+  resize: vertical;
+}
+
+.qa-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%) translateY(12px);
+  z-index: 9999;
+  max-width: min(86vw, 360px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(20, 20, 24, 0.92);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+.qa-toast.is-on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .explain {
   margin-top: 12px; border: 1px solid var(--border); border-radius: var(--radius-card);
   background: var(--card); overflow: hidden;
@@ -371,15 +448,52 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
 
 .q-actions {
   position: sticky; bottom: calc(var(--tab-h) + 8px);
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  display: flex; flex-direction: column; gap: 10px;
   margin-top: 16px; padding: 8px 0;
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(8px);
   z-index: 20;
 }
+.q-actions .q-nav-row { display: flex; gap: 8px; }
+.q-actions .q-nav-row .btn { flex: 1; }
 .q-actions .btn { min-height: 44px; padding: 0 8px; font-size: 13px; }
+.q-actions .btn-block { width: 100%; }
 @media (min-width: 1024px) {
   .q-actions { position: static; background: transparent; backdrop-filter: none; }
+}
+
+/* 长题干 / 解析：可滚动，不溢出 */
+.q-stem { max-height: 42vh; overflow-y: auto; overflow-wrap: anywhere; word-break: break-word; }
+.explain-body { max-height: 60vh; overflow-y: auto; }
+.explain-block .content { overflow-wrap: anywhere; word-break: break-word; }
+
+/* 错因选择 */
+.reason-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 4px; }
+
+/* ===== 弹窗（点遮罩关闭，主题跟随 data-theme） ===== */
+.qa-modal-mask {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.qa-modal-box {
+  background: var(--card, #fff); color: var(--text, #0f172a);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px; padding: 18px 18px 14px;
+  max-width: 420px; width: 100%;
+  box-shadow: 0 18px 48px rgba(0,0,0,.18);
+}
+.qa-modal-title { font-size: 16px; font-weight: 750; margin-bottom: 8px; }
+.qa-modal-body { font-size: 14px; line-height: 1.65; color: var(--text-sub, #475569); max-height: 50vh; overflow-y: auto; }
+.qa-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+.qa-modal-actions .btn { min-height: 40px; min-width: 88px; }
+.shortcut-list p { margin: 6px 0; }
+html.qa-modal-open { overflow: hidden; }
+[data-theme="dark"] .qa-modal-mask { background: rgba(0, 0, 0, 0.55); }
+[data-theme="dark"] .qa-modal-box {
+  background: var(--card, #1e293b); color: var(--text, #e2e8f0);
+  border-color: var(--border, #334155);
 }
 
 .note-input {
@@ -716,11 +830,15 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
   .q-actions {
     position: sticky !important;
     bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    display: flex !important;
+    flex-direction: column !important;
     background: var(--bg) !important;
     padding: 8px 0 !important;
   }
+  .q-actions .q-nav-row { display: flex !important; gap: 8px !important; }
+  .q-actions .q-nav-row .btn { flex: 1 !important; }
   .q-actions .btn { min-height: 44px !important; font-size: 13px !important; }
+  .q-actions .btn-block { width: 100% !important; }
   .mathline { font-size: 15px !important; overflow-x: auto; max-width: 100%; }
   .f-card { padding: 12px !important; }
   .f-body { font-size: 15px !important; overflow-x: auto; }
@@ -1257,6 +1375,19 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
 }
 .login-submit:active { filter: brightness(0.95); }
 .login-msg { text-align: center; margin-top: 12px; font-size: 13px; color: var(--text-sub); min-height: 1.2em; }
+.login-forgot {
+  display: block;
+  margin: 10px auto 0;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 6px 8px;
+}
+.login-forgot:hover { opacity: 0.85; }
+
 .login-guest {
   display: block;
   width: 100%;
