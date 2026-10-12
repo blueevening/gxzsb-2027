@@ -1400,3 +1400,21 @@ html.qa-modal-open { overflow: hidden; }
   cursor: pointer;
 }
 .login-guest:hover { color: var(--text); }
+
+/* µÇÂ¼Ò³Òþ²Ø²àÀ¸/µ×À¸£¬È¥µô×ó²à°×É«¿ÕÌõ */
+.side-nav.is-hidden,
+.tabbar.is-hidden,
+.side-nav:empty {
+  display: none !important;
+}
+.app-frame.nav-hidden {
+  display: block !important;
+  grid-template-columns: none !important;
+  max-width: none !important;
+  padding: 0 20px 40px !important;
+}
+.app-frame.nav-hidden .shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 0 48px !important;
+}

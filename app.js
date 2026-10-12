@@ -905,10 +905,10 @@
     // 登录页不显示导航；其余页面一律恢复底部 tab / 侧栏
     const isLoginRoute = state.route === "login" || (!state.user && sb);
     if (isLoginRoute) {
-      $("#tabbar").innerHTML = "";
-      $("#sideNav").innerHTML = "";
+      hideNav();
       return;
     }
+    showNav();
     const html = NAV.map(
       (n) =>
         `<button class="tab-item ${state.route === n.id || (n.id === "bank" && state.route === "subject") || (n.id === "words" && (state.route === "word-learn" || state.route === "word-review" || state.route === "word-list")) ? "is-active" : ""}" data-nav="${n.id}" type="button"><span class="ico">${n.ico}</span><span>${n.label}</span></button>`
@@ -2947,8 +2947,27 @@ function formulaFilter() {
   }
 
   function hideNav() {
-    if ($("#sideNav")) $("#sideNav").innerHTML = "";
-    if ($("#tabbar")) $("#tabbar").innerHTML = "";
+    const side = $("#sideNav");
+    const tab = $("#tabbar");
+    if (side) {
+      side.innerHTML = "";
+      side.classList.add("is-hidden");
+    }
+    if (tab) {
+      tab.innerHTML = "";
+      tab.classList.add("is-hidden");
+    }
+    const frame = document.querySelector(".app-frame");
+    if (frame) frame.classList.add("nav-hidden");
+  }
+
+  function showNav() {
+    const side = $("#sideNav");
+    const tab = $("#tabbar");
+    if (side) side.classList.remove("is-hidden");
+    if (tab) tab.classList.remove("is-hidden");
+    const frame = document.querySelector(".app-frame");
+    if (frame) frame.classList.remove("nav-hidden");
   }
 
   /* 事件由 document 级委托统一绑定；此函数供登录页等调用以保持接口兼容 */
@@ -3494,8 +3513,7 @@ function formulaFilter() {
       if (sb) sb.auth.signOut();
       state.user = null;
       // 退出登录 ≠ 清数据：保留本机学习记录，仅回登录页并隐藏侧栏/底栏
-      if ($("#sideNav")) $("#sideNav").innerHTML = "";
-      if ($("#tabbar")) $("#tabbar").innerHTML = "";
+      hideNav();
       go("login"); render();
     } else if (act === "reset-study") {
       if (!confirm("重置学习记录？（做题/错题/收藏/笔记/打卡将清空，并同步到已登录的其它设备；主题与登录状态保留）")) return;
