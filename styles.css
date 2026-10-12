@@ -1505,7 +1505,19 @@ html.qa-modal-open { overflow: hidden; }
 .oc-score b { font-size: 28px; line-height: 1; }
 .oc-score span { font-size: 12px; margin-left: 2px; }
 .oc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
-.oc-types { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.oc-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (min-width: 900px) {
+  .oc-types { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.type-pill {
+  height: 100%;
+  box-sizing: border-box;
+}
 .type-pill {
   display: inline-flex; flex-direction: column; gap: 2px;
   background: color-mix(in srgb, var(--text) 5%, transparent);
