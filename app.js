@@ -2694,9 +2694,12 @@ function formulaFilter() {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
   }
-  /** 兼容 frac{...}{...} 与 \frac{...}{...} → 上下分式 */
+  /** 兼容 frac{...}{...} 与 \frac{...}{...} → 上下分式；并自动把 a/b 横排分数也变成上下分式 */
   function renderMath(expr) {
     return mathHtml(expr);
+  }
+  function fracSpan(num, den) {
+    return '<span class="frac"><span class="num">' + mathHtml(num) + '</span><span class="den">' + mathHtml(den) + "</span></span>";
   }
   function mathHtml(expr) {
     const raw = String(expr == null ? "" : expr);
@@ -2727,7 +2730,7 @@ function formulaFilter() {
             if (depth) den += ch;
             i++;
           }
-          out += '<span class="frac"><span class="num">' + mathHtml(num) + '</span><span class="den">' + mathHtml(den) + "</span></span>";
+          out += fracSpan(num, den);
           continue;
         }
         out += escKeep(raw.slice(i - skip, i));
@@ -2736,7 +2739,24 @@ function formulaFilter() {
       out += escKeep(raw[i]);
       i++;
     }
-    return out;
+    return autoFrac(out);
+  }
+  /** 把纯文本里的 a/b（含 1/x、2x²/x²、12/(4+12)）收成上下分式 */
+  function autoFrac(html) {
+    const parts = String(html).split(/(<[^>]+>)/g);
+    // 分子/分母：括号组 或 连续数学符号
+    const atom = "(?:\\([^()]+\\)|[A-Za-z0-9²³¹⁴⁺⁻^.°√|]+(?:\\^\\{[^}]+\\}|\\^\\d)?)";
+    const re = new RegExp("(" + atom + ")\\s*\\/\\s*(" + atom + ")", "g");
+    for (let p = 0; p < parts.length; p++) {
+      if (p % 2 === 1) continue;
+      parts[p] = parts[p].replace(re, function (m, a, b) {
+        if (!a || !b) return m;
+        // 纯英文单词/单词（如 and/or）不转
+        if (/^[A-Za-z]+$/.test(a) && /^[A-Za-z]+$/.test(b)) return m;
+        return fracSpan(a, b);
+      });
+    }
+    return parts.join("");
   }
   function renderMathLine(expr) {
     return '<div class="mathline">' + mathHtml(expr) + "</div>";

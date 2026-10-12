@@ -1660,3 +1660,17 @@ html.qa-modal-open { overflow: hidden; }
   margin-bottom: 14px;
 }
 .f-row { align-items: flex-start; }
+
+/* 说明文字里的上下分式也要清晰 */
+.f-txt .frac,
+.f-steps .frac {
+  display: inline-flex;
+  vertical-align: middle;
+  margin: 0 3px;
+  font-size: 0.95em;
+}
+.f-txt .frac .num, .f-txt .frac .den,
+.f-steps .frac .num, .f-steps .frac .den {
+  padding: 1px 6px;
+  min-width: 18px;
+}
