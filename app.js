@@ -101,7 +101,25 @@
     const out = { _v: 1 };
     Object.keys(SYNC_FIELDS).forEach((f) => { out[f] = state[f]; });
     out.nick = load("gxzsb.nick", null);
+    out.resetAt = load("gxzsb.resetAt", 0) || 0;
     return out;
+  }
+
+  function emptyStudyPayload(resetAt, nick) {
+    return {
+      _v: 1,
+      attempts: [],
+      wrong: {},
+      fav: {},
+      marks: {},
+      notes: {},
+      streak: { d: null, n: 0, today: 0 },
+      last: null,
+      history: [],
+      reports: [],
+      nick: nick || null,
+      resetAt: resetAt || Date.now(),
+    };
   }
 
   function applyData(data) {
@@ -126,6 +144,15 @@
 
   function mergeProgress(local, remote) {
     if (!remote || typeof remote !== "object") return local;
+    const lR = Number(local && local.resetAt) || 0;
+    const rR = Number(remote && remote.resetAt) || 0;
+    // 任一侧发生了「重置/清除」：用较新的 resetAt 整包覆盖，禁止把旧学习数据合并回来
+    if (rR > lR && rR > 0) {
+      return emptyStudyPayload(rR, remote.nick || (local && local.nick) || null);
+    }
+    if (lR > rR && lR > 0) {
+      return emptyStudyPayload(lR, (local && local.nick) || remote.nick || null);
+    }
     const out = Object.assign({}, local);
 
     // attempts：保留每次作答，按 (questionId, at) 去重，按时间排序，截断 1500
@@ -182,6 +209,7 @@
 
     out.nick = remote.nick || local.nick || null;
     out.theme = local.theme;   // 主题为设备本地偏好，不参与同步
+    out.resetAt = Math.max(lR, rR);
     return out;
   }
 
@@ -413,6 +441,8 @@
     STUDY_KEYS.forEach((k) => localStorage.removeItem(k));
     localStorage.removeItem("gxzsb.session");
     localStorage.removeItem("gxzsb.daily30");
+    const resetAt = Date.now();
+    save("gxzsb.resetAt", resetAt);
     state.attempts = [];
     state.wrong = {};
     state.fav = {};
@@ -423,6 +453,7 @@
     state.history = [];
     state.reports = [];
     state.session = null;
+    return resetAt;
   }
   function backupThenResetLearning() {
     try {
@@ -2757,21 +2788,31 @@ function formulaFilter() {
       if ($("#tabbar")) $("#tabbar").innerHTML = "";
       go("login"); render();
     } else if (act === "reset-study") {
-      if (!confirm("重置学习记录？（做题/错题/收藏/笔记/打卡将清空，主题与登录状态保留）")) return;
-      resetLearningData();
-      if (activeUser()) scheduleSync();
-      alert("学习记录已重置");
+      if (!confirm("重置学习记录？（做题/错题/收藏/笔记/打卡将清空，并同步到已登录的其它设备；主题与登录状态保留）")) return;
+      const resetAt = resetLearningData();
+      if (activeUser()) {
+        // 立即推送空学习数据 + resetAt，手机等设备下次拉取会清空而不是合并回旧数据
+        pushProgress(emptyStudyPayload(resetAt, load("gxzsb.nick", null)));
+      }
+      alert("学习记录已重置（已登录设备将自动同步）");
       render();
     } else if (act === "clear") {
-      if (!confirm("清除本机全部数据？（含主题、备份与学习记录；登录会话也会结束）")) return;
+      if (!confirm("清除本机全部数据？（含主题、备份与学习记录；登录会话也会结束；若已登录将同步清空云端进度）")) return;
+      const u = activeUser();
       try {
         Object.keys(localStorage).forEach((k) => {
           if (k.indexOf("gxzsb") === 0) localStorage.removeItem(k);
         });
       } catch (e) {}
-      if (sb) sb.auth.signOut();
-      state.user = null;
-      location.reload();
+      const clearCloud = u && sb
+        ? sb.from("progress").delete().eq("user_id", u.id).then(function () {
+            return sb.auth.signOut();
+          }).catch(function () { return sb.auth.signOut(); })
+        : (sb ? sb.auth.signOut() : Promise.resolve());
+      Promise.resolve(clearCloud).finally(function () {
+        state.user = null;
+        location.reload();
+      });
     } else if (act === "school") go("school");
     else if (act === "start-exam-paper") {
       const idx = parseInt(t.getAttribute("data-idx"));
