@@ -1729,36 +1729,34 @@ function ensureExplain(q) {
     setTitle("登录", false);
     var mode = state.loginMode || "login";
     return `
-      <div style="max-width:400px;margin:60px auto;padding:0 20px">
-        <div style="text-align:center;margin-bottom:32px">
-          <div style="font-size:40px;margin-bottom:8px">⚡</div>
-          <div style="font-size:22px;font-weight:bold">广西专升本练习</div>
-          <div style="color:#64748b;font-size:14px;margin-top:4px">登录后云端同步学习进度</div>
+      <div class="login-wrap">
+        <div class="login-hero">
+          <div class="logo">⚡</div>
+          <div class="name">广西专升本练习</div>
+          <div class="sub">登录后云端同步学习进度</div>
         </div>
-        <div style="display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:20px">
-          <button data-act="switch-login" data-mode="login" type="button" style="flex:1;padding:10px;border:none;border-radius:8px;font-size:15px;font-weight:${mode==='login'?'bold':'normal'};background:${mode==='login'?'white':'transparent'};color:${mode==='login'?'#1e293b':'#64748b'};cursor:pointer">登录</button>
-          <button data-act="switch-login" data-mode="register" type="button" style="flex:1;padding:10px;border:none;border-radius:8px;font-size:15px;font-weight:${mode==='register'?'bold':'normal'};background:${mode==='register'?'white':'transparent'};color:${mode==='register'?'#1e293b':'#64748b'};cursor:pointer">注册</button>
+        <div class="login-tabs" role="tablist">
+          <button type="button" data-act="switch-login" data-mode="login" class="${mode==='login'?'is-on':''}" role="tab" aria-selected="${mode==='login'}">登录</button>
+          <button type="button" data-act="switch-login" data-mode="register" class="${mode==='register'?'is-on':''}" role="tab" aria-selected="${mode==='register'}">注册</button>
         </div>
         <div class="card" style="padding:24px">
-          <div style="margin-bottom:16px">
-            <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">邮箱</label>
-            <input id="loginEmail" type="email" placeholder="your@email.com" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
+          <div class="login-field">
+            <label for="loginEmail">邮箱</label>
+            <input id="loginEmail" type="email" placeholder="your@email.com" autocomplete="email" />
           </div>
-          <div style="margin-bottom:${mode==='register'?'16px':'20px'}">
-            <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">密码</label>
-            <input id="loginPwd" type="password" placeholder="至少6位" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
+          <div class="login-field">
+            <label for="loginPwd">密码</label>
+            <input id="loginPwd" type="password" placeholder="至少6位" autocomplete="${mode==='register'?'new-password':'current-password'}" />
           </div>
           ${mode==='register'?`
-          <div style="margin-bottom:20px">
-            <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">确认密码</label>
-            <input id="loginPwd2" type="password" placeholder="再输入一次密码" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
+          <div class="login-field">
+            <label for="loginPwd2">确认密码</label>
+            <input id="loginPwd2" type="password" placeholder="再输入一次密码" autocomplete="new-password" />
           </div>`:''}
-          <button data-act="${mode==='login'?'do-login':'do-register'}" type="button" style="width:100%;padding:14px;background:#2D5BFF;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer">${mode==='login'?'登录':'注册'}</button>
-          <div id="loginMsg" style="text-align:center;margin-top:12px;font-size:13px;color:#64748b"></div>
+          <button type="button" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
+          <div id="loginMsg" class="login-msg"></div>
         </div>
-        <div style="text-align:center;margin-top:20px">
-          <button data-act="guest" type="button" style="color:#64748b;font-size:13px;background:none;border:none;cursor:pointer">先逛逛，稍后登录</button>
-        </div>
+        <button type="button" class="login-guest" data-act="guest">先逛逛，稍后登录</button>
       </div>
     `;
   }
