@@ -2741,32 +2741,109 @@ function formulaFilter() {
     }
     return autoFrac(out);
   }
-  /** 把纯文本里的 a/b（含 sin u / u、(sin 3x)/(3x)、x²/2、0/0、1/x）收成上下分式 */
   function autoFrac(html) {
-    const parts = String(html).split(/(<[^>]+>)/g);
-    // 允许括号组、带空格的三角/对数（sin 3x、ln(1+x)）、上下标
-    const atom =
-      "(?:\\([^()]+\\)(?:²|³|⁴|⁺|⁻|\\^\\{[^}]+\\}|\\^\\d)?|(?:[A-Za-z0-9²³¹⁴⁺⁻^.°√|]|\\^\\{[^}]+\\}|\\^\\d|−|:|\\s(?=[A-Za-z0-9(√])){1,48})";
-    const re = new RegExp("(" + atom + ")\\s*\\/\\s*(" + atom + ")", "g");
-    for (let p = 0; p < parts.length; p++) {
-      if (p % 2 === 1) continue;
-      // 多轮替换，避免相邻分数漏网
-      let prev = null;
-      let s = parts[p];
-      for (let guard = 0; guard < 6 && s !== prev; guard++) {
-        prev = s;
-        s = s.replace(re, function (m, a, b) {
-          const A = String(a || "").trim();
-          const B = String(b || "").trim();
-          if (!A || !B) return m;
-          // 纯英文单词/单词（and/or）不转；网址 http:// 不转（已由空白限制）
-          if (/^[A-Za-z]+$/.test(A) && /^[A-Za-z]+$/.test(B)) return m;
-          return fracSpan(A, B);
-        });
-      }
-      parts[p] = s;
+    let s0 = String(html == null ? "" : html);
+    const keep = [];
+    s0 = s0.replace(/<span class="frac">[\s\S]*?<\/span><\/span>/g, function (m) {
+      keep.push(m);
+      return "@@KF" + (keep.length - 1) + "@@";
+    });
+    function isTok(ch) {
+      return /[A-Za-z0-9^.()|]/.test(ch) || (ch && ch.charCodeAt(0) > 127);
     }
-    return parts.join("");
+    function rightEnd(s, i) {
+      while (i < s.length && /\s/.test(s[i])) i++;
+      if (s[i] === "(") {
+        let d = 1, j = i + 1;
+        while (j < s.length && d) {
+          if (s[j] === "(") d++;
+          else if (s[j] === ")") d--;
+          j++;
+        }
+        return j;
+      }
+      let j = i;
+      while (j < s.length && isTok(s[j])) {
+        if (s[j] === "^" && s[j + 1] === "{") {
+          let d = 1, k = j + 2;
+          while (k < s.length && d) {
+            if (s[k] === "{") d++;
+            else if (s[k] === "}") d--;
+            k++;
+          }
+          j = k;
+        } else j++;
+      }
+      return j;
+    }
+    function leftStart(s, slash) {
+      let i = slash - 1;
+      while (i >= 0 && /\s/.test(s[i])) i--;
+      if (i < 0) return -1;
+      if (s[i] === ")") {
+        let d = 1, k = i - 1;
+        while (k >= 0 && d) {
+          if (s[k] === ")") d++;
+          else if (s[k] === "(") d--;
+          k--;
+        }
+        return k + 1;
+      }
+      let j = i;
+      while (j >= 0 && isTok(s[j])) {
+        if (s[j] === "^") break;
+        j--;
+      }
+      return j + 1;
+    }
+    for (let pass = 0; pass < 8; pass++) {
+      let out = "";
+      let last = 0;
+      let i = 0;
+      let hit = false;
+      while (i < s0.length) {
+        if (s0[i] === "/") {
+          const L = leftStart(s0, i);
+          const R = rightEnd(s0, i + 1);
+          if (L >= last && L < i && R > i + 1) {
+            let A = s0.slice(L, i).trim();
+            let B = s0.slice(i + 1, R).trim();
+            const hasCJK = /[\u4e00-\u9fff]/.test(A + B);
+            const pureWords = /^[A-Za-z]+$/.test(A) && /^[A-Za-z]+$/.test(B);
+            if (hasCJK) { i++; continue; }
+            if (/y'/.test(s0.slice(Math.max(0, L - 2), R + 2)) && /y'\(/.test(s0.slice(L, R))) {
+              /* fallthrough */
+            }
+            if (A && B && !pureWords && A.indexOf("@@") < 0 && B.indexOf("@@") < 0) {
+              let pre = "";
+              const pm = A.match(/^(lim|LIM)\s+/);
+              if (pm) { pre = pm[0]; A = A.slice(pm[0].length).trim(); }
+              if (A && B) {
+                {
+                let L2 = L;
+                const before = s0.slice(Math.max(0, L - 12), L);
+                const fm = before.match(/(\b(sin|cos|tan|cot|ln|log|exp|arcsin|arccos|arctan)\s+)$/i);
+                if (fm) {
+                  L2 = L - fm[0].length;
+                  A = s0.slice(L2, i).trim();
+                }
+                out += s0.slice(last, L2) + pre + fracSpan(A, B);
+              }
+                last = R;
+                i = R;
+                hit = true;
+                continue;
+              }
+            }
+          }
+        }
+        i++;
+      }
+      out += s0.slice(last);
+      s0 = out;
+      if (!hit) break;
+    }
+    return s0.replace(/@@KF(\d+)@@/g, function (_, i) { return keep[+i]; });
   }
   function renderMathLine(expr) {
     return '<div class="mathline">' + mathHtml(expr) + "</div>";
