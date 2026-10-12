@@ -1,0 +1,14 @@
+﻿const fs = require("fs");
+const path = require("path");
+const vm = require("vm");
+const file = path.join(__dirname, "..", "all-bank.js");
+const sb = { window: { STUDY_DATA: {} } };
+vm.createContext(sb);
+vm.runInContext(fs.readFileSync(file, "utf8"), sb);
+const Q = sb.window.STUDY_DATA.questions;
+const by = {};
+Q.forEach((q) => { by[q.subject] = (by[q.subject] || 0) + 1; });
+console.log("total", Q.length, by);
+const ok = Q.length === 1500 && Object.keys(by).length === 5 && Object.values(by).every((n) => n === 300);
+console.log(ok ? "VERIFY_300_PASS" : "VERIFY_300_FAIL");
+process.exit(ok ? 0 : 1);

@@ -29,7 +29,12 @@ vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(root, "all-bank.js"), "utf8"), ctx, { timeout: 60000 });
 const D = ctx.window.STUDY_DATA;
 ok(!!D, "STUDY_DATA 存在");
-ok(Array.isArray(D.questions) && D.questions.length > 2000, "questions 非空 (" + (D.questions || []).length + ")");
+ok(Array.isArray(D.questions) && D.questions.length === 1500, "questions 精选1500 (" + (D.questions || []).length + ")");
+{
+  const by = {};
+  (D.questions || []).forEach((q) => { by[q.subject] = (by[q.subject] || 0) + 1; });
+  ok(Object.keys(by).length === 5 && Object.values(by).every((n) => n === 300), "每科300题 " + JSON.stringify(by));
+}
 ok(!!D.chapters && D.chapters.length >= 5, "chapters 存在");
 ok(!!D.subjects, "subjects 存在");
 ok(!!D.EXAM_PLANS, "EXAM_PLANS 存在");
