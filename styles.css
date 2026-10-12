@@ -647,7 +647,7 @@ html.qa-modal-open { overflow: hidden; }
   .chip-row { overflow-x:auto; flex-wrap:nowrap; }
 }
 
-/* �����׾� �� ��Ƭ�����ͼ��Ŵ� */
+/* ׾  ƬͼŴ */
 .exam-stack { display:flex; flex-direction:column; gap:12px; }
 .exam-card {
   width:100%; display:flex; align-items:center; gap:14px;
@@ -680,7 +680,7 @@ html.qa-modal-open { overflow: hidden; }
   display:grid; place-items:center; font-size:13px; font-weight:700;
 }
 
-/* �������񣺱���/˵�����У���Ƭռ����� */
+/* 񣺱/˵УƬռ */
 .task-row .main { display:flex; flex-direction:column; gap:2px; }
 .task-row .t { display:block; font-size:15px; font-weight:750; line-height:1.35; }
 .task-row .s { display:block; font-size:12px; color:var(--text-sub); line-height:1.4; }
@@ -691,7 +691,7 @@ html.qa-modal-open { overflow: hidden; }
   .home-tasks > .card { width:100%; max-width:800px; }
 }
 
-/* ��ʽ������ */
+/* ʽ */
 .f-side-title { font-size:12px; font-weight:750; color:var(--text-sub); margin:0 0 8px; }
 /* 标签块与正文分行：教辅讲义式排版 */
 .f-row {
@@ -716,7 +716,7 @@ html.qa-modal-open { overflow: hidden; }
   border-radius:10px; padding:16px 12px; margin:12px 0 4px;
 }
 
-/* ����/רҵ�л� */
+/* /רҵл */
 .seg-top {
   display:grid; grid-template-columns:1fr 1fr; gap:8px;
   margin-bottom:4px;
@@ -740,7 +740,7 @@ html.qa-modal-open { overflow: hidden; }
 }
 .f-card { border-left-width:3px !important; }
 
-/* ��ѧ��ʽ */
+/* ѧʽ */
 .frac {
   display:inline-flex; flex-direction:column; align-items:center;
   vertical-align:middle; margin:0 4px; line-height:1.25;
@@ -757,7 +757,7 @@ html.qa-modal-open { overflow: hidden; }
 @media (max-width: 768px) {
   .mathline { font-size:16px; }
 }
-/* ��������ǿ�Ʒ��� */
+/* ǿƷ */
 .task-row .t { display:block !important; }
 .task-row .s { display:block !important; }
 .task-row .main { display:flex !important; flex-direction:column !important; }
@@ -765,7 +765,7 @@ html.qa-modal-open { overflow: hidden; }
 .chip-ok { color:var(--success); border-color:color-mix(in srgb, var(--success) 40%, var(--border)); }
 .chip-warn { color:var(--warning); border-color:color-mix(in srgb, var(--warning) 45%, var(--border)); }
 
-/* ���ʽ���������� / ���� / ��ĸ���� */
+/* ʽ /  / ĸ */
 .frac {
   display:inline-flex !important;
   flex-direction:column !important;
@@ -806,7 +806,7 @@ html.qa-modal-open { overflow: hidden; }
   .frac .num, .frac .den { min-width:36px; padding:4px 12px; }
 }
 
-/* ===== �ƶ���ǿ�����䣨���ǣ� ===== */
+/* ===== ƶǿ䣨ǣ ===== */
 @media (max-width: 1023px) {
   .side-nav { display: none !important; }
   .app-frame {
@@ -882,7 +882,7 @@ html.qa-modal-open { overflow: hidden; }
   .exam-ico { width: 40px !important; height: 40px !important; }
 }
 
-/* ѧϰһ�� / ��� UI */
+/* ѧϰһ /  UI */
 .learn-hero {
   background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--card)), var(--card));
   border: 1px solid var(--border);
@@ -1423,7 +1423,7 @@ html.qa-modal-open { overflow: hidden; }
 }
 .login-guest:hover { color: var(--text); }
 
-/* ��¼ҳ���ز���/������ȥ������ɫ���� */
+/* ¼ҳز/ȥɫ */
 .side-nav.is-hidden,
 .tabbar.is-hidden,
 .side-nav:empty {
@@ -1441,7 +1441,7 @@ html.qa-modal-open { overflow: hidden; }
   padding: 24px 0 48px !important;
 }
 
-/* ===== ��ҳ��2027 ��ٽṹ ===== */
+/* ===== ҳ2027 ٽṹ ===== */
 .home-hero {
   display: flex; gap: 16px; align-items: stretch; justify-content: space-between;
   background: linear-gradient(135deg, #2D5BFF, #4F8CFF);
@@ -1538,9 +1538,9 @@ html.qa-modal-open { overflow: hidden; }
   .home-subj-row { grid-template-columns: 1fr; }
 }
 
-/* ===== UI �Ű��Ż���һ��һ���� / �����㼶 / �޿� / �ȿ���ʱ�� ===== */
+/* ===== UI ŰŻһһ / 㼶 / ޿ / ȿʱ ===== */
 
-/* ����ҳ����ɸ����� */
+/* ҳɸ */
 .q-stem {
   font-size: 17px;
   line-height: 1.75;
@@ -1552,7 +1552,7 @@ html.qa-modal-open { overflow: hidden; }
   line-height: 1.55;
 }
 
-/* �����㼶���ȶԴ�������� */
+/* 㼶ȶԴ */
 .feedback {
   min-height: 44px;
   display: flex;
@@ -1583,7 +1583,7 @@ html.qa-modal-open { overflow: hidden; }
   margin: 8px 0;
 }
 
-/* ���Զ������޿�������������ѹ */
+/* Զ޿ѹ */
 @media (min-width: 1024px) {
   .practice-wrap,
   #app > .q-progress + *,
@@ -1593,11 +1593,11 @@ html.qa-modal-open { overflow: hidden; }
   .explain-body { max-width: 760px; }
   .q-stem { font-size: 18px; }
   .opt { font-size: 16px; min-height: 52px; }
-  /* ���������/���������п� */
+  /* /п */
   .shell { --readable: 760px; }
 }
 
-/* ���������ֶθ��׶� */
+/* ֶθ׶ */
 .explain-block .content {
   font-size: 14px;
   line-height: 1.75;
@@ -1614,7 +1614,7 @@ html.qa-modal-open { overflow: hidden; }
   letter-spacing: 0.02em;
 }
 
-/* �ȿ����ּ�ʱ */
+/* ȿּʱ */
 .exam-timer,
 .hh-num,
 .today-num,
@@ -1623,17 +1623,17 @@ html.qa-modal-open { overflow: hidden; }
   font-feature-settings: "tnum";
 }
 
-/* �Աȶȣ���Ҫ���ֲ�Ҫ̫�� */
+/* ԱȶȣҪֲҪ̫ */
 .muted, .oc-sub, .today-label, .hh-stats span {
   color: var(--text-sub);
 }
 
-/* ��״̬������ */
+/* ״̬ */
 .empty .btn {
   margin-top: 12px;
 }
 
-/* ��������0 ���Ȳ���ʾ����䣻��Ŀ������ͳ�Ʒ��� */
+/* 0 Ȳʾ䣻ĿͳƷ */
 .bar > i[style*="width:0%"],
 .bar > i[style*="width: 0%"] {
   display: none;
@@ -1644,7 +1644,7 @@ html.qa-modal-open { overflow: hidden; }
 .subj-chip .sc-p { display: block; }
 .subj-chip .swatch { display: inline-block; margin-bottom: 2px; }
 
-/* ��ʽ�����ֲ������� */
+/* ʽֲ */
 .f-steps {
   margin: 4px 0 0;
   padding-left: 22px;
@@ -1682,7 +1682,7 @@ html.qa-modal-open { overflow: hidden; }
 .me-page .list-row .t { white-space: normal; }
 .me-page .list-row .end { font-size: 13px; }
 
-/* ˵������������·�ʽҲҪ���� */
+/* ˵·ʽҲҪ */
 .f-txt .frac,
 .f-steps .frac {
   display: inline-flex;
@@ -1696,7 +1696,7 @@ html.qa-modal-open { overflow: hidden; }
   min-width: 18px;
 }
 
-/* �����������һ��һ�������Ѱ�ť */
+/* һһѰť */
 .q-actions {
   display: flex;
   flex-direction: column;
@@ -1716,7 +1716,7 @@ html.qa-modal-open { overflow: hidden; }
   flex: 0.9;
 }
 
-/* �����ǩ���͵�Բ��Сǩ */
+/* ǩ͵ԲСǩ */
 .reason-pick {
   display: flex;
   flex-wrap: wrap;

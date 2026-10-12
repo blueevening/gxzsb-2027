@@ -987,23 +987,23 @@
         )
         .join("");
     const SYL_MATH = [
-      { label: "����ѡ��", desc: "10 �� �� 5 �� = 50 ��" },
-      { label: "���", desc: "4 �� �� 5 �� = 20 ��" },
-      { label: "���", desc: "7 �� �� 8 �� = 56 ��" },
-      { label: "Ӧ��", desc: "2 �� �� 12 �� = 24 ��" }
+      { label: "\u5355\u9879\u9009\u62e9", desc: "10 \u9898 \u00d7 5 \u5206 = 50 \u5206" },
+      { label: "\u586b\u7a7a", desc: "4 \u9898 \u00d7 5 \u5206 = 20 \u5206" },
+      { label: "\u89e3\u7b54", desc: "7 \u9898 \u00d7 8 \u5206 = 56 \u5206" },
+      { label: "\u5e94\u7528", desc: "2 \u9898 \u00d7 12 \u5206 = 24 \u5206" }
     ];
     const SYL_EN = [
-      { label: "�ʻ����﷨��ѡ", desc: "20 �� = 40 ��" },
-      { label: "�Ķ����ⵥѡ", desc: "50 ��" },
-      { label: "�Ķ����", desc: "5 �� = 10 �֣��Ķ��ϼ� 60��" },
-      { label: "����", desc: "Ӣ�뺺ѡ�� 8 �� 24 + ����Ӣ 1 �� 8 = 32 ��" },
-      { label: "д��Ӧ����", desc: "1 �� = 18 ��" }
+      { label: "\u8bcd\u6c47\u4e0e\u8bed\u6cd5\u5355\u9009", desc: "20 \u9898 = 40 \u5206" },
+      { label: "\u9605\u8bfb\u7406\u89e3\u5355\u9009", desc: "50 \u5206" },
+      { label: "\u9605\u8bfb\u586b\u7a7a", desc: "5 \u9898 = 10 \u5206\uff08\u9605\u8bfb\u5408\u8ba1 60\uff09" },
+      { label: "\u7ffb\u8bd1", desc: "\u82f1\u8bd1\u6c49\u9009\u62e9 8 \u9898 24 + \u6c49\u8bd1\u82f1 1 \u9898 8 = 32 \u5206" },
+      { label: "\u5199\u4f5c\u5e94\u7528\u6587", desc: "1 \u9898 = 18 \u5206" }
     ];
     const SYL_MAJ = [
-      { label: "����ѡ��", desc: "30 �� = 120 ��" },
-      { label: "�ж�", desc: "15 �� = 45 ��" },
-      { label: "���", desc: "30 �� = 60 ��" },
-      { label: "Ӧ��", desc: "6 �� = 75 ��" }
+      { label: "\u5355\u9879\u9009\u62e9", desc: "30 \u9898 = 120 \u5206" },
+      { label: "\u5224\u65ad", desc: "15 \u9898 = 45 \u5206" },
+      { label: "\u586b\u7a7a", desc: "30 \u9898 = 60 \u5206" },
+      { label: "\u5e94\u7528", desc: "6 \u9898 = 75 \u5206" }
     ];
     function outlineCard(opt) {
       return `
