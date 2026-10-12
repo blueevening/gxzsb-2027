@@ -8,11 +8,12 @@
   }
 
   const D = window.STUDY_DATA || {};
-  const Q = (D.questions || []).map((q) => {
+  const Q = (D.questions || []).map((q, qi) => {
     if (q.type === "choice") q.type = "single";
     if (q.type === "blank") q.type = "fill";
     return {
     ...q,
+    _ord: qi,
     difficultyLabel: q.difficultyLabel || ({ 1: "基础", 2: "强化", 3: "冲刺" })[q.difficulty] || "基础",
     typeLabel:
       q.typeLabel ||
@@ -20,6 +21,7 @@
       "单选",
     };
   });
+  const Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
 
   const SUBJ = {
     高等数学: { cls: "sc-math", short: "高数", color: "#3B82F6", group: "public", score: 150, order: 1 },
@@ -183,17 +185,27 @@
     return out;
   }
 
-  async function pushProgress(data) {
+  async function pushProgress(data, attempt) {
     const u = activeUser();
     if (!u) return;
+    const n = attempt || 0;
     const payload = data || gatherLocal();
     try {
       const { error } = await sb.from("progress").upsert(
         { user_id: u.id, data: payload, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       );
-      if (error) console.warn("sync push:", error.message);
-    } catch (e) {}
+      if (error) {
+        console.warn("sync push:", error.message);
+        if (n < 2) setTimeout(() => pushProgress(data, n + 1), 1500 * (n + 1));
+      }
+    } catch (e) {
+      // 离线/失败：排队稍后重试
+      if (n < 2) setTimeout(() => pushProgress(data, n + 1), 2000 * (n + 1));
+      else {
+        try { save("gxzsb.syncQueue", { at: Date.now(), data: payload }); } catch (e2) {}
+      }
+    }
   }
 
   function scheduleSync() {
@@ -205,6 +217,14 @@
   async function pullAndMerge() {
     const u = activeUser();
     if (!u) return;
+    // 先冲掉离线队列
+    try {
+      const q = load("gxzsb.syncQueue", null);
+      if (q && q.data) {
+        localStorage.removeItem("gxzsb.syncQueue");
+        await pushProgress(q.data);
+      }
+    } catch (e) {}
     try {
       const { data, error } = await sb.from("progress")
         .select("data,updated_at").eq("user_id", u.id).maybeSingle();
@@ -262,7 +282,7 @@
     }
     return x;
   };
-  const qById = (id) => Q.find((x) => x.id === id);
+  const qById = (id) => Q_BY_ID.get(id) || Q.find((x) => x.id === id);
   const daysLeft = () => Math.max(0, Math.ceil((EXAM_DAY - Date.now()) / 86400000));
 
   function subjOf(name) {
@@ -336,6 +356,82 @@
       s.today = 1;
     }
     save(LS.streak, s);
+  }
+
+  /* ========== 每日 30 题（按日锁定题组） ========== */
+  function dayKey(d) {
+    const dt = d || new Date();
+    return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+  }
+  function seededPick(ids, seedStr, n) {
+    let h = 2166136261;
+    for (let i = 0; i < seedStr.length; i++) {
+      h ^= seedStr.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    let s = h >>> 0;
+    const rnd = () => {
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const arr = ids.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = (rnd() * (i + 1)) | 0;
+      const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr.slice(0, n);
+  }
+  function getDaily30() {
+    const key = dayKey();
+    let d = load("gxzsb.daily30", null);
+    if (d && d.date === key && Array.isArray(d.ids) && d.ids.length) return d.ids;
+    const ids = seededPick(Q.map((q) => q.id), "gxzsb-daily-" + key, 30);
+    d = { date: key, ids };
+    save("gxzsb.daily30", d);
+    return ids;
+  }
+  function todayDoneCount() {
+    const d = load("gxzsb.daily30", null);
+    const key = dayKey();
+    if (!d || d.date !== key || !Array.isArray(d.ids)) return 0;
+    const set = new Set(d.ids);
+    const day = new Date().toDateString();
+    const done = new Set();
+    state.attempts.forEach((a) => {
+      if (!a || !set.has(a.questionId)) return;
+      if (new Date(a.at || 0).toDateString() !== day) return;
+      done.add(a.questionId);
+    });
+    return Math.min(done.size, 30);
+  }
+
+  /* ========== 学习数据重置（只清学习记录） ========== */
+  const STUDY_KEYS = [LS.attempts, LS.wrong, LS.fav, LS.notes, LS.marks, LS.last, LS.streak, LS.history, LS.reports];
+  function resetLearningData() {
+    STUDY_KEYS.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem("gxzsb.session");
+    localStorage.removeItem("gxzsb.daily30");
+    state.attempts = [];
+    state.wrong = {};
+    state.fav = {};
+    state.notes = {};
+    state.marks = {};
+    state.last = null;
+    state.streak = { d: null, n: 0, today: 0 };
+    state.history = [];
+    state.reports = [];
+    state.session = null;
+  }
+  function backupThenResetLearning() {
+    try {
+      const bak = { at: Date.now(), data: {} };
+      STUDY_KEYS.forEach((k) => { bak.data[k] = load(k, null); });
+      bak.data["gxzsb.daily30"] = load("gxzsb.daily30", null);
+      save("gxzsb.bak." + Date.now(), bak);
+    } catch (e) {}
+    resetLearningData();
   }
 
   function record(q, ok) {
@@ -426,8 +522,7 @@
     const pub = ["高等数学", "英语"].map(subjStat);
     const maj = ["电工电子技术基础", "C语言程序设计", "计算机网络基础"].map((s) => ({ s, ...subjStat(s) }));
     const totalDone = new Set(state.attempts.map((a) => a.questionId).filter(Boolean)).size;
-    var todayStr = new Date().toDateString();
-    var todayDone = state.attempts.filter((a) => new Date(a.at || Date.now()).toDateString() === todayStr).length;
+    var todayDone = todayDoneCount();
 
     return `
       <button class="syllabus-banner" data-nav="syllabus" type="button">
@@ -511,6 +606,8 @@
         <button class="qi" data-act="due" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>错题重练</button>
         <button class="qi" data-act="school" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>真题库</button>
         <button class="qi" data-act="report" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>学习报告</button>
+        <button class="qi" data-nav="mock" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>模拟考试</button>
+        <button class="qi" data-nav="stats" type="button"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></svg></span>数据分析</button>
       </div>
 
       <div class="section-title">考纲套卷</div>
@@ -710,7 +807,15 @@
       const dueIds = Object.keys(state.wrong).filter((id) => (state.wrong[id].due || 0) <= Date.now());
       pool = pool.filter((q) => dueIds.includes(q.id));
     }
-    if (opts.limit) pool = shuffle(pool).slice(0, opts.limit);
+    // ordered：顺序练习按题库录入顺序稳定取前 N；显式 ids 时保持给定顺序，不再打乱
+    if (opts.ids) {
+      if (opts.limit) pool = pool.slice(0, opts.limit);
+    } else if (opts.ordered) {
+      pool = pool.slice().sort((a, b) => (a._ord || 0) - (b._ord || 0));
+      if (opts.limit) pool = pool.slice(0, opts.limit);
+    } else if (opts.limit) {
+      pool = shuffle(pool).slice(0, opts.limit);
+    }
 
     state.session = {
       title: opts.title || "练习",
@@ -724,6 +829,8 @@
       start: Date.now(),
       end: opts.minutes ? Date.now() + opts.minutes * 60000 : null,
       exam: opts.exam || null,
+      ordered: !!opts.ordered,
+      daily: !!opts.daily,
     };
     state.last = { title: opts.title, subject: opts.subject, at: Date.now() };
     save(LS.last, state.last);
@@ -739,6 +846,7 @@
       localStorage.setItem("gxzsb.session", JSON.stringify({
         title: s.title, ids: s.q.map(function(q){return q.id;}), i: s.i,
         sel: s.sel, submitted: s.submitted, results: s.results,
+        ordered: !!s.ordered, daily: !!s.daily,
         date: new Date().toDateString()
       }));
     } catch(e) {}
@@ -756,7 +864,8 @@
       state.session = {
         title: d.title, q: qs, i: Math.min(d.i, qs.length-1),
         sel: d.sel, submitted: d.submitted, results: d.results || {},
-        flags: {}, showExp: false, start: Date.now(), end: null, exam: null
+        flags: {}, showExp: false, start: Date.now(), end: null, exam: null,
+        ordered: !!d.ordered, daily: !!d.daily
       };
       return true;
     } catch(e) { return false; }
@@ -954,6 +1063,7 @@
     const s = state.session;
     if (!s) return;
     if (s.i >= s.q.length - 1) {
+      saveExamHistory(s);
       go("report");
       render();
       return;
@@ -964,6 +1074,35 @@
     s.showExp = false;
     render();
     window.scrollTo({ top: 0 });
+  }
+
+  function saveExamHistory(s) {
+    if (!s || !s.exam) return;
+    try {
+      const ids = s.q.map((q) => q.id);
+      const answered = ids.filter((id) => id in s.results);
+      const ok = answered.filter((id) => s.results[id]).length;
+      let got = 0, full = 0;
+      ids.forEach((id) => {
+        const sc = (s.exam.scoreOf && s.exam.scoreOf[id]) || 1;
+        full += sc;
+        if (s.results[id]) got += sc;
+      });
+      const rec = {
+        id: "ex-" + Date.now(),
+        title: s.title,
+        at: Date.now(),
+        ok: ok,
+        total: ids.length,
+        answered: answered.length,
+        acc: answered.length ? Math.round((ok / answered.length) * 100) : 0,
+        score: got,
+        fullScore: full,
+      };
+      state.history = [rec].concat(state.history || []).slice(0, 50);
+      save(LS.history, state.history);
+      scheduleSync();
+    } catch (e) {}
   }
   function prevQ() {
     const s = state.session;
@@ -1038,6 +1177,150 @@
     `;
   }
 
+  /* ========== 模拟考试 ========== */
+  function viewMock() {
+    setTitle("模拟考试", true);
+    const plans = D.EXAM_PLANS || {};
+    const cards = [
+      { id: "math-full", label: "高数考纲卷", desc: "单选/填空/计算/应用 · 120 分钟", color: "#3B82F6", icon: "数" },
+      { id: "english-full", label: "英语考纲卷", desc: "词汇语法/阅读/翻译/写作 · 120 分钟", color: "#8B5CF6", icon: "英" },
+      { id: "major-combined", label: "专业综合合卷", desc: "电工 + C + 计网 · 150 分钟", color: "#F97316", icon: "专" },
+      { id: "ee-special", label: "电工专项", desc: "50 道高频易错 · 60 分钟", color: "#F97316", icon: "电" },
+      { id: "c-special", label: "C 语言专项", desc: "50 道高频易错 · 60 分钟", color: "#10B981", icon: "C" },
+      { id: "net-special", label: "计网专项", desc: "50 道高频易错 · 60 分钟", color: "#06B6D4", icon: "网" },
+    ];
+    const hist = (state.history || []).slice(0, 10);
+    return `
+      <div class="section-title">选择试卷</div>
+      <div class="exam-stack">
+        ${cards.map((c) => `
+          <button class="exam-card" data-act="exam" data-plan="${attr(c.id)}" type="button" ${plans[c.id] ? "" : "disabled"}>
+            <span class="exam-ico" style="background:${c.color}">${c.icon}</span>
+            <span class="exam-main">
+              <span class="exam-t">${esc(c.label)}</span>
+              <span class="exam-s">${esc(c.desc)}</span>
+              <span class="exam-meta"><span class="pill">限时</span><span class="pill">交卷出分</span><span class="pill">可对答案</span></span>
+            </span>
+            <span class="exam-go">开始</span>
+          </button>
+        `).join("")}
+      </div>
+      <div class="section-title">考试历史</div>
+      ${hist.length ? `<div class="card" style="padding:0">
+        ${hist.map((h) => `
+          <div class="list-row" style="cursor:default">
+            <span class="main">
+              <span class="t">${esc(h.title || "模拟考")}</span>
+              <span class="s">${new Date(h.at || 0).toLocaleString("zh-CN")} · 得分 ${h.score != null ? h.score : "—"}/${h.fullScore != null ? h.fullScore : "—"} · 正确率 ${h.acc != null ? h.acc + "%" : "—"}</span>
+            </span>
+            <span class="end mono">${h.ok != null ? h.ok + "/" + h.total : ""}</span>
+          </div>
+        `).join("")}
+      </div>` : `<div class="empty">还没有模拟考记录，选一套卷开始吧</div>`}
+      <div class="disclaimer">模拟卷按考纲结构自动组卷，交卷后可查看得分与解析。</div>
+    `;
+  }
+
+  /* ========== 数据分析看板 ========== */
+  function viewStats() {
+    setTitle("数据分析", true);
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      days.push({ key: dayKey(d), label: (d.getMonth() + 1) + "/" + d.getDate(), date: d.toDateString() });
+    }
+    const dayStat = days.map((d) => {
+      const at = state.attempts.filter((a) => new Date(a.at || 0).toDateString() === d.date);
+      const ok = at.filter((a) => a.correct).length;
+      return { ...d, n: at.length, ok, acc: at.length ? Math.round((ok / at.length) * 100) : 0 };
+    });
+    const maxN = Math.max(1, ...dayStat.map((x) => x.n));
+
+    const subjNames = ["高等数学", "英语", "电工电子技术基础", "C语言程序设计", "计算机网络基础"];
+    const subjRows = subjNames.map((n) => {
+      const p = subjStat(n);
+      return { name: n, short: subjOf(n).short, color: subjOf(n).color, ...p };
+    });
+    const maxDone = Math.max(1, ...subjRows.map((r) => r.done));
+
+    const weak = weakPoints(8).filter((w) => w.t > 0);
+    const totalDone = new Set(state.attempts.map((a) => a.questionId).filter(Boolean)).size;
+    const totalOk = state.attempts.filter((a) => a.correct).length;
+    const totalAcc = state.attempts.length ? Math.round((totalOk / state.attempts.length) * 100) : 0;
+
+    return `
+      <div class="stat-grid" style="margin-bottom:16px">
+        <div class="stat-box"><div class="n">${totalDone}</div><div class="l">已练题数</div></div>
+        <div class="stat-box"><div class="n">${totalAcc}%</div><div class="l">总正确率</div></div>
+        <div class="stat-box"><div class="n">${state.attempts.length}</div><div class="l">作答次数</div></div>
+        <div class="stat-box"><div class="n">${Object.keys(state.wrong).length}</div><div class="l">错题数</div></div>
+      </div>
+
+      <div class="section-title">近 7 日学习量</div>
+      <div class="card">
+        <div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:8px 0">
+          ${dayStat.map((d) => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end">
+              <span class="muted" style="font-size:11px">${d.n}</span>
+              <div style="width:100%;max-width:36px;height:${Math.max(4, Math.round((d.n / maxN) * 80))}px;background:var(--primary);border-radius:4px 4px 0 0;opacity:${d.n ? 1 : 0.25}"></div>
+              <span class="muted" style="font-size:11px">${d.label}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="section-title">正确率趋势（近 7 日）</div>
+      <div class="card">
+        ${dayStat.every((d) => !d.n) ? `<div class="empty">还没有作答数据</div>` : `
+        <svg viewBox="0 0 280 100" width="100%" height="120" role="img" aria-label="正确率趋势">
+          <polyline fill="none" stroke="var(--primary)" stroke-width="2"
+            points="${dayStat.map((d, i) => (20 + i * 40) + "," + (90 - (d.acc / 100) * 70)).join(" ")}" />
+          ${dayStat.map((d, i) => `
+            <circle cx="${20 + i * 40}" cy="${90 - (d.acc / 100) * 70}" r="3.5" fill="var(--primary)" />
+            <text x="${20 + i * 40}" y="100" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.6">${d.label}</text>
+            <text x="${20 + i * 40}" y="${84 - (d.acc / 100) * 70}" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.75">${d.n ? d.acc + "%" : "—"}</text>
+          `).join("")}
+        </svg>`}
+      </div>
+
+      <div class="section-title">科目进度</div>
+      <div class="card">
+        ${subjRows.map((r) => `
+          <div class="hbar-row">
+            <div class="label">${esc(r.short)}</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${Math.max(3, Math.round((r.done / (r.total || 1)) * 100))}%;background:${r.color}"></div></div>
+            <div class="val">${r.done}/${r.total}</div>
+          </div>
+          <div class="muted" style="font-size:11px;margin:-2px 0 8px">正确率 ${r.acc == null ? "—" : r.acc + "%"} · 覆盖 ${Math.max(3, Math.round((r.done / maxDone) * 100))}%</div>
+        `).join("")}
+      </div>
+
+      <div class="section-title">薄弱知识点 TOP</div>
+      ${weak.length ? `<div class="card" style="padding:0">
+        ${weak.map((w, i) => `
+          <button class="list-row" data-act="prac-point" data-p="${attr(w.point)}" type="button">
+            <span class="mono" style="width:22px;opacity:0.55">${i + 1}</span>
+            <span class="main">
+              <span class="t">${esc(w.point || "未命名")}</span>
+              <span class="s">${esc(subjOf(w.subject).short)} · 正确率 ${w.rate == null ? "—" : w.rate + "%"} · 已练 ${w.t}</span>
+            </span>
+            <span class="end">›</span>
+          </button>
+        `).join("")}
+      </div>` : `<div class="empty">做几道题后这里会显示薄弱考点</div>`}
+
+      <div class="section-title">模拟考历史</div>
+      ${(state.history || []).length ? `<div class="card" style="padding:0">
+        ${(state.history || []).slice(0, 5).map((h) => `
+          <div class="list-row" style="cursor:default">
+            <span class="main"><span class="t">${esc(h.title || "模拟考")}</span>
+            <span class="s">${new Date(h.at || 0).toLocaleDateString("zh-CN")} · ${h.score != null ? h.score + "/" + h.fullScore : ""} · ${h.acc != null ? h.acc + "%" : ""}</span></span>
+          </div>
+        `).join("")}
+      </div>` : `<div class="empty">暂无模拟考记录</div>`}
+    `;
+  }
+
   /* ========== 错题本 ========== */
   function viewWrong() {
     setTitle("错题 / 收藏", true);
@@ -1069,6 +1352,11 @@
     const subjFilter = state.wrongSubj || "all";
     let filteredItems = items;
     if (subjFilter !== "all") filteredItems = items.filter(function (it) { return it.q.subject === subjFilter; });
+    // 分页渲染，避免错题很多时一次插入过大 DOM
+    const pageSize = state.wrongPageSize || 40;
+    const pageNo = state.wrongPage || 1;
+    const pageItems = filteredItems.slice(0, pageNo * pageSize);
+    const moreWrong = filteredItems.length > pageItems.length;
 
     function rows(arr, kind) {
       if (!arr.length) {
@@ -1134,7 +1422,8 @@
         '<button class="chip" data-act="by-reason" data-r="read" type="button">审题偏差</button>' +
         '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
         "</div>" +
-        '<div class="section-title">错题列表（点题看解析，✕移除已掌握）</div>' + rows(filteredItems, "wrong");
+        '<div class="section-title">错题列表（点题看解析，✕移除已掌握）</div>' + rows(pageItems, "wrong") +
+        (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "");
     } else if (tab === "fav") {
       body =
         '<div class="section-title">我的收藏</div>' +
@@ -1455,10 +1744,15 @@ function ensureExplain(q) {
             <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">邮箱</label>
             <input id="loginEmail" type="email" placeholder="your@email.com" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
           </div>
-          <div style="margin-bottom:20px">
+          <div style="margin-bottom:${mode==='register'?'16px':'20px'}">
             <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">密码</label>
             <input id="loginPwd" type="password" placeholder="至少6位" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
           </div>
+          ${mode==='register'?`
+          <div style="margin-bottom:20px">
+            <label style="font-size:13px;color:#64748b;display:block;margin-bottom:6px">确认密码</label>
+            <input id="loginPwd2" type="password" placeholder="再输入一次密码" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box" />
+          </div>`:''}
           <button data-act="${mode==='login'?'do-login':'do-register'}" type="button" style="width:100%;padding:14px;background:#2D5BFF;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" style="text-align:center;margin-top:12px;font-size:13px;color:#64748b"></div>
         </div>
@@ -1476,8 +1770,7 @@ function ensureExplain(q) {
     const acc = total ? Math.round((ok / total) * 100) : 0;
     var wbS = window.WORDS ? window.WORDS.getStats() : { mastered: 0, reviewing: 0, learning: 0, total: 3000 };
     const favN = Object.keys(state.fav || {}).filter((k) => state.fav[k]).length;
-    const today = new Date().toDateString();
-    const todayDone = state.attempts.filter((a) => new Date(a.at || Date.now()).toDateString() === today).length;
+    const todayDone = todayDoneCount();
     const nick = load("gxzsb.nick", "专升本备考人");
 
     return `
@@ -1495,6 +1788,8 @@ function ensureExplain(q) {
 
       <div class="section-title">学习数据</div>
       <div class="card" style="padding:0;margin-bottom:16px">
+        <button class="list-row" data-nav="stats" type="button"><span class="main"><span class="t">数据分析看板</span><span class="s">正确率趋势 · 薄弱考点 · 近 7 日学习量</span></span><span class="end">›</span></button>
+        <button class="list-row" data-nav="mock" type="button"><span class="main"><span class="t">模拟考试</span><span class="s">限时交卷 · 出分对答案 · 历史记录</span></span><span class="end">›</span></button>
         <button class="list-row" data-nav="words" type="button"><span class="main"><span class="t">背单词进度</span><span class="s">已掌握 ${wbS.mastered}/${wbS.total} · 复习中 ${wbS.reviewing}</span></span><span class="end">›</span></button>
         <button class="list-row" data-nav="wrong" type="button"><span class="main"><span class="t">我的错题本</span><span class="s">${Object.keys(state.wrong).length} 道待复习</span></span><span class="end">›</span></button>
       </div>
@@ -1504,6 +1799,7 @@ function ensureExplain(q) {
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span><span class="s">当前：${esc(nick)}</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出全部数据备份</span><span class="s">下载JSON文件，换设备可导入</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span><span class="s">从JSON文件恢复学习记录</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span><span class="s">只清做题/错题/笔记，保留主题与登录</span></span><span class="end">›</span></button>
       </div>
 
       <div class="section-title">工具与设置</div>
@@ -1511,8 +1807,8 @@ function ensureExplain(q) {
         <button class="list-row" data-act="exam-info" type="button"><span class="main"><span class="t">考试结构说明</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="school" type="button"><span class="main"><span class="t">真题库/资料</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">切换深色/浅色模式</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t" style="color:var(--error)">退出登录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span><span class="s">保留本机学习记录</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span><span class="s">含主题与备份，不可恢复</span></span><span class="end">›</span></button>
       </div>
 
       <div class="disclaimer">
@@ -2076,20 +2372,31 @@ function formulaFilter() {
     return html;
   }
 
+  function hideNav() {
+    if ($("#sideNav")) $("#sideNav").innerHTML = "";
+    if ($("#tabbar")) $("#tabbar").innerHTML = "";
+  }
+
+  /* 事件由 document 级委托统一绑定；此函数供登录页等调用以保持接口兼容 */
+  function bindEvents() {}
+
   function render() {
     const { route, params } = parseHash();
     state.route = route;
     const app = $("#app");
     if (sb && !state.user && route !== "login") {
       app.innerHTML = viewLogin();
+      hideNav();
       bindEvents();
       return;
     }
-    if (route === "login") { app.innerHTML = viewLogin(); bindEvents(); return; }
+    if (route === "login") { app.innerHTML = viewLogin(); hideNav(); bindEvents(); return; }
     if (route === "bank") app.innerHTML = viewBank();
     else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
     else if (route === "practice") app.innerHTML = viewPractice();
     else if (route === "report") app.innerHTML = viewReport();
+    else if (route === "mock") app.innerHTML = viewMock();
+    else if (route === "stats") app.innerHTML = viewStats();
     else if (route === "wrong") app.innerHTML = viewWrong();
     else if (route === "formula") app.innerHTML = viewFormula();
     else if (route === "learn") app.innerHTML = viewLearn();
@@ -2185,11 +2492,10 @@ function formulaFilter() {
     } else if (act === "learn-mark") {
       t.textContent = "已学 \u2713";
     } else if (act === "daily") {
-      // 今天已开始过就继续
+      // 今天已开始过就继续（恢复同一题序）
       if (restoreSession()) { go("practice"); render(); return; }
-      const allIds = Q.map((q) => q.id);
-      const shuffled = shuffle(allIds).slice(0, 30);
-      startSession({ ids: shuffled, title: "每日 30 题（随机）" });
+      const dailyIds = getDaily30();
+      startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true });
     }
     else if (act === "due") startSession({ dueOnly: true, onlyWrong: true, limit: 15, title: "到期错题" });
     else if (act === "practice-wrong-all") {
@@ -2212,13 +2518,13 @@ function formulaFilter() {
     } else if (act === "weak") startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
     else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
     else if (act === "chapter") startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习" });
-    else if (act === "seq-practice") startSession({ subject: t.getAttribute("data-name"), limit: 20, title: "顺序练习" });
+    else if (act === "seq-practice") startSession({ subject: t.getAttribute("data-name"), limit: 20, title: "顺序练习", ordered: true });
     else if (act === "seq-obj") {
       const name = t.getAttribute("data-name");
-      startSession({ subject: name, limit: 20, title: name + " · 客观题", filterKind: "obj" });
+      startSession({ subject: name, limit: 20, title: name + " · 客观题", filterKind: "obj", ordered: true });
     } else if (act === "seq-subj") {
       const name = t.getAttribute("data-name");
-      startSession({ subject: name, limit: 15, title: name + " · 主观题", filterKind: "subj" });
+      startSession({ subject: name, limit: 15, title: name + " · 主观题", filterKind: "subj", ordered: true });
     }
     else if (act === "filter") {
       const kind = t.getAttribute("data-kind");
@@ -2338,9 +2644,14 @@ function formulaFilter() {
       else startSession({ mode: "weak", limit: 8, title: "错因补练" });
     } else if (act === "wrong-tab") {
       state.wrongTab = t.getAttribute("data-v");
+      state.wrongPage = 1;
+      render();
+    } else if (act === "wrong-more") {
+      state.wrongPage = (state.wrongPage || 1) + 1;
       render();
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
+      state.wrongPage = 1;
       render();
     } else if (act === "remove-wrong") {
       const id = t.getAttribute("data-id");
@@ -2374,9 +2685,11 @@ function formulaFilter() {
     } else if (act === "do-register") {
       var em2 = document.getElementById("loginEmail").value.trim();
       var pw2 = document.getElementById("loginPwd").value;
+      var pw2b = document.getElementById("loginPwd2");
       var msg2 = document.getElementById("loginMsg");
       if (!em2 || !pw2) { msg2.textContent = "请输入邮箱和密码"; return; }
       if (pw2.length < 6) { msg2.textContent = "密码至少6位"; return; }
+      if (pw2b && pw2b.value !== pw2) { msg2.textContent = "两次输入的密码不一致"; return; }
       msg2.textContent = "注册中...";
       sb.auth.signUp({ email: em2, password: pw2 }).then(function(r) {
         if (r.error) {
@@ -2387,6 +2700,8 @@ function formulaFilter() {
           }
           return;
         }
+        // 新账号隔离：备份并清空本机旧学习数据，避免串号
+        backupThenResetLearning();
         // 注册成功，尝试自动登录
         sb.auth.signInWithPassword({ email: em2, password: pw2 }).then(function(r2) {
           if (r2.error) {
@@ -2439,14 +2754,25 @@ function formulaFilter() {
       stopRealtime();
       if (sb) sb.auth.signOut();
       state.user = null;
+      // 退出登录 ≠ 清数据：保留本机学习记录，仅回登录页并隐藏侧栏/底栏
+      if ($("#sideNav")) $("#sideNav").innerHTML = "";
+      if ($("#tabbar")) $("#tabbar").innerHTML = "";
       go("login"); render();
+    } else if (act === "reset-study") {
+      if (!confirm("重置学习记录？（做题/错题/收藏/笔记/打卡将清空，主题与登录状态保留）")) return;
+      resetLearningData();
+      if (activeUser()) scheduleSync();
+      alert("学习记录已重置");
+      render();
     } else if (act === "clear") {
-      if (!confirm("清除本机全部学习数据？")) return;
-      Object.values(LS).forEach((k) => localStorage.removeItem(k));
-      localStorage.removeItem("gxzsb.session");
-      localStorage.removeItem("gxzsb.nick");
-      localStorage.removeItem("gxzsb.uid");
+      if (!confirm("清除本机全部数据？（含主题、备份与学习记录；登录会话也会结束）")) return;
+      try {
+        Object.keys(localStorage).forEach((k) => {
+          if (k.indexOf("gxzsb") === 0) localStorage.removeItem(k);
+        });
+      } catch (e) {}
       if (sb) sb.auth.signOut();
+      state.user = null;
       location.reload();
     } else if (act === "school") go("school");
     else if (act === "start-exam-paper") {

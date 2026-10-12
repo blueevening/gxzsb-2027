@@ -4,11 +4,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>广西专升本练习 · gxzsb</title>
-<link rel="stylesheet" href="styles.css?v=330" />
+<link rel="stylesheet" href="styles.css?v=331" />
 </head>
 <body>
   <header class="topbar">
-    <button class="back" id="btnBack" type="button" aria-label="返回">‹</button>
+    <button class="back" id="btnBack" type="button" aria-label="返回">←</button>
     <span class="title" id="pageTitle">广西专升本练习</span>
     <button class="icon-btn" id="btnSearch" type="button" aria-label="搜索">🔍</button>
     <button class="icon-btn" id="btnTheme" type="button" aria-label="切换主题">◐</button>
@@ -24,27 +24,24 @@
   <nav class="tabbar" id="tabbar" aria-label="底部导航"></nav>
 
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(r) { r.unregister(); });
-  });
-}
-if (window.caches) {
-  caches.keys().then(function(keys) {
-    keys.forEach(function(k) { caches.delete(k); });
+/* SW：仅在 http(s) 下注册（file:// 双击打开时跳过，不影响使用） */
+if ('serviceWorker' in navigator &&
+    (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
   });
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="sb-config.js"></script>
-<script defer src="all-bank.js?v=330"></script>
-<script defer src="all-learn.js?v=330"></script>
-<script defer src="formula-book.js?v=330"></script>
-<script defer src="wordbook.js?v=330"></script>
-<script defer src="kp-detail.js?v=330"></script>
-<script defer src="syllabus.js?v=330"></script>
-<script defer src="syllabus-sample.js?v=330"></script>
-<script defer src="exam-plans-v2.js?v=330"></script>
-<script defer src="app.js?v=330"></script>
+<script defer src="all-bank.js?v=331"></script>
+<script defer src="all-learn.js?v=331"></script>
+<script defer src="formula-book.js?v=331"></script>
+<script defer src="wordbook.js?v=331"></script>
+<script defer src="kp-detail.js?v=331"></script>
+<script defer src="syllabus.js?v=331"></script>
+<script defer src="syllabus-sample.js?v=331"></script>
+<script defer src="exam-plans-v2.js?v=331"></script>
+<script defer src="app.js?v=331"></script>
 </body>
 </html>
