@@ -2309,7 +2309,7 @@ function ensureExplain(q) {
     const p = pt.p;
     setTitle(p.name, true);
     const fmt = function (s) {
-      return String(s).replace(/frac\{([^}]+)\}\{([^}]+)\}/g, "($1)/($2)");
+      return mathHtml(String(s));
     };
     return (
       '<div class="card">' +
@@ -2741,20 +2741,30 @@ function formulaFilter() {
     }
     return autoFrac(out);
   }
-  /** 把纯文本里的 a/b（含 1/x、2x²/x²、12/(4+12)）收成上下分式 */
+  /** 把纯文本里的 a/b（含 sin u / u、(sin 3x)/(3x)、x²/2、0/0、1/x）收成上下分式 */
   function autoFrac(html) {
     const parts = String(html).split(/(<[^>]+>)/g);
-    // 分子/分母：括号组 或 连续数学符号
-    const atom = "(?:\\([^()]+\\)|[A-Za-z0-9²³¹⁴⁺⁻^.°√|]+(?:\\^\\{[^}]+\\}|\\^\\d)?)";
+    // 允许括号组、带空格的三角/对数（sin 3x、ln(1+x)）、上下标
+    const atom =
+      "(?:\\([^()]+\\)(?:²|³|⁴|⁺|⁻|\\^\\{[^}]+\\}|\\^\\d)?|(?:[A-Za-z0-9²³¹⁴⁺⁻^.°√|]|\\^\\{[^}]+\\}|\\^\\d|−|:|\\s(?=[A-Za-z0-9(√])){1,48})";
     const re = new RegExp("(" + atom + ")\\s*\\/\\s*(" + atom + ")", "g");
     for (let p = 0; p < parts.length; p++) {
       if (p % 2 === 1) continue;
-      parts[p] = parts[p].replace(re, function (m, a, b) {
-        if (!a || !b) return m;
-        // 纯英文单词/单词（如 and/or）不转
-        if (/^[A-Za-z]+$/.test(a) && /^[A-Za-z]+$/.test(b)) return m;
-        return fracSpan(a, b);
-      });
+      // 多轮替换，避免相邻分数漏网
+      let prev = null;
+      let s = parts[p];
+      for (let guard = 0; guard < 6 && s !== prev; guard++) {
+        prev = s;
+        s = s.replace(re, function (m, a, b) {
+          const A = String(a || "").trim();
+          const B = String(b || "").trim();
+          if (!A || !B) return m;
+          // 纯英文单词/单词（and/or）不转；网址 http:// 不转（已由空白限制）
+          if (/^[A-Za-z]+$/.test(A) && /^[A-Za-z]+$/.test(B)) return m;
+          return fracSpan(A, B);
+        });
+      }
+      parts[p] = s;
     }
     return parts.join("");
   }
