@@ -1150,20 +1150,6 @@
           pdf: SYL_PDF.maj.href,
           pdfName: SYL_PDF.maj.name
         })}
-        <div class="home-subj-row">
-          ${["电工电子技术基础", "C语言程序设计", "计算机网络基础"]
-            .map(function (n) {
-              const p = subjStat(n);
-              const m = subjOf(n);
-              return `<button class="subj-chip" data-act="subject" data-name="${attr(n)}" type="button">
-                <span class="swatch ${m.cls}"></span>
-                <span class="sc-t">${m.short}</span>
-                <span class="sc-p">${p.done}/${p.total}</span>
-                <div class="bar sub"><i style="width:${(p.pct || 0)}%"></i></div>
-              </button>`;
-            })
-            .join("")}
-        </div>
       </section>
 
       <!-- 快捷入口：按大纲备考动线 -->
@@ -1187,6 +1173,7 @@
           <button class="qi" data-nav="formula" type="button"><span class="ico">${iconBook()}</span>公式速查</button>
           <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
         </div>
+        <div class="qi-group-label">资料</div>
         <div class="quick-3">
           <button class="qi" data-nav="syllabus" type="button"><span class="ico">${iconBook()}</span>2027 考纲</button>
           <button class="qi" data-act="school" type="button"><span class="ico">${iconFile()}</span>真题库</button>
@@ -1759,7 +1746,7 @@
             ? `<button class="btn btn-ghost btn-block btn-sm" data-act="exit-exam" type="button" style="opacity:.65">退出考试（不计成绩）</button>`
             : ""
         }
-        <button class="btn btn-ghost btn-block btn-sm" data-act="show-shortcuts" type="button" style="opacity:.75">答题快捷键</button>
+        <button class="btn btn-ghost btn-block btn-sm shortcut-link" data-act="show-shortcuts" type="button">答题快捷键</button>
       </div>
       </div>
       <aside class="answer-card-panel card" style="padding:12px">
@@ -2818,7 +2805,8 @@ function formulaFilter() {
           if (L >= last && L < i && R > i + 1) {
             let A = s0.slice(L, i).trim();
             let B = s0.slice(i + 1, R).trim();
-            const hasCJK = /[\u4e00-\u9fff]/.test(A + B);
+            // 含中文或 □△○● 等占位符时不自动转上下分式（占位符排版会很怪）
+            const hasCJK = /[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef\u25a0-\u25ff\u2600-\u27bf]/.test(A + B);
             const pureWords = /^[A-Za-z]+$/.test(A) && /^[A-Za-z]+$/.test(B);
             if (hasCJK) { i++; continue; }
             if (/y'/.test(s0.slice(Math.max(0, L - 2), R + 2)) && /y'\(/.test(s0.slice(L, R))) {

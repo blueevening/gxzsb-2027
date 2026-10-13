@@ -233,5 +233,6 @@
       source:"2027官方考纲", tags:["运放","考纲样题"]
     }
   ];
-  S.questions = S.questions.concat(qs);
+  // 挂独立键，不并入刷题池：题库保持每科 300，官方样题单独存放
+  S.SAMPLE_QUESTIONS = qs;
 })();

@@ -1539,7 +1539,7 @@ html.qa-modal-open { overflow: hidden; }
 .subj-chip .sc-p { font-size: 11px; color: var(--text-sub); }
 
 .qi-group-label {
-  font-size: 11px; color: var(--text-sub); margin: 10px 2px 6px; letter-spacing: .06em;
+  font-size: 11px; color: var(--text-sub); margin: 14px 2px 8px; letter-spacing: .06em;
 }
 
 @media (max-width: 480px) {
@@ -1757,3 +1757,59 @@ html.qa-modal-open { overflow: hidden; }
   white-space: normal;
   line-height: 1.35;
 }
+
+/* ===== 答题页重构：紧凑公式 + 移动端优先 ===== */
+/* 题干/选项/解析里的分式收紧，不再把行高撑成两倍 */
+.q-stem .frac, .opt .frac, .explain-body .frac, .ref-answer .frac,
+.mistake-box .frac, .feedback .frac, .smart-grade .frac {
+  font-size: 0.9em;
+  line-height: 1.08;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+.q-stem .frac .num, .q-stem .frac .den,
+.opt .frac .num, .opt .frac .den,
+.explain-body .frac .num, .explain-body .frac .den,
+.ref-answer .frac .num, .ref-answer .frac .den {
+  padding: 0 5px;
+  min-width: 14px;
+}
+.q-stem .frac .num, .opt .frac .num,
+.explain-body .frac .num, .ref-answer .frac .num {
+  padding-bottom: 1px;
+  border-bottom-width: 1.2px;
+}
+.q-stem .frac .den, .opt .frac .den,
+.explain-body .frac .den, .ref-answer .frac .den {
+  padding-top: 1px;
+}
+.q-stem { overflow-wrap: anywhere; }
+.opt > span:not(.key):not(.mark) { min-width: 0; flex: 1; }
+
+/* 题号进度点：更紧凑，当前题高亮清晰 */
+.q-dots { gap: 4px; padding: 4px 0 0; }
+.q-dot { width: 6px; height: 6px; }
+.q-dot.now {
+  width: 10px; height: 10px;
+  background: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+/* 快捷键入口：小字链接，不再占一条大按钮 */
+.q-actions .shortcut-link {
+  min-height: 30px !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--text-sub) !important;
+  background: transparent !important;
+  border: none !important;
+  opacity: 0.7;
+}
+.q-actions .shortcut-link:hover { opacity: 1; }
+
+/* 答题卡片：题干与选项节奏更均匀 */
+.q-stem { margin: 4px 0 14px; }
+.opt { border-radius: 12px; }
+.feedback { border-radius: 12px; margin: 10px 0; }
