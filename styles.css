@@ -173,6 +173,13 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
   color: var(--text);
 }
 .btn-ghost:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.btn-accent {
+  background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.28);
+}
+.btn-accent:hover { filter: brightness(1.06); color: #fff; }
+.btn-accent:active { transform: scale(0.98); }
 .btn-sm { min-height: 38px; padding: 0 14px; font-size: 13px; border-radius: 10px; }
 .btn-block { width: 100%; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -1549,6 +1556,18 @@ html.qa-modal-open { overflow: hidden; }
   .today-card { flex-direction: column; }
   .today-side { width: 100%; }
   .home-subj-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 360px) {
+  .home-hero { padding: 16px; }
+  .hh-num { font-size: 40px; }
+  .hh-right { gap: 8px; }
+  .ring { width: 80px; height: 80px; }
+  .ring-in { width: 64px; height: 64px; }
+  .ring-in b { font-size: 17px; }
+  .ring-in span { font-size: 9px; }
+  .hh-stats { gap: 4px; }
+  .hh-stats b { font-size: 15px; }
+  .hh-stats span { font-size: 10px; white-space: nowrap; }
 }
 
 /* ===== UI ŰŻһһ / 㼶 / ޿ / ȿʱ ===== */

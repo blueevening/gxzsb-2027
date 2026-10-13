@@ -1269,6 +1269,12 @@
   }
 
   function viewSubject(name) {
+    if (!SUBJ[name]) {
+      setTitle("未找到科目", true);
+      return `<div class="empty">未找到「${esc(name)}」相关科目
+        <div><button class="btn btn-primary btn-sm" data-nav="bank" type="button">返回题库</button></div>
+      </div>`;
+    }
     setTitle(name, true);
     const m = subjOf(name);
     const p = subjStat(name);
@@ -1566,6 +1572,7 @@
       }
     });
     s.examSubmitted = true;
+    s.unansweredAtSubmit = unfilled;
     s.end = null;
     stopExamTimer();
     saveExamHistory(s);
@@ -1904,7 +1911,8 @@
     // 未答计入总分母与错题
     const total = allIds.length;
     const wrongN = allIds.filter((id) => !(id in s.results) || !s.results[id]).length;
-    const unansN = total - answeredIds.length;
+    // 模拟考交卷时会把未答题写入 results=false，故未答数优先取交卷瞬间记录的计数
+    const unansN = s.exam && typeof s.unansweredAtSubmit === "number" ? s.unansweredAtSubmit : total - answeredIds.length;
     const acc = total ? Math.round((ok / total) * 100) : 0;
     const sec = Math.round((Date.now() - s.start) / 1000);
     const mm = String(Math.floor(sec / 60)).padStart(2, "0");
