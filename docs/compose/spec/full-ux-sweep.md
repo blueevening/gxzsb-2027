@@ -1,14 +1,20 @@
 ---
 feature: full-ux-sweep
-status: designed
+status: delivered
 updated: 2026-01-13
 branch: main
-commits:
+commits: 7c421a2..13490d2
 ---
 
 # 全站交互实测与修复（full-ux-sweep）
 
 ## Report
+
+**What was built** — 以移动视口（390×844）为主、桌面抽查为辅，用 Playwright 遍历了首页/搜索/主题/题库筛选/练习全流程（客观题点选提交、错因、笔记、解析展开、快捷键弹窗、空提交提示）/模拟考（计时、交卷、报告）/错题/单词四模式/公式（切换、过滤、复制）/学习一刻/统计/真题库/考纲/我的（导出、重置弹窗）/返回键等全部交互路径。修复 2 项 P1：模拟考交卷入口从「仅最后一题」改为考试中全程可见；到期错题/薄弱考点无数据时给出针对性提示而非模糊空态。另消 favicon 404。产出 8 条不合理清单（P2）存档。
+
+**Verification** — 全流程 Playwright 实测修复后 **0 issue**（无 pageerror/console error/HTTP≥400/点击失败）；`npm run smoke` → SMOKE PASSED；`node scripts/verify-300.js` → VERIFY_300_PASS。独立评审三结论（Spec compliance / Correctness / Codebase consistency）均 PASS，无 critical。
+
+**Journey log** — ① 首轮 11 个 issue 里 4 个「空态无引导」和学习页 0 块是测试脚本误报（选择器用了 learn-point 而实际是 learn-open；空态判定误伤正常内容页）——修脚本比修 app 多。② 「交卷点不动」真因是按钮只在 `s.i >= s.q.length - 1` 时渲染，属可发现性缺陷而非逻辑 bug。③ nextQ 在末题仍会自动交卷，交卷存在双路径，改交卷交互时两条都要顾。④ 笔记框在解析面板内且换题即收起，自动化必须在提交后立刻填。⑤ 持久 dialog 监听与 page.once 冲突会导致「已处理」崩溃，统一用标志位控制 accept/dismiss 更稳。
 
 ## [S1] Problem
 
@@ -73,8 +79,8 @@ commits:
 
 ## Tasks
 
-- [ ] T1: 全站交互实测 — acceptance: Playwright 脚本覆盖测试矩阵，输出 P0/P1/P2 清单（含复现步骤与证据）（covers: S2 测试矩阵）
-- [ ] T2: 修复 P0/P1 — acceptance: 清单内 P0/P1 全部修复且对应流程重测通过（covers: S2 分级修复；依赖: T1）
-- [ ] T3: 不合理清单与 P2 处理 — acceptance: P2 清单写入文档；实施低风险项并重测（covers: S2；依赖: T1）
-- [ ] T4: 集成回归 — acceptance: smoke + verify-300 PASS；全流程脚本 P0/P1=0（covers: S2 验证边界；依赖: T2 T3）
-- [ ] T5: 独立评审 — acceptance: 评审三结论 PASS，critical 清零（covers: S2；依赖: T4）
+- [x] T1: 全站交互实测 — acceptance: Playwright 脚本覆盖测试矩阵，输出 P0/P1/P2 清单（含复现步骤与证据）（covers: S2 测试矩阵）
+- [x] T2: 修复 P0/P1 — acceptance: 清单内 P0/P1 全部修复且对应流程重测通过（covers: S2 分级修复；依赖: T1）
+- [x] T3: 不合理清单与 P2 处理 — acceptance: P2 清单写入文档；实施低风险项并重测（covers: S2；依赖: T1）
+- [x] T4: 集成回归 — acceptance: smoke + verify-300 PASS；全流程脚本 P0/P1=0（covers: S2 验证边界；依赖: T2 T3）
+- [x] T5: 独立评审 — acceptance: 评审三结论 PASS，critical 清零（covers: S2；依赖: T4）
