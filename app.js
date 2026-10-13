@@ -694,12 +694,18 @@
   }
 
   function subjStat(name) {
-    const qs = Q.filter((q) => q.subject === name);
+    // 预计算各科题目总数，避免每次 filter 遍历全库
+    if (!_subjTotalCache) {
+      _subjTotalCache = {};
+      Q.forEach((q) => { _subjTotalCache[q.subject] = (_subjTotalCache[q.subject] || 0) + 1; });
+    }
+    const total = _subjTotalCache[name] || 0;
     const at = state.attempts.filter((a) => a.subject === name);
     const done = new Set(at.map((a) => a.questionId).filter(Boolean)).size;
     const acc = at.length ? Math.round((at.filter((a) => a.correct).length / at.length) * 100) : null;
-    return { total: qs.length, done, acc, pct: qs.length ? Math.round((done / qs.length) * 100) : 0 };
+    return { total, done, acc, pct: total ? Math.round((done / total) * 100) : 0 };
   }
+  let _subjTotalCache = null;
 
   function dueCount() {
     return Object.keys(state.wrong).filter((id) => (state.wrong[id].due || 0) <= Date.now()).length;
