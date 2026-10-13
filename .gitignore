@@ -7,3 +7,11 @@ _tmp_*.js
 *.log
 .idea/
 .vscode/
+
+# 临时文件与归档
+_archive/
+_batch*.json
+_*.json
+.worktrees/
+net-analysis-batches/
+

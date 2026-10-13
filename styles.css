@@ -60,6 +60,27 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
 .mono { font-family: var(--mono); }
 .hidden { display: none !important; }
 
+/* ===== Boot 加载页 ===== */
+.boot {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 60vh; gap: 16px;
+}
+.boot-logo {
+  width: 64px; height: 64px; border-radius: 20px;
+  background: linear-gradient(135deg, var(--primary), #6B8AFF);
+  color: #fff; font-size: 32px; font-weight: 800;
+  display: grid; place-items: center;
+  box-shadow: 0 8px 24px rgba(45, 91, 255, 0.25);
+  animation: bootPulse 1.5s ease-in-out infinite;
+}
+@keyframes bootPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 8px 24px rgba(45, 91, 255, 0.25); }
+  50% { transform: scale(1.05); box-shadow: 0 12px 32px rgba(45, 91, 255, 0.35); }
+}
+.boot div:last-child {
+  color: var(--text-sub); font-size: 14px; letter-spacing: 0.5px;
+}
+
 /* ===== 顶栏 ===== */
 .topbar {
   position: sticky; top: 0; z-index: 50;
