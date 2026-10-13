@@ -86,8 +86,39 @@
   function normAns(s) {
     return String(s ?? "")
       .replace(/\s+/g, "")
-      .replace(/[，,；;：:！!？?（）()【】[\]'"‘’“”、]/g, "")
-      .toLowerCase();
+      .replace(/[，,；;：:！!？?（）()【】[\]'"‘’“”、·．|]/g, "")
+      .toLowerCase()
+      // 全角字符 → 半角
+      .replace(/[\uFF01-\uFF5E]/g, function (ch) { return String.fromCharCode(ch.charCodeAt(0) - 0xfee0); })
+      // frac{a}{b} → a/b（处理嵌套，循环 2 次）
+      .replace(/frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "$1/$2")
+      .replace(/frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "$1/$2")
+      // 删除 ^ 与花括号残留（x^2 → x2；e^{x} → ex）
+      .replace(/[\^{}]/g, "")
+      // Unicode 数学符号 → 键盘可输入的 ASCII 等价
+      .replace(/[\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079]/g, function (ch) {
+        return { "\u2070": "0", "\u00b9": "1", "\u00b2": "2", "\u00b3": "3", "\u2074": "4", "\u2075": "5", "\u2076": "6", "\u2077": "7", "\u2078": "8", "\u2079": "9" }[ch];
+      })
+      .replace(/[\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089]/g, function (ch) {
+        return { "\u2080": "0", "\u2081": "1", "\u2082": "2", "\u2083": "3", "\u2084": "4", "\u2085": "5", "\u2086": "6", "\u2087": "7", "\u2088": "8", "\u2089": "9" }[ch];
+      })
+      .replace(/[\u02e3\u02b2\u02b0\u02b7]/g, function (ch) {
+        return { "\u02e3": "x", "\u02b2": "r", "\u02b0": "h", "\u02b7": "w" }[ch];
+      })
+      .replace(/\u2212/g, "-")
+      .replace(/\u00d7/g, "x")
+      .replace(/\u00f7/g, "/")
+      .replace(/\u2264/g, "<=")
+      .replace(/\u2265/g, ">=")
+      .replace(/\u2260/g, "!=")
+      .replace(/\u221a/g, "v")
+      .replace(/\u03c0/g, "pi")
+      .replace(/\u221e/g, "inf")
+      .replace(/\u222a/g, "u")
+      .replace(/\u2229/g, "n")
+      .replace(/\u2208/g, "in")
+      .replace(/[\u2192\u2190\u21d2]/g, "->")
+      .replace(/[\u222b\u2211\u2215]/g, "");
   }
   function extractSmartPoints(q) {
     const pts = [];
@@ -1639,8 +1670,9 @@
                 })
                 .join("")
             : q.type === "translate" || q.type === "write"
-            ? `<div class="mistake-box">主观题：先自己作答，提交后可看智能评分与参考答案，再自评「我答对了 / 需加强」。</div>
-               <textarea class="input subj-input" id="subjInput" style="margin:8px 0;min-height:96px;width:100%" ${s.submitted ? "disabled" : ""} placeholder="在此写下你的答案…">${esc(s.sel || "")}</textarea>`
+            ? `<div class="mistake-box" style="background:#eef6ff;border-left:3px solid #3b82f6">${q.type === "translate" ? "✍️ 翻译题 · 直接看译文学习" : "📝 应用文写作 · 直接看范文学习"}</div>
+               <div class="ref-answer" style="margin:10px 0 4px"><b>${q.type === "translate" ? "译文：" : "范文："}</b></div>
+               <div class="subj-view" style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:14px;line-height:1.8;white-space:pre-wrap;font-size:15px">${mathHtml(String(q.sample && String(q.sample).trim() ? q.sample : (Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "见下方解析")))}</div>`
             : `<label class="muted" style="font-size:12px;font-weight:650">${q.type === "fill" ? "填写答案" : "填写最终结果"}</label>
                <input class="input" id="fillInput" style="margin:8px 0" ${s.submitted ? "disabled" : ""} value="${attr(s.sel || "")}" />`
         }
@@ -1650,17 +1682,30 @@
             ? (function () {
                 const ok = !!s.results[q.id];
                 const isSubj = q.type === "translate" || q.type === "write";
+                // 范文学习模式：直接展示译文/范文，无评分无自评
+                if (isSubj) {
+                  return `<div class="feedback ok">✓ 已学习（范文/译文已在上方展示）</div>`;
+                }
                 const sc = s.scores && s.scores[q.id] != null ? s.scores[q.id] : null;
                 // 填空若智能评分有值，同样展示，与 S2「部分 fill」对齐
                 const showSmart = isSubj || (sc != null && sc > 0);
                 let extra = "";
                 if (showSmart) {
                   const pct = sc == null ? (ok ? 100 : 0) : Math.round(sc * 100);
+                  // 主观题无范文时：给出答案 + 参考步骤（steps）作为“参考要点”
+                  let refBody = String(q.sample || "");
+                  if (!refBody.trim()) {
+                    const ansTxt = String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "");
+                    const stepTxt = (q.steps && q.steps.length)
+                      ? " 参考思路：" + q.steps.slice(0, 4).join(" ")
+                      : "";
+                    refBody = (ansTxt ? "答案：" + ansTxt : "见上方「保姆级拆解」") + stepTxt;
+                  }
                   extra =
                     `<div class="smart-grade">智能评分 <b>${pct}%</b></div>` +
-                    `<div class="ref-answer"><b>参考答案：</b>${esc(String(q.sample || q.answer || "—").slice(0, 220))}</div>`;
+                    `<div class="ref-answer"><b>参考答案：</b>${mathHtml(refBody).slice(0, 900)}</div>`;
                 } else if (!ok) {
-                  extra = `<div class="ref-answer"><b>参考答案：</b>${esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
+                  extra = `<div class="ref-answer"><b>参考答案：</b>${mathHtml(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
                 }
                 const bar = showSmart
                   ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
@@ -1692,7 +1737,7 @@
           <div class="explain-body">
             <div class="explain-block" style="border-left:3px solid #22c55e;background:#f0fdf4;padding:12px;border-radius:8px;margin-bottom:12px">
               <h4 style="margin:0 0 6px 0">⚡ 秒懂考点</h4>
-              <div class="content" style="font-size:15px">本题考 <strong style="color:#16a34a">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:#16a34a;font-size:18px">${esc(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
+              <div class="content" style="font-size:15px">本题考 <strong style="color:#16a34a">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:#16a34a;font-size:18px">${mathHtml(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
             </div>
             <details class="explain-block" style="border-left:3px solid #3b82f6" open>
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 保姆级拆解（点击展开）</summary>
@@ -1745,7 +1790,9 @@
           ${
             s.submitted
               ? `<button class="btn btn-primary" data-act="next" type="button">下一题</button>`
-              : `<button class="btn btn-primary" data-act="submit" type="button">提交答案</button>`
+              : (q.type === "translate" || q.type === "write")
+                ? `<button class="btn btn-primary" data-act="submit" type="button">看完了，下一题</button>`
+                : `<button class="btn btn-primary" data-act="submit" type="button">提交答案</button>`
           }
         </div>
         ${
@@ -1798,17 +1845,10 @@
       s.showExp = true;
       record(q, ok);
     } else if (t === "translate" || t === "write") {
-      const box = document.getElementById("subjInput");
-      const val = (box ? box.value : (s.sel || "")).trim();
-      s.sel = val;
-      const score = smartGrade(q, val);
-      s.scores = s.scores || {};
-      s.scores[q.id] = score;
-      const provisionalOk = score >= 0.5;
+      // 范文学习模式：无需作答，直接标记已看，不进错题本
       s.submitted = true;
-      s.results[q.id] = provisionalOk;
+      s.results[q.id] = true;
       s.showExp = true;
-      record(q, provisionalOk);
     } else {
       const box = document.getElementById("fillInput");
       const val = (box ? box.value : s.sel || "").trim();
@@ -1886,6 +1926,16 @@
         acc: ids.length ? Math.round((ok / ids.length) * 100) : 0,
         score: got,
         fullScore: full,
+        // 快照：供历史记录逐题回看
+        ids: ids,
+        results: s.results || {},
+        scores: s.scores || null,
+        answers: s.answers || null,
+        exam: s.exam ? {
+          planId: s.exam.planId || null,
+          scoreOf: s.exam.scoreOf || null,
+          sectionOf: s.exam.sectionOf || null
+        } : null
       };
       state.history = [rec].concat(state.history || []).slice(0, 50);
       save(LS.history, state.history);
@@ -1967,7 +2017,8 @@
 
       <div class="section-title">下一步</div>
       <div class="card" style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-primary btn-block" data-act="due" type="button">复习错题</button>
+        ${s.exam ? '<button class="btn btn-primary btn-block" data-act="review-exam" type="button">逐题回看 / 对答案</button>' : ""}
+        <button class="btn btn-ghost btn-block" data-act="due" type="button">复习错题</button>
         <button class="btn btn-ghost btn-block" data-act="weak" type="button">薄弱强化</button>
         <button class="btn btn-ghost btn-block" data-nav="home" type="button">返回首页</button>
       </div>
@@ -2005,13 +2056,13 @@
       <div class="section-title">考试历史</div>
       ${hist.length ? `<div class="card" style="padding:0">
         ${hist.map((h) => `
-          <div class="list-row" style="cursor:default">
+          <button class="list-row" data-act="exam-open" data-id="${attr(h.id)}" type="button">
             <span class="main">
               <span class="t">${esc(h.title || "模拟考")}</span>
-              <span class="s">${new Date(h.at || 0).toLocaleString("zh-CN")} · 得分 ${h.score != null ? h.score : "—"}/${h.fullScore != null ? h.fullScore : "—"} · 正确率 ${h.acc != null ? h.acc + "%" : "—"}</span>
+              <span class="s">${new Date(h.at || 0).toLocaleString("zh-CN")} · 得分 ${h.score != null ? h.score : "—"}/${h.fullScore != null ? h.fullScore : "—"} · 正确率 ${h.acc != null ? h.acc + "%" : "—"}${h.ids ? " · 可回看" : ""}</span>
             </span>
-            <span class="end mono">${h.ok != null ? h.ok + "/" + h.total : ""}</span>
-          </div>
+            <span class="end mono">${h.ok != null ? h.ok + "/" + h.total : ""} ›</span>
+          </button>
         `).join("")}
       </div>` : `<div class="empty">还没有模拟考记录，选一套卷开始吧</div>`}
       <div class="disclaimer">模拟卷按考纲结构自动组卷，交卷后可查看得分与解析。</div>
@@ -2109,10 +2160,11 @@
       <div class="section-title">模拟考历史</div>
       ${(state.history || []).length ? `<div class="card" style="padding:0">
         ${(state.history || []).slice(0, 5).map((h) => `
-          <div class="list-row" style="cursor:default">
+          <button class="list-row" data-act="exam-open" data-id="${attr(h.id)}" type="button">
             <span class="main"><span class="t">${esc(h.title || "模拟考")}</span>
-            <span class="s">${new Date(h.at || 0).toLocaleDateString("zh-CN")} · ${h.score != null ? h.score + "/" + h.fullScore : ""} · ${h.acc != null ? h.acc + "%" : ""}</span></span>
-          </div>
+            <span class="s">${new Date(h.at || 0).toLocaleDateString("zh-CN")} · ${h.score != null ? h.score + "/" + h.fullScore : ""} · ${h.acc != null ? h.acc + "%" : ""}${h.ids ? " · 可回看" : ""}</span></span>
+            <span class="end">›</span>
+          </button>
         `).join("")}
       </div>` : `<div class="empty">暂无模拟考记录</div>`}
     `;
@@ -2249,7 +2301,8 @@
 
   
 function ensureExplain(q) {
-  if (q.analysis && q.analysis.length > 200) return q.analysis;
+  // 原始深度解析存在即优先返回（不再用长度阈值丢弃短解析，也避免模板覆盖题库数据）
+  if (q.analysis && String(q.analysis).trim().length) return q.analysis;
   const stem = String(q.stem||"").replace(/frac\{([^}]+)\}\{([^}]+)\}/g,"($1)/($2)");
   const ans = Array.isArray(q.answer)? q.answer.join(" / ") : q.answer;
   const kp = q.knowledgePoint||"";
@@ -2563,7 +2616,7 @@ function ensureExplain(q) {
           ? "你当前已登录，学习进度会同步到云端账号；若在多设备登录，以最近一次同步为准。"
           : "你当前是游客/未登录模式，所有数据仅保存在你本机浏览器中，不上传任何服务器。"}
         <br/><br/><a href="https://www.gxeea.cn/zsb/tzgg.htm" target="_blank" rel="noopener" style="color:#6366f1">官方信息：广西招生考试院专升本公告 ›</a>
-        <br/><br/>版本 v3.0 · 3000核心词 · 五科1500+题
+        <br/><br/>版本 v3.0 · ${window.WORDS ? window.WORDS.getStats().total : "2200+"}核心词 · 五科1500+题
       </div>
       </div>
     `;
@@ -3349,6 +3402,56 @@ function formulaFilter() {
         pre[a.questionId] = !!a.correct;
       });
       startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true, results: pre });
+    }
+    else if (act === "review-exam") {
+      // 当前模拟考已交卷，直接进入逐题回看（解析已在会话中）
+      const s = state.session;
+      if (!s || !s.exam) return;
+      s.i = 0;
+      s.sel = s.answers && s.answers[s.q[0].id] != null ? s.answers[s.q[0].id] : null;
+      s.submitted = s.q[0].id in s.results;
+      s.showExp = true;
+      go("practice");
+      render();
+      window.scrollTo({ top: 0 });
+    }
+    else if (act === "exam-open") {
+      // 从历史记录恢复整卷回看
+      const hid = t.getAttribute("data-id");
+      const rec = (state.history || []).find(function (h) { return h.id === hid; });
+      if (!rec || !Array.isArray(rec.ids) || !rec.ids.length) { alert("该记录缺少题目快照，无法回看"); return; }
+      const qs = rec.ids.map(qById).filter(Boolean);
+      if (!qs.length) { alert("题库已更新，该记录中的题目已不存在，无法回看"); return; }
+      const examPlan = rec.exam && rec.exam.planId ? (D.EXAM_PLANS || {})[rec.exam.planId] : null;
+      stopExamTimer();
+      state.session = {
+        title: rec.title || "模拟考回看",
+        q: qs,
+        i: 0,
+        sel: rec.answers && rec.answers[qs[0].id] != null ? rec.answers[qs[0].id] : null,
+        submitted: qs[0].id in (rec.results || {}),
+        results: rec.results || {},
+        scores: rec.scores || null,
+        answers: rec.answers || null,
+        flags: {},
+        showExp: true,
+        start: rec.at || Date.now(),
+        end: null,
+        exam: rec.exam ? {
+          planId: rec.exam.planId || null,
+          plan: examPlan || null,
+          scoreOf: rec.exam.scoreOf || null,
+          sectionOf: rec.exam.sectionOf || null
+        } : null,
+        examSubmitted: true,
+        lastSeenAt: Date.now(),
+        ordered: false,
+        daily: false
+      };
+      saveSession();
+      go("practice");
+      render();
+      window.scrollTo({ top: 0 });
     }
     else if (act === "due") {
       if (!dueCount()) { alert("今天没有到期的错题；到期的题会按遗忘曲线自动出现在这里"); return; }
