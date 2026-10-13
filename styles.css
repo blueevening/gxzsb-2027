@@ -817,7 +817,26 @@ html.qa-modal-open { overflow: hidden; }
   .frac .num, .frac .den { min-width:36px; padding:4px 12px; }
 }
 
-/* ===== ƶǿ䣨ǣ ===== */
+/* 数学上标 ^ / 下标 _（含上标内分式的紧凑处理） */
+sup.math-sup, sub.math-sub {
+  font-size: 0.74em;
+  line-height: 1;
+}
+sup.math-sup { vertical-align: super; }
+sub.math-sub { vertical-align: sub; }
+sup.math-sup .frac, sub.math-sub .frac {
+  font-size: 0.92em;
+  margin: 0 1px;
+}
+sup.math-sup .frac .num, sup.math-sup .frac .den,
+sub.math-sub .frac .num, sub.math-sub .frac .den {
+  padding: 0 4px;
+  min-width: 12px;
+}
+sup.math-sup .frac .num { border-bottom-width: 1.2px; padding-bottom: 1px; }
+sup.math-sup .frac .den { padding-top: 1px; }
+
+/* ===== 移动端（下） ===== */
 @media (max-width: 1023px) {
   .side-nav { display: none !important; }
   .app-frame {

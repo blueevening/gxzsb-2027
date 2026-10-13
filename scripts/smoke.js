@@ -263,6 +263,14 @@ ok(/startsWith\("\\\\frac\{"|startsWith\("frac\{"/.test(appSrc) || (appSrc.inclu
 ok(/renderMath\(/.test(appSrc), "存在 renderMath");
 const searchBlock = appSrc.slice(appSrc.indexOf("function viewSearch"), appSrc.indexOf("function formulaFilter"));
 ok(/renderMath\(/.test(searchBlock), "搜索列表用 renderMath");
+// 公式上标 ^ / 下标 _（^{...} 组内可含分式）
+ok(/"math-sup"/.test(appSrc) && /"math-sub"/.test(appSrc), "公式引擎支持上标 ^ 与下标 _");
+ok(/\^\{[\s\S]{0,40}?mathHtml\(inner\)|mathHtml\(inner\)/.test(appSrc), "上/下标组内递归解析（可含分式）");
+const mathCssSrc = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+ok(/sup\.math-sup, sub\.math-sub/.test(mathCssSrc), "上/下标样式存在");
+const mathFbSrc = fs.readFileSync(path.join(root, "formula-book.js"), "utf8");
+ok(!/frac\{\^/.test(mathFbSrc), "公式数据无坏写法 frac{^{...}");
+ok(!/\^[\s\S]{0,6}?\}\)\{/.test(mathFbSrc), "公式数据无 )}{ 残字符");
 ok(typeof QA2.fileExtOf === "function" && QA2.fileExtOf("a.bin") === "bin" && QA2.fileExtOf("x.PDF") === "pdf", "fileExtOf 解析扩展名");
 
 console.log("[16] T11 UI P2 弹窗 / 窄屏 / 滚动 / 主题备份");

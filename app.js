@@ -2643,6 +2643,7 @@ function formulaFilter() {
     let out = "";
     let i = 0;
     while (i < raw.length) {
+      const c0 = raw[i];
       let skip = 0;
       if (raw.startsWith("\\frac{", i)) skip = 6;
       else if (raw.startsWith("frac{", i)) skip = 5;
@@ -2672,6 +2673,38 @@ function formulaFilter() {
         }
         out += escKeep(raw.slice(i - skip, i));
         continue;
+      }
+      // 上标 ^ / 下标 _：支持 ^{...}、_{...} 组（组内可含分式）与单字符 ^x、_n
+      if (c0 === "^" || c0 === "_") {
+        let j = i + 1;
+        while (j < raw.length && /\s/.test(raw[j])) j++;
+        let innerHtml = "";
+        let consumed = false;
+        if (raw[j] === "{") {
+          j++;
+          let depth = 1;
+          let inner = "";
+          while (j < raw.length && depth) {
+            const ch = raw[j];
+            if (ch === "{") depth++;
+            else if (ch === "}") { depth--; if (!depth) { j++; break; } }
+            if (depth) inner += ch;
+            j++;
+          }
+          innerHtml = mathHtml(inner);
+          consumed = true;
+        } else if (j < raw.length && /[A-Za-z0-9=.,()\u4e00-\u9fff\u00b2\u00b3\u00b9\u2070-\u209f\u2080-\u2089]/.test(raw[j])) {
+          innerHtml = mathHtml(raw[j]);
+          j++;
+          consumed = true;
+        }
+        if (consumed) {
+          const tag = c0 === "^" ? "sup" : "sub";
+          const cls = c0 === "^" ? "math-sup" : "math-sub";
+          out += "<" + tag + ' class="' + cls + '">' + innerHtml + "</" + tag + ">";
+          i = j;
+          continue;
+        }
       }
       out += escKeep(raw[i]);
       i++;

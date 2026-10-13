@@ -29,7 +29,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "use": "看到 (1 + 小量)^{大数}，或底数→1、指数→∞，就往 e 的定义上凑。",
           "steps": [
             "识别形状：底数是 1 加一个无穷小，指数是该无穷小的倒数倍。",
-            "因为 (1+frac{a}{x})^x = [(1+frac{a}{x})frac{^{x}{a}}]^a，而内层 (1+frac{a}{x})frac{^{x}{a}} → e。",
+            "因为 (1+frac{a}{x})^x = [(1+frac{a}{x})^{frac{x}{a}}]^a，而内层 (1+frac{a}{x})^{frac{x}{a}} → e。",
             "所以 (1+frac{a}{x})^x → e^a；本题 a=2，结果是 e²。"
           ],
           "example": "求 lim(x→∞) (1+frac{2}{x})^x",
