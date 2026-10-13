@@ -1,5 +1,5 @@
-/* gxzsb sw v41 — 网络优先，进入即最新 */
-const CACHE = "gxzsb-net-first-v41";
+/* gxzsb sw v42 — 网络优先，进入即最新 */
+const CACHE = "gxzsb-net-first-v42";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {
