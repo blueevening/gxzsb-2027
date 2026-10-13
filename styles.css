@@ -838,8 +838,12 @@ html.qa-modal-open { overflow: hidden; }
     width: 100%;
   }
   .topbar {
-    padding: 0 12px !important;
-    height: 56px !important;
+    padding: env(safe-area-inset-top, 0px) 12px 0 !important;
+    height: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  }
+  /* 输入框字号 ≥16px，避免 iOS Safari 聚焦时自动放大页面 */
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="search"], input:not([type]), textarea, select {
+    font-size: 16px !important;
   }
   .topbar .title { font-size: 15px !important; }
   .hero-count { min-height: 96px; padding: 16px !important; }

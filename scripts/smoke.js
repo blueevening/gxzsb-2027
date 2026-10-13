@@ -349,6 +349,8 @@ ok(/s\.unansweredAtSubmit\s*=\s*unfilled/.test(appSrc), "交卷时记录未答�
 ok(/s\.unansweredAtSubmit\s*===?\s*"number"\s*\?\s*s\.unansweredAtSubmit/.test(appSrc), "报告页读取交卷未答数");
 ok(/if\s*\(!SUBJ\[name\]\)/.test(appSrc) && /未找到/.test(appSrc), "非法科目路由友好兜底");
 ok(/@media\s*\(max-width:\s*360px\)/.test(cssSrc) && /\.ring\s*\{[^}]*width:\s*80px/.test(cssSrc), "320px 窄屏 hero 缩小避免折行");
+ok(/safe-area-inset-top/.test(cssSrc), "移动端顶部刘海安全区");
+ok(/font-size:\s*16px/.test(cssSrc) && /避免 iOS Safari 聚焦时自动放大/.test(cssSrc), "移动端输入框 16px 防 iOS 聚焦放大");
 
 console.log(failed ? "\nSMOKE FAILED: " + failed : "\nSMOKE PASSED");
 process.exit(failed ? 1 : 0);
