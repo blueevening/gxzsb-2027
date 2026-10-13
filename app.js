@@ -1174,9 +1174,8 @@
           <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
         </div>
         <div class="qi-group-label">资料</div>
-        <div class="quick-3">
+        <div class="quick-3 quick-2">
           <button class="qi" data-nav="syllabus" type="button"><span class="ico">${iconBook()}</span>2027 考纲</button>
-          <button class="qi" data-act="school" type="button"><span class="ico">${iconFile()}</span>真题库</button>
           <button class="qi" data-nav="stats" type="button"><span class="ico">${iconChart()}</span>数据分析</button>
         </div>
       </section>
@@ -2448,72 +2447,6 @@ function ensureExplain(q) {
     `;
   }
 
-    function viewSchool() {
-    setTitle("真题库", true);
-    const assets = (D.schoolAssets && D.schoolAssets.assets) || [];
-    const schoolAll = Q.filter((q) => q.source === "school");
-    const countPaper = (subj, yearTag) =>
-      schoolAll.filter((q) => {
-        if (subj !== "全部" && q.subject !== subj) return false;
-        return (q.tags || []).some((t) => String(t).indexOf(yearTag) >= 0);
-      }).length;
-    // 按年份和科目分组统计题目
-    const exams = [
-      { year: "2025年", title: "2025年 高等数学 完整卷", subj: "高等数学", tag: "完整真题", color: "#3b82f6", yearTag: "2025" },
-      { year: "2025年", title: "2025年 大学英语 完整卷", subj: "英语", tag: "完整真题", color: "#8b5cf6", yearTag: "2025" },
-      { year: "2025年", title: "2025年 电工电子技术基础 真题卷", subj: "电工电子技术基础", tag: "真题精选", color: "#f97316", yearTag: "2025" },
-      { year: "2025年", title: "2025年 C语言程序设计 真题卷", subj: "C语言程序设计", tag: "真题精选", color: "#10b981", yearTag: "2025" },
-      { year: "2025年", title: "2025年 计算机网络基础 真题卷", subj: "计算机网络基础", tag: "真题精选", color: "#06b6d4", yearTag: "2025" },
-      { year: "2026年", title: "2026年 全真模拟卷（五科合卷）", subj: "全部", tag: "模拟预测", color: "#ef4444", yearTag: "2026" }
-    ].map((e) => ({ ...e, n: countPaper(e.subj, e.yearTag) }));
-    const practiceLimit = 20;
-    return `
-      <div class="section-title">真题试卷</div>
-      <div class="card" style="padding:0">
-        ${exams.map((e, i) => `
-          <div class="list-row" data-act="${e.n ? "start-exam-paper" : ""}" data-idx="${i}" style="cursor:${e.n ? "pointer" : "default"};${e.n ? "" : "opacity:.55"}">
-            <span class="dot" style="background:${e.color}"></span>
-            <span class="main">
-              <span class="t">${e.title}</span>
-              <span class="s">${e.year} · ${e.tag} · ${e.n} 题${e.n ? "" : "（整理中）"}</span>
-            </span>
-            <span class="end">${e.n ? "开始 ›" : "暂无"}</span>
-          </div>
-        `).join("")}
-      </div>
-      <div style="margin-top:16px">
-        <button class="btn btn-ghost btn-block" data-act="school-practice" type="button"${schoolAll.length ? "" : " disabled"}>随机刷真题（每次 ${Math.min(practiceLimit, schoolAll.length)} 题 / 共 ${schoolAll.length} 题）</button>
-      </div>
-
-      <div class="section-title" style="margin-top:20px">资料下载</div>
-      <div class="card" style="padding:0">
-        ${assets
-          .map(
-            (a) => {
-              const ext = (fileExtOf(a.file) || "bin");
-              return `<div class="list-row" style="cursor:default">
-              <span class="dot"></span>
-              <span class="main"><span class="t">${esc(a.name)}</span><span class="s">${esc(a.kind)} · ${esc(ext.toUpperCase())}</span></span>
-              <a class="btn btn-ghost btn-sm" href="${attr(a.file)}" download="${attr(a.name)}.${attr(ext)}">下载</a>
-            </div>`;
-            }
-          )
-          .join("")}
-      </div>
-      <div class="section-title">原包目录</div>
-      <div class="card" style="padding:0">
-        ${((D.schoolAssets && D.schoolAssets.catalog) || [])
-          .map(
-            (c) => `<div class="list-row" style="cursor:default">
-              <span class="main"><span class="t">${esc(c.folder)}</span><span class="s">${esc(c.desc)}</span></span>
-            </div>`
-          )
-          .join("")}
-      </div>
-      <div class="disclaimer" style="margin-top:12px">根据官方考纲整理的高度仿真真题，仅供参考。</div>
-    `;
-  }
-
   function viewExamInfo() {
     setTitle("考试结构", true);
     return `
@@ -2613,7 +2546,6 @@ function ensureExplain(q) {
       <div class="section-title">工具与设置</div>
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="exam-info" type="button"><span class="main"><span class="t">考试结构说明</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="school" type="button"><span class="main"><span class="t">真题库/资料</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">切换深色/浅色模式</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span></span><span class="end">›</span></button>
@@ -3269,7 +3201,6 @@ function formulaFilter() {
     else if (route === "formula") app.innerHTML = viewFormula();
     else if (route === "learn") app.innerHTML = viewLearn();
     else if (route === "learn-point") app.innerHTML = viewLearnDetail(params[0] || "");
-    else if (route === "school") app.innerHTML = viewSchool();
     else if (route === "syllabus") app.innerHTML = viewSyllabus(params[0] ? decodeURIComponent(params[0]) : "");
     else if (route === "exam-info") app.innerHTML = viewExamInfo();
     else if (route === "me") app.innerHTML = viewMe();
@@ -3822,36 +3753,9 @@ function formulaFilter() {
         state.user = null;
         location.reload();
       });
-    } else if (act === "school") go("school");
-    else if (act === "start-exam-paper") {
-      const idx = parseInt(t.getAttribute("data-idx"));
-      const papers = [
-        { subj: "高等数学", title: "2025高数真题卷", yearTag: "2025" },
-        { subj: "英语", title: "2025英语真题卷", yearTag: "2025" },
-        { subj: "电工电子技术基础", title: "2025电工真题卷", yearTag: "2025" },
-        { subj: "C语言程序设计", title: "2025C语言真题卷", yearTag: "2025" },
-        { subj: "计算机网络基础", title: "2025计网真题卷", yearTag: "2025" },
-        { subj: "全部", title: "2026全真模拟卷", yearTag: "2026" }
-      ];
-      const p = papers[idx];
-      if (!p) return;
-      let ids;
-      if (p.subj === "全部") {
-        ids = Q.filter((q) => q.source === "school" && q.tags && q.tags.some((tg) => String(tg).indexOf(p.yearTag) >= 0)).map(q => q.id);
-      } else {
-        ids = Q.filter((q) => q.source === "school" && q.subject === p.subj && q.tags && q.tags.some(tg => String(tg).indexOf(p.yearTag) >= 0)).map(q => q.id);
-      }
-      if (ids.length === 0) { alert("这套卷题目还在整理中~"); return; }
-      startSession({ ids, limit: ids.length, title: p.title });
-    }
-    else if (act === "report") go("report");
+    } else if (act === "report") go("report");
     else if (act === "exam-info") go("exam-info");
-    else if (act === "school-practice") {
-      const ids = Q.filter((q) => q.source === "school").map((q) => q.id);
-      const n = Math.min(20, ids.length);
-      if (!ids.length) { toastLite("真题库暂无题目"); return; }
-      startSession({ ids, limit: n, title: "学校题库" });
-    } else if (act === "ai-deepseek" || act === "ai-doubao" || act === "ai-copy") {
+    else if (act === "ai-deepseek" || act === "ai-doubao" || act === "ai-copy") {
       const qq = qById(t.getAttribute("data-id")) || (state.session && state.session.q[state.session.i]);
       if (!qq) return;
       const prompt = buildAiPrompt(qq);

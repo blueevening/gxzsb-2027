@@ -273,6 +273,9 @@ ul,ol { margin: 0; padding: 0; list-style: none; }
 .quick-3 {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
 }
+.quick-3.quick-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
 .quick-3 .qi {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--radius-card);

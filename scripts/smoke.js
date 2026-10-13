@@ -251,7 +251,7 @@ ok(/坏 JSON|不是合法 JSON|JSON 对象/.test(appSrc), "坏 JSON 有提示");
 ok(/isImportKey/.test(appSrc) && /collectExportData/.test(appSrc), "导出扫描 gxzsb.*（含 wb）");
 ok(QA2.collectExportData(fakeStorage)["gxzsb.wb.prog"] && QA2.isImportKey("gxzsb.wb.goal"), "gxzsb.wb.* 可导出/可导入");
 
-console.log("[15] T10 错因 / 真题文案 / 公式 / 下载");
+console.log("[15] T10 错因 / 公式 / 下载工具");
 ok(typeof QA2.guessWrongReason === "function", "guessWrongReason 存在");
 ok(QA2.guessWrongReason({ type: "calc", stem: "计算下列积分" }) === "formula" || QA2.guessWrongReason({ type: "calc", stem: "计算下列积分" }) === "calc", "计算题给出错因启发");
 ok(QA2.guessWrongReason({ stem: "阅读材料".padEnd(70, "。"), type: "single" }) === "read", "长题干 → read");
@@ -259,14 +259,10 @@ ok(QA2.guessWrongReason({ stem: "概念题", type: "judge" }) === "concept", "�
 ok(/reason/.test(appSrc) && /setWrongReason|set-reason/.test(appSrc), "错题记录写 reason，可改");
 ok(/by-reason/.test(appSrc), "按错因补练入口存在");
 ok(/按错因补练/.test(appSrc), "按错因补练文案存在");
-ok(/共 \$\{[^}]+\} 题|共 .* 题/.test(appSrc), "真题库文案含实际题量");
-ok(/schoolAll\.length/.test(appSrc), "真题文案绑定实际 pool 大小");
-ok(/e\.n \? "start-exam-paper" : ""/.test(appSrc) && /暂无/.test(appSrc), "0 题卷禁用按钮");
 ok(/startsWith\("\\\\frac\{"|startsWith\("frac\{"/.test(appSrc) || (appSrc.includes('\\\\frac{') && appSrc.includes('frac{')), "公式兼容 frac{ 与 \\\\frac{");
 ok(/renderMath\(/.test(appSrc), "存在 renderMath");
 const searchBlock = appSrc.slice(appSrc.indexOf("function viewSearch"), appSrc.indexOf("function formulaFilter"));
 ok(/renderMath\(/.test(searchBlock), "搜索列表用 renderMath");
-ok(/fileExtOf/.test(appSrc) && /download="\$\{attr\(a\.name\)\}\.\$\{attr\(ext\)\}"/.test(appSrc), "下载扩展名取自真实资源");
 ok(typeof QA2.fileExtOf === "function" && QA2.fileExtOf("a.bin") === "bin" && QA2.fileExtOf("x.PDF") === "pdf", "fileExtOf 解析扩展名");
 
 console.log("[16] T11 UI P2 弹窗 / 窄屏 / 滚动 / 主题备份");
@@ -351,6 +347,20 @@ ok(/if\s*\(!SUBJ\[name\]\)/.test(appSrc) && /未找到/.test(appSrc), "非法科
 ok(/@media\s*\(max-width:\s*360px\)/.test(cssSrc) && /\.ring\s*\{[^}]*width:\s*80px/.test(cssSrc), "320px 窄屏 hero 缩小避免折行");
 ok(/safe-area-inset-top/.test(cssSrc), "移动端顶部刘海安全区");
 ok(/font-size:\s*16px/.test(cssSrc) && /避免 iOS Safari 聚焦时自动放大/.test(cssSrc), "移动端输入框 16px 防 iOS 聚焦放大");
+
+console.log("[21] 移除真题库：入口/路由/页面/事件已清除，题库保留");
+ok(!/viewSchool|data-act="school"|school-practice|start-exam-paper|route === "school"|真题库/.test(appSrc), "app.js 已无真题库功能");
+ok(/\.quick-3\.quick-2\s*\{[^}]*repeat\(2,\s*1fr\)/.test(cssSrc), "资料组两列网格");
+ok(/quick-3 quick-2/.test(appSrc), "首页资料组改为两列");
+// 题库本身不受影响：题目总数与五科分布不变
+(function () {
+  const qs = D.questions || [];
+  ok(qs.length === 1500, "题库仍为 1500 题 (got " + qs.length + ")");
+  ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"].forEach(function (name) {
+    const c = qs.filter(function (q) { return q.subject === name; }).length;
+    ok(c === 300, name + " 仍为 300 题 (got " + c + ")");
+  });
+})();
 
 console.log(failed ? "\nSMOKE FAILED: " + failed : "\nSMOKE PASSED");
 process.exit(failed ? 1 : 0);
