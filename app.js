@@ -1737,7 +1737,7 @@
           }
         </div>
         ${
-          s.exam && !s.examSubmitted && s.i >= s.q.length - 1
+          s.exam && !s.examSubmitted
             ? `<button class="btn btn-accent btn-block" data-act="submit-exam" type="button">交卷并出分</button>`
             : ""
         }
@@ -3372,7 +3372,10 @@ function formulaFilter() {
       });
       startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true, results: pre });
     }
-    else if (act === "due") startSession({ dueOnly: true, onlyWrong: true, limit: 15, title: "到期错题" });
+    else if (act === "due") {
+      if (!dueCount()) { alert("今天没有到期的错题；到期的题会按遗忘曲线自动出现在这里"); return; }
+      startSession({ dueOnly: true, onlyWrong: true, limit: 15, title: "到期错题" });
+    }
     else if (act === "practice-wrong-all") {
       const ids = Object.keys(state.wrong).filter(function (id) { return qById(id); });
       if (!ids.length) { alert("暂无错题"); return; }
@@ -3390,7 +3393,10 @@ function formulaFilter() {
       const last = state.last;
       if (last && last.subject && SUBJ[last.subject]) startSession({ subject: last.subject, limit: 12, title: "继续 " + last.subject });
       else startSession({ limit: 12, title: "综合练习" });
-    } else if (act === "weak") startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
+    } else if (act === "weak") {
+      if (!state.attempts || !state.attempts.length) { alert("还没有练习记录，先做几道题再来找薄弱考点"); return; }
+      startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
+    }
     else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
     else if (act === "chapter") startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习" });
     else if (act === "seq-practice") startSession({ subject: t.getAttribute("data-name"), limit: 20, title: "顺序练习", ordered: true });
