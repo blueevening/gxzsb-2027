@@ -1,14 +1,20 @@
 ---
 feature: bank-quality-sweep
-status: in-progress
+status: delivered
 updated: 2026-01-13
 branch: main
-commits:
+commits: 7356fa6..5a2c344
 ---
 
 # 题库全科质量清扫（章节治理 + 解析去模板）
 
 ## Report
+
+**What was built** — 五科题库（1500 题）完成结构与内容双重清扫。章节体系严格对齐 2027 大纲考查内容点：英语改为 4 章（152 道黑户题出 `ch-en-vocab`）、电工扩为大纲 10 章、计网扩为 6 章、数学 catch-all 从 123 打散到 55、C 语言 10 章并入交付；全库越界章清零、36 章章章有题。解析三件套（steps/pitfalls/hint）全量去模板：计网 300 道「寄快递类比」骨架、全科 1200+ 条万能 hint、错配 pitfalls 全部从各题自身 analysis 重新提取改写；analysis 正文与 questionId 一字未动。附带计网 27 道裸层名知识点二次归位。
+
+**Verification** — `node scripts/verify-300.js` → VERIFY_300_PASS；`npm run smoke` → SMOKE PASSED；全科审计复检越界章=0、模板 steps/pitfalls/hint=0/0/0；移动视口（390×844）浏览器抽查英语 4 章（242/26/27/5）、电工 10 章全非空、计网 6 章（91/16/40/69/34/50），计网传输层题解析展示专属步骤；每科抽样审题 2 道答案全对；答案-解析一致性扫描 27 条疑似经记号归一化确认全部等价、0 真错误。独立评审三结论（Spec compliance / Correctness / Codebase consistency）均 PASS，无 critical。
+
+**Journey log** — ① 最初假设「题库还是 2900 题旧版」，审计证明实为每科 300，真凶是 `syllabus-sample.js` 把 16 道官方样题 concat 进刷题池，导致 304/312 显示。② C 语言章节表 7 章 vs 题目散布 10 章是 new2026 批次与章节表脱节的产物，同一批次也制造了计网「寄快递类比」steps 全科骨架。③ 主 analysis 一直是逐题定制的（100% 含①②③与【易错】），三件套重写只做「从自身 analysis 提取」而非生成新内容，保证了正确性。④ PowerShell `Set-Content` 曾把 index.html 中文写坏成 UTF-16 乱码，此后一律用 .NET UTF8Encoding 无 BOM 读写。⑤ 评审指出的裸层名 KP 堆积问题用 27 题二次归位当场收敛；hint 统一尾句与 _archive 旧模板作为已知非运行时问题留档。
 
 ## [S1] Problem
 
@@ -17,7 +23,7 @@ C 语言题库已暴露两类结构性质量问题，其余四科审计确认同
 1. **章节体系与题目错位**：英语 152 题挂在章节表不存在的 `ch-en-vocab`；电工章节表只有 4 章而题目散布 `ch-ee-1..10`（83 题越界）；计网章节表 5 章而题目用到 `ch-net-6`（21 题越界），且 `ch-math-1`/`ch-ee-1`/`ch-net-1` 各有 40% 左右的 catch-all 堆积（大量题 KP 明显属于其他章）。章节练习页看不到越界章的题。
 2. **解析三件套批量模板化**：计网 300 题 steps 全是「【用寄快递类比】…排除「X」：和正确答案对比，哪里算错/理解错了？」同一骨架；全科 hint 约 814 条是「按循环/指针规则逐步跟踪变量」等万能句；pitfalls 存在串题错配（如字节题提示「5/2 整除截断」）。答题页优先展示 steps，用户看到的是批量脚本产物。
 
-主解析（analysis）本身已逐题定制，100% 含含①②③分步与【易错】段，是修复的可靠数据源。
+主解析（analysis）本身已逐题定制，100% 含①②③分步与【易错】段，是修复的可靠数据源。
 
 ## [S2] Design
 
@@ -37,13 +43,13 @@ C 语言题库已暴露两类结构性质量问题，其余四科审计确认同
 
 ### 解析三件套去模板
 
-通用脚本（`scripts/rewrite-explain.mjs` 或按科复用 `rewrite-c-explain.js` 逻辑），对每题：
+通用脚本（复用 `rewrite-c-explain.js` 逻辑），对每题：
 
-- **steps**：若为空或命中模板正则（含计网「寄快递类比/逐个排除错误选项/和正确答案对比」骨架），从该题 `analysis` 的【执行步骤/代码推演】/【推演】/【计算步骤】/【执行过程】段按 ①②③… 提取重组为「【秒懂考点】→【一】…→【答案】」；无编号段则按句拆分；首条固定含 KP 与短答案，末条【答案】。
+- **steps**：若为空或命中模板正则（含计网「寄快递类比/逐个排除错误选项/和正确答案对比」骨架），从该题 `analysis` 的【执行步骤/代码推演】/【步骤/计算过程】/【推演】等段按 ①②③… 提取重组为「【秒懂考点】→【一】…→【答案】」；无编号段则按句拆分；首条固定含 KP 与短答案，末条【答案】。
 - **pitfalls**：模板（「在脑子里一行一行跑代码」等）或串题错配（启发式：pitfalls 关键词与题干/知识点/解析头部明显无关）→ 从该题 analysis【易错】段重提；无则给中性提醒。
 - **hint**：空或万能句 → 由【结论】+【考点】+【审题/知识点】首句浓缩重写。
 
-覆盖量预期：计网 steps ≤300，hint ≈ math105 + en281 + ee210 + net218（C 已完成 0 残留）；pitfalls 错配按扫描结果逐科修复。**不改 analysis 正文**。
+覆盖量：计网 steps 重建约 337，hint 全量 1200 重写（C 已完成 0 残留）；pitfalls 错配按扫描结果逐科修复。**不改 analysis 正文**。
 
 ### 题目与解析全量 QA
 
@@ -70,8 +76,8 @@ C 语言题库已暴露两类结构性质量问题，其余四科审计确认同
 
 ## Tasks
 
-- [ ] T1: 四科章节治理 — acceptance: 章节表严格取自 syllabus 考查内容点（英语 4 章/电工 10 章/计网 6 章/数学保持 6 章）；越界章=0；每章题量>0；数学 catch-all 打散；VERIFY_300_PASS（covers: S2 章节治理；依赖: 无）
-- [ ] T2: 计网 steps + 四科 hint 去模板 — acceptance: 计网模板 steps=0；四科模板 hint=0；抽 3 题浏览器确认解析区为该题专属步骤（covers: S2 解析三件套；依赖: 无）
-- [ ] T3: 全量 QA（pitfalls 错配 + 答案-解析一致性 + 抽样审题） — acceptance: 启发式错配=0；答案-解析不一致清单为空或已修复；每科抽样审题记录结论（covers: S2 全量 QA / 解析三件套；依赖: 无）
-- [ ] T4: 集成验证与回归 — acceptance: VERIFY_300_PASS + SMOKE PASSED + 英语/电工/计网章节页截图确认章题量；C 语言既有修复无回归（covers: S2 验证边界；依赖: T1 T2 T3）
-- [ ] T5: 独立评审 — acceptance: 评审子代理对完整 diff 给出 Spec 合规/正确性/一致性三结论，critical 项清零（covers: S2；依赖: T4）
+- [x] T1: 四科章节治理 — acceptance: 章节表严格取自 syllabus 考查内容点（英语 4 章/电工 10 章/计网 6 章/数学保持 6 章）；越界章=0；每章题量>0；数学 catch-all 打散；VERIFY_300_PASS（covers: S2 章节治理）
+- [x] T2: 计网 steps + 四科 hint 去模板 — acceptance: 计网模板 steps=0；四科模板 hint=0；抽 3 题浏览器确认解析区为该题专属步骤（covers: S2 解析三件套）
+- [x] T3: 全量 QA（pitfalls 错配 + 答案-解析一致性 + 抽样审题） — acceptance: 启发式错配=0；答案-解析不一致清单为空或已修复；每科抽样审题记录结论（covers: S2 全量 QA / 解析三件套）
+- [x] T4: 集成验证与回归 — acceptance: VERIFY_300_PASS + SMOKE PASSED + 英语/电工/计网章节页截图确认章题量；C 语言既有修复无回归（covers: S2 验证边界；依赖: T1 T2 T3）
+- [x] T5: 独立评审 — acceptance: 评审子代理对完整 diff 给出 Spec 合规/正确性/一致性三结论，critical 项清零（covers: S2；依赖: T4）
