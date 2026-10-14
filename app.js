@@ -988,6 +988,8 @@
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
+    const wrongCount = Object.keys(state.wrong || {}).length;
+    const favCount = Object.keys(state.fav || {}).length;
 
     // 按大纲卷：用分值权重估算「备考完成度」
     function moduleProgress(names) {
@@ -1100,6 +1102,12 @@
               <b>${Math.round(totalDone/totalQ*100)}%</b>
               <span>题库进度</span>
             </div>
+          </div>
+          <div class="hh-stats">
+            <div><b>${totalDone}</b><span>累计做题</span></div>
+            <div><b>${acc == null ? "—" : acc + "%"}</b><span>正确率</span></div>
+            <div><b>${wrongCount}</b><span>错题数</span></div>
+            <div><b>${favCount}</b><span>收藏数</span></div>
           </div>
         </div>
       </section>
