@@ -1268,27 +1268,38 @@
   }
   function viewBank() {
     setTitle("题库", true);
+    const allP = subjStat("") ;
     const groups = [
       { title: "公共基础课（各 150 分）", names: ["高等数学", "英语"] },
       { title: "专业基础综合课（合卷 300 分）", names: ["电工电子技术基础", "C语言程序设计", "计算机网络基础"] },
     ];
-    return groups.map(function (g) {
-      return (
-        '<div class="section-title">' + esc(g.title) + "</div>" +
-        g.names.map(function (n) {
-          const p = subjStat(n);
-          const m = subjOf(n);
-          return (
-            '<button class="bank-subject ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button">' +
-            '<span class="sw"></span>' +
-            '<span style="flex:1"><span class="t">' + esc(m.short) + '</span>' +
-            '<span class="s">' + p.total + " 题 · 已练 " + p.done + " · " + (p.acc == null ? "—" : p.acc + "%") + "</span>" +
-            '<div class="bar" style="margin-top:8px"><i style="width:' + (p.pct || 0) + '%;background:' + m.color + '"></i></div></span>' +
-            '<span class="muted">›</span></button>'
-          );
-        }).join("")
-      );
-    }).join("");
+    return (
+      '<div class="card" style="display:flex;text-align:center;padding:16px;margin-bottom:16px">' +
+      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + totalQ + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">已练习</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">正确率</div></div>' +
+      '</div>' +
+      groups.map(function (g) {
+        return (
+          '<div class="section-title">' + esc(g.title) + "</div>" +
+          g.names.map(function (n) {
+            const p = subjStat(n);
+            const m = subjOf(n);
+            return (
+              '<button class="bank-subject ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%">' +
+              '<div style="width:40px;height:40px;border-radius:10px;background:' + (m.color || "#2563EB") + '20;color:' + (m.color || "#2563EB") + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">' + esc(m.short[0]) + '</div>' +
+              '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:15px;font-weight:600">' + esc(m.short) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + p.total + " 题 · 已练 " + p.done + "</div>" +
+              '<div class="bar" style="margin-top:6px;height:4px"><i style="width:' + (p.pct || 0) + '%;background:' + (m.color || "#2563EB") + ';border-radius:2px"></i></div>' +
+              '</div>' +
+              '<div style="font-size:18px;font-weight:700;color:' + (m.color || "#2563EB") + '">' + (p.pct || 0) + '%</div>' +
+              '</button>'
+            );
+          }).join("")
+        );
+      }).join("")
+    );
   }
 
   function viewSubject(name) {
