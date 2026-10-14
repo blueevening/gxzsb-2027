@@ -1128,6 +1128,10 @@ sup.math-sup .frac .den { padding-top: 1px; }
   border: 2px solid var(--border);
 }
 .wb-card:active { transform: scale(0.98); }
+.wb-card-front { display: flex; flex-direction: column; align-items: center; }
+.wb-card-back { display: none; flex-direction: column; align-items: center; }
+.wb-card.flipped .wb-card-front { display: none; }
+.wb-card.flipped .wb-card-back { display: flex; }
 .wb-word { font-size: 36px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
 .wb-phonetic { font-size: 18px; color: var(--text-sub); margin-bottom: 16px; }
 .wb-pos {
