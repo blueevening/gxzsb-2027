@@ -3280,6 +3280,7 @@ function formulaFilter() {
   function render() {
     const { route, params } = parseHash();
     state.route = route;
+    window.scrollTo(0, 0);
     const app = $("#app");
     // 题库数据未就绪：仅登录页（不依赖数据）可渲染，其余显示加载占位，就绪后自动重渲染
     if (!window.GXZSB_DATA_READY && route !== "login" && !(sb && !state.user)) {
