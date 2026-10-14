@@ -1134,17 +1134,15 @@
         </div>
       </section>
 
-      <!-- 快捷入口：按重要程度排序 -->
+      <!-- 快捷入口 -->
       <section>
         <div class="quick-3">
+          <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
           <button class="qi" data-nav="formula" type="button"><span class="ico">${iconBook()}</span>公式速查</button>
           <button class="qi" data-nav="words" type="button"><span class="ico">${iconType()}</span>背单词</button>
           <button class="qi" data-nav="mock" type="button"><span class="ico">${iconClock()}</span>模拟考</button>
           <button class="qi" data-act="due" type="button"><span class="ico">${iconClock()}</span>错题重练</button>
           <button class="qi" data-nav="bank" type="button"><span class="ico">${iconBook()}</span>章节 / 顺序</button>
-          <button class="qi" data-act="weak" type="button"><span class="ico">${iconChart()}</span>薄弱考点</button>
-          <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
-          <button class="qi" data-nav="stats" type="button"><span class="ico">${iconChart()}</span>数据分析</button>
         </div>
       </section>
 
