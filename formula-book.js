@@ -969,7 +969,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           ],
           "example": "You are a student, ______ you?",
           "answer": "aren’t",
-          "wrong": "错在前后肯否一致；必须前肯后否、前否后肯。；错在 Let’s 的反意疑问用 don’t you；Let’s 用 shall we，Let us 用 will you。；错在 I think that… 的反意看从句；看宾语从句主谓，且主语一般不是第一人称时才变。",
+          "wrong": "错在前后肯否一致；必须前肯后否、前否后肯。；错在 Let’s 的反意疑问用 don’t you；Let’s 用 shall we，Let us 用 will you。；错在 I think… 的反意看主句；第一人称 I think/believe/suppose 否定前移，反意看从句主谓；He thinks 等其他人称作主语时才看主句。",
           "tip": "口诀：前肯后否，前否后肯；Let’s shall we，Let us will you。",
           "out": true
         }
