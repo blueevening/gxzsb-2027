@@ -1657,7 +1657,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           ],
           "example": "NPN 管 V_E=1.2V、V_B=1.9V、V_C=1.3V，判断状态。",
           "answer": "饱和（V_BE=0.7V 已导通，但 V_C=1.3V 仅比 V_E 高 0.1V，V_CE 太小）",
-          "wrong": "错在只看 V_BE=0.7 就判放大；还要看 V_CE 与集电结偏置。；错在 NPN/PMOS 混淆电位关系；NPN 放大时 V_C 最高。；错在忽略温度影响；硅管 0.7V 是近似值。",
+          "wrong": "错在只看 V_BE=0.7 就判放大；还要看 V_CE 与集电结偏置。；错在 NPN/PNP 混淆电位关系；NPN 放大时 V_C 最高，PNP 相反。；错在忽略温度影响；硅管 0.7V 是近似值。",
           "tip": "口诀：放大 C 最高，饱和 C 低，截止都不通。"
         },
         {
