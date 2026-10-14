@@ -1102,9 +1102,9 @@
           </div>
         </div>
         <div class="hh-right">
-          <div class="ring" style="--p:${Math.round(totalDone/totalQ*100)}">
+          <div class="ring" style="--p:${totalQ > 100 ? Math.round(totalDone/totalQ*100) : 0}">
             <div class="ring-in">
-              <b>${Math.round(totalDone/totalQ*100)}%</b>
+              <b>${totalQ > 100 ? Math.round(totalDone/totalQ*100) + "%" : "--"}</b>
               <span>题库进度</span>
             </div>
           </div>
