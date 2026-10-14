@@ -2316,7 +2316,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "文件随机读写 fseek/ftell",
-          "formula": "fseek(fp, 偏移, 起点)：起点 frac{SEEK_SET}{CUR}/END；ftell(fp) 返回当前位置；rewind(fp) 回开头",
+          "formula": "fseek(fp, 偏移, 起点)：起点 SEEK_SET/CUR/END；ftell(fp) 返回当前位置；rewind(fp) 回开头",
           "plain": "随机读写像书本翻页：可跳到任意位置再读写。",
           "use": "改写文件中间内容、求文件长度、追加定位。",
           "steps": [
