@@ -1081,6 +1081,9 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .btn-wb-know {
   background: #10B981; color: #fff; border: none; flex: 1;
 }
+.btn-wb-hard {
+  background: #F59E0B; color: #fff; border: none; flex: 1;
+}
 .btn-wb-forget {
   background: #F43F5E; color: #fff; border: none; flex: 1;
 }

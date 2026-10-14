@@ -2974,9 +2974,10 @@ function formulaFilter() {
             <div class="wb-meaning">${esc(w.m)}</div>
           </div>
         </div>
-        <div class="wb-mark-btns">
-          <button class="btn btn-wb-forget" data-act="wb-mark" data-v="0" type="button">不认识</button>
-          <button class="btn btn-wb-know" data-act="wb-mark" data-v="1" type="button">认识</button>
+        <div class="wb-mark-btns" style="display:flex;gap:8px">
+          <button class="btn btn-wb-forget" data-act="wb-mark" data-v="1" style="flex:1" type="button">不认识</button>
+          <button class="btn btn-wb-hard" data-act="wb-mark" data-v="2" style="flex:1" type="button">模糊</button>
+          <button class="btn btn-wb-know" data-act="wb-mark" data-v="3" style="flex:1" type="button">认识</button>
         </div>
       </div>
     `;
@@ -3018,9 +3019,10 @@ function formulaFilter() {
             <div class="wb-meaning">${esc(w.m)}</div>
           </div>
         </div>
-        <div class="wb-mark-btns">
-          <button class="btn btn-wb-forget" data-act="wb-mark-review" data-v="0" type="button">不认识</button>
-          <button class="btn btn-wb-know" data-act="wb-mark-review" data-v="1" type="button">认识</button>
+        <div class="wb-mark-btns" style="display:flex;gap:8px">
+          <button class="btn btn-wb-forget" data-act="wb-mark-review" data-v="1" style="flex:1" type="button">不认识</button>
+          <button class="btn btn-wb-hard" data-act="wb-mark-review" data-v="2" style="flex:1" type="button">模糊</button>
+          <button class="btn btn-wb-know" data-act="wb-mark-review" data-v="3" style="flex:1" type="button">认识</button>
         </div>
       </div>
     `;
@@ -3932,16 +3934,16 @@ function formulaFilter() {
     } else if (act === "wb-mark") {
       if (!state.wbLearn) return;
       var w = state.wbLearn.list[state.wbLearn.i];
-      var know = t.getAttribute("data-v") === "1";
-      window.WORDS.markWord(w.id, know);
+      var q = parseInt(t.getAttribute("data-v"));
+      window.WORDS.markWord(w.id, q);
       state.wbLearn.i++;
       state.wbLearn.flipped = false;
       render();
     } else if (act === "wb-mark-review") {
       if (!state.wbReview) return;
       var w2 = state.wbReview.list[state.wbReview.i];
-      var know2 = t.getAttribute("data-v") === "1";
-      window.WORDS.markWord(w2.id, know2);
+      var q2 = parseInt(t.getAttribute("data-v"));
+      window.WORDS.markWord(w2.id, q2);
       state.wbReview.i++;
       state.wbReview.flipped = false;
       render();
