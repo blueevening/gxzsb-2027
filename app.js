@@ -2519,49 +2519,30 @@ function ensureExplain(q) {
 
     return `
       <div class="me-page">
-      <div class="card" style="text-align:center;padding:24px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;margin-bottom:16px">
-        <div style="width:64px;height:64px;border-radius:50%;background:white;color:#6366f1;font-size:28px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px">${nick[0] || "学"}</div>
-        <div style="font-size:18px;font-weight:bold">${esc(nick)}</div>
-        <div style="font-size:13px;opacity:0.9;margin-top:4px">今天已练 ${todayDone} 题 · 连续打卡 ${state.streak.n || 0} 天</div>
-      </div>
-      <div class="stat-grid" style="margin-bottom:16px">
-        <div class="stat-box"><div class="n">${total}</div><div class="l">累计做题</div></div>
-        <div class="stat-box"><div class="n">${acc}%</div><div class="l">正确率</div></div>
-        <div class="stat-box"><div class="n">${Object.keys(state.wrong).length}</div><div class="l">错题数</div></div>
-        <div class="stat-box"><div class="n">${favN}</div><div class="l">收藏数</div></div>
-      </div>
-
-      <div class="section-title">学习数据</div>
-      <div class="card" style="padding:0;margin-bottom:16px">
-        <button class="list-row" data-nav="stats" type="button"><span class="main"><span class="t">数据分析看板</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="mock" type="button"><span class="main"><span class="t">模拟考试</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="words" type="button"><span class="main"><span class="t">背单词进度</span></span><span class="end">${wbS.mastered}/${wbS.total} ›</span></button>
-        <button class="list-row" data-nav="wrong" type="button"><span class="main"><span class="t">我的错题本</span></span><span class="end">${Object.keys(state.wrong).length} 道 ›</span></button>
+      <div class="card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;margin-bottom:16px">
+        <div style="width:52px;height:52px;border-radius:50%;background:white;color:#6366f1;font-size:24px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px">${nick[0] || "学"}</div>
+        <div style="font-size:16px;font-weight:bold">${esc(nick)}</div>
       </div>
 
       <div class="section-title">账号与数据</div>
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出全部数据备份</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
       </div>
 
-      <div class="section-title">工具与设置</div>
+      <div class="section-title">设置</div>
       <div class="card" style="padding:0;margin-bottom:16px">
-        <button class="list-row" data-act="exam-info" type="button"><span class="main"><span class="t">考试结构说明</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">切换深色/浅色模式</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机全部数据</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机数据</span></span><span class="end">›</span></button>
       </div>
 
       <div class="disclaimer">
-        本站为个人 AI 辅助整理的广西专升本备考工具，非广西招生考试院官方平台。所有题目与内容仅供参考，请以官方发布的考试大纲为准。
-        ${activeUser()
-          ? "你当前已登录，学习进度会同步到云端账号；若在多设备登录，以最近一次同步为准。"
-          : "你当前是游客/未登录模式，所有数据仅保存在你本机浏览器中，不上传任何服务器。"}
-        <br/><br/><a href="https://www.gxeea.cn/zsb/tzgg.htm" target="_blank" rel="noopener" style="color:#6366f1">官方信息：广西招生考试院专升本公告 ›</a>
-        <br/><br/>版本 v3.0 · ${window.WORDS ? window.WORDS.getStats().total : "2200+"}核心词 · 五科1500+题
+        本站为个人整理的广西专升本备考工具，非官方平台，内容仅供参考。
+        ${activeUser() ? "已登录，进度同步云端。" : "游客模式，数据仅存本机。"}
+        <br/>版本 v3.0 · 五科1500+题
       </div>
       </div>
     `;
