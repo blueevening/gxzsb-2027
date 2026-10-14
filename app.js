@@ -1100,10 +1100,10 @@
           </div>
         </div>
         <div class="hh-right">
-          <div class="ring" style="--p:${ready}" data-nav="bank" type="button" role="button">
+          <div class="ring" style="--p:${Math.round(totalDone/totalQ*100)}">
             <div class="ring-in">
-              <b>${ready}%</b>
-              <span>备考完成度</span>
+              <b>${totalDone}/${totalQ}</b>
+              <span>题库进度</span>
             </div>
           </div>
           <div class="hh-stats">
