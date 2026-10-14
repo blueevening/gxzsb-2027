@@ -4050,6 +4050,7 @@ function formulaFilter() {
     Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
     restoreSession();
     render();
+    window.scrollTo(0, 0);
     ensureExamTimer();
   });
   document.documentElement.setAttribute("data-theme", state.theme);
