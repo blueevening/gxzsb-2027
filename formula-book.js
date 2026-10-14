@@ -666,8 +666,8 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "plain": "表示过去发生的动作或状态，现在通常已结束。动词要变成过去式。",
           "use": "时间标志 yesterday, last week, ago, in 2020, just now。",
           "steps": [
-            "看到 yesterday，确定是一般过去时。",
-            "因为实义动词过去式是规则变化 +ed，所以 play 变 played。",
+            "看到 last Sunday，确定是一般过去时。",
+            "因为实义动词过去式是规则变化 +ed，所以 visit 变 visited。",
             "否定句要加 did not 并还原动词：She did not play football yesterday。"
           ],
           "example": "They ______ (visit) the museum last Sunday.",
@@ -711,8 +711,8 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "plain": "will 表临时决定、预测、意愿；be going to 表事先计划或有迹象即将发生。",
           "use": "tomorrow, next week, in the future；看语境是「临时」还是「已计划」。",
           "steps": [
-            "对话中 A 问谁来开门，B 当场决定自己去——属临时决定。",
-            "因为临时决定用 will + 原形，所以填 will open。",
+            "电话响了，B 当场决定自己去接——属临时决定。",
+            "因为临时决定用 will + 原形，所以填 will answer。",
             "若是「我早就打算买票」，则用 am going to buy。"
           ],
           "example": "—The phone is ringing. —I ______ (answer) it.",
@@ -778,7 +778,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "steps": [
             "if 引导条件状语从句，主句是 will go（将来）。",
             "因为「主将从现」：主句将来时，从句用一般现在时表将来。",
-            "所以从句填 come（原形三单为 comes）。"
+            "所以从句填 rains。"
           ],
           "example": "If it ______ (rain) tomorrow, we will stay at home.",
           "answer": "rains",
@@ -902,11 +902,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "use": "never, hardly, seldom, not only, only + 状语, so/neither 开头。",
           "steps": [
             "句首是 Never（否定词），需要部分倒装。",
-            "因为否定副词置首，把助动词 had 提到主语前。",
-            "所以填 Never had I seen such a beautiful place。"
+            "因为否定副词置首，把助动词 have 提到主语前。",
+            "所以填 Never have I seen such a beautiful place。"
           ],
           "example": "Never ______ I seen such a beautiful place.",
-          "answer": "had",
+          "answer": "have",
           "wrong": "错在否定词置首仍用正常语序；必须倒装。；错在完全倒装与部分倒装混；完全倒装是整个谓语提前，部分倒装只提前助动词。；错在 only 放句首就倒装却忽略「only + 状语」才倒装；only + 主语不倒装。",
           "tip": "口诀：否定 only 状语提句首，助动 be 提前走。",
           "out": true
@@ -948,7 +948,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "plain": "避免重复，英语大量省略相同成分，或用 do/so 代替上文。",
           "use": "口语化考题、状语从句省略主语+be、不定式省略原形动词。",
           "steps": [
-            "上文用 Did you go to school？下文避免重复用 Yes, I did。",
+            "上文用 Did you finish it？下文避免重复用 Yes, I did。",
             "因为 did 替代了 went to school，所以省略重复部分。",
             "不确定用 I’m afraid not，肯定替代用 I hope so。"
           ],
