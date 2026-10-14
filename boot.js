@@ -1,4 +1,4 @@
-/* gxzsb boot v356 — 首屏加载管理器
+/* gxzsb boot v357 — 首屏加载管理器
    解决：11 个 defer 脚本串行阻塞首屏渲染（任一挂起即永久卡「加载中…」）
    方案：首屏即渲染与 App 同风格的品牌加载页（logo + 站点名 + 主题色进度条，
          骨架内联在 index.html，第一帧即可见），数据脚本后台按序加载
@@ -9,7 +9,7 @@
 (function () {
   "use strict";
 
-  var V = "356";          // 与 index.html 的版本号保持一致
+  var V = "357";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -69,6 +69,13 @@
       ' <button id="bootRetry" type="button" class="boot-retry">重新加载</button>';
     var btn = $("bootRetry");
     if (btn) btn.addEventListener("click", function () { location.reload(); });
+  }
+
+  /* 加载成功：立即隐藏所有浮层提示，避免残留 */
+  function toastDone() {
+    if (toastTimer) clearTimeout(toastTimer);
+    var t = $("bootToast");
+    if (t) t.classList.add("is-hide");
   }
 
   /* 数据加载完成前，拦截页面内所有业务点击，仅提示原因 */
@@ -171,6 +178,7 @@
     }
     /* 全部就绪 → 恢复导航壳，注入 app.js 完成初始化（数据已可用） */
     unblockClick();
+    toastDone();
     document.body.classList.remove("boot-loading");
     var appJs = document.createElement("script");
     appJs.src = "app.js?v=" + V;
