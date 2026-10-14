@@ -6,7 +6,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>广西专升本练习 · gxzsb</title>
 <link rel="icon" href="data:," />
-<link rel="stylesheet" href="styles.css?v=355" />
+<script>
+/* 首帧即应用持久化主题，避免深色用户加载页闪白 */
+(function () {
+  try { if (localStorage.getItem("gxzsb.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="styles.css?v=356" />
 </head>
 <body>
   <header class="topbar">
@@ -19,7 +25,7 @@
   <div class="app-frame">
     <nav class="side-nav" id="sideNav" aria-label="主导航"></nav>
     <main class="shell">
-      <div id="app"><div class="boot"><div class="boot-logo">✓</div><div>加载中…</div></div></div>
+      <div id="app"><div class="boot"><div class="boot-logo">⚡</div><div class="boot-name">广西专升本练习</div><div class="boot-sub" id="bootSub">正在加载题库数据…</div><div class="boot-track"><div class="boot-bar" id="bootBar" style="width:6%"></div></div><div class="boot-count" id="bootCount">0 / 11</div></div></div>
     </main>
   </div>
 
@@ -34,6 +40,6 @@ if ('serviceWorker' in navigator &&
   });
 }
 </script>
-<script defer src="boot.js?v=355"></script>
+<script defer src="boot.js?v=356"></script>
 </body>
 </html>

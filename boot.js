@@ -1,47 +1,72 @@
-/* gxzsb boot v355 — 首屏加载管理器
+/* gxzsb boot v356 — 首屏加载管理器
    解决：11 个 defer 脚本串行阻塞首屏渲染（任一挂起即永久卡「加载中…」）
-   方案：先渲染静态登录页壳（复用 styles.css 的 login-* 样式，不依赖任何数据脚本），
-         数据脚本在后台按序加载（30s 超时 / 失败重试 1 次 / 失败给出重试入口），
-         全部就绪后再动态注入 app.js 完成真实初始化，app.js 内部逻辑零改动。
+   方案：首屏即渲染与 App 同风格的品牌加载页（logo + 站点名 + 主题色进度条，
+         骨架内联在 index.html，第一帧即可见），数据脚本后台按序加载
+         （30s 超时 / 失败重试 1 次 / 失败给出重试入口），加载期间隐藏
+         topbar/tabbar/side-nav 等空壳导航避免割裂，全部就绪后注入 app.js
+         完成真实初始化，app.js 内部逻辑零改动。
    非必要脚本（supabase 登录组件）失败仅降级登录，不阻塞主流程。 */
 (function () {
   "use strict";
 
-  var V = "355";          // 与 index.html 的版本号保持一致
+  var V = "356";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
   var SCRIPTS = [
-    { src: "vendor/supabase.min.js", required: false, label: "登录组件" },
-    { src: "sb-config.js",           required: true,  label: "配置" },
-    { src: "all-bank.js",            required: true,  label: "题库" },
-    { src: "all-learn.js",           required: true,  label: "考点精讲" },
-    { src: "learn-book-2027.js",     required: true,  label: "学习手册" },
-    { src: "formula-book.js",        required: true,  label: "公式书" },
-    { src: "wordbook.js",            required: true,  label: "单词书" },
-    { src: "kp-detail.js",           required: true,  label: "考点详解" },
-    { src: "syllabus.js",            required: true,  label: "考纲" },
-    { src: "syllabus-sample.js",     required: true,  label: "样卷" },
-    { src: "exam-plans-v2.js",       required: true,  label: "考纲卷" }
+    { src: "vendor/supabase.min.js", required: false, label: "登录组件", verify: "" },
+    { src: "sb-config.js",           required: true,  label: "配置",     verify: "SB_CONFIG" },
+    { src: "all-bank.js",            required: true,  label: "题库",     verify: "STUDY_DATA" },
+    { src: "all-learn.js",           required: true,  label: "考点精讲", verify: "STUDY_DATA" },
+    { src: "learn-book-2027.js",     required: true,  label: "学习手册", verify: "STUDY_DATA" },
+    { src: "formula-book.js",        required: true,  label: "公式书",   verify: "STUDY_DATA" },
+    { src: "wordbook.js",            required: true,  label: "单词书",   verify: "WORDS" },
+    { src: "kp-detail.js",           required: true,  label: "考点详解", verify: "KP_DETAIL" },
+    { src: "syllabus.js",            required: true,  label: "考纲",     verify: "SYLLABUS" },
+    { src: "syllabus-sample.js",     required: true,  label: "样卷",     verify: "STUDY_DATA" },
+    { src: "exam-plans-v2.js",       required: true,  label: "考纲卷",   verify: "STUDY_DATA" }
   ];
 
   function $(id) { return document.getElementById(id); }
 
-  /* ---------- 提示条 ---------- */
-  function toast(msg) {
-    var t = $("bootToast");
-    if (t) { t.textContent = msg; t.style.display = "block"; }
+  /* ---------- 加载页进度 ---------- */
+  function setProgress(done, total) {
+    var pct = total ? Math.round(done / total * 100) : 0;
+    var bar = $("bootBar");
+    if (bar) bar.style.width = pct + "%";
+    var count = $("bootCount");
+    if (count) count.textContent = Math.min(done, total) + " / " + total;
+    var sub = $("bootSub");
+    if (sub) sub.textContent = "正在加载题库数据…";
   }
-  function toastDone() {
+
+  /* ---------- 浮层提示 ---------- */
+  var toastTimer = null;
+  function toastEl() {
     var t = $("bootToast");
-    if (t) t.style.display = "none";
+    if (!t) {
+      t = document.createElement("div");
+      t.id = "bootToast";
+      document.body.appendChild(t);
+    }
+    return t;
   }
+  /* 轻提示：短暂显示后自动消失 */
+  function toast(msg, ms) {
+    var t = toastEl();
+    if (toastTimer) clearTimeout(toastTimer);
+    t.className = "boot-toast";
+    t.textContent = msg;
+    t.classList.remove("is-hide");
+    toastTimer = setTimeout(function () { t.classList.add("is-hide"); }, ms || 1600);
+  }
+  /* 失败提示：常驻，带重新加载入口 */
   function toastFail(failedLabels) {
-    var t = $("bootToast");
-    if (!t) return;
-    t.style.background = "#B91C1C";
+    var t = toastEl();
+    if (toastTimer) clearTimeout(toastTimer);
+    t.className = "boot-toast is-error";
     t.innerHTML = "部分数据加载失败：" + failedLabels.join("、") +
-      " <button id=\"bootRetry\" type=\"button\" style=\"margin-left:10px;padding:4px 14px;border:1px solid #fff;border-radius:6px;background:transparent;color:#fff;cursor:pointer;\">重新加载</button>";
+      ' <button id="bootRetry" type="button" class="boot-retry">重新加载</button>';
     var btn = $("bootRetry");
     if (btn) btn.addEventListener("click", function () { location.reload(); });
   }
@@ -58,38 +83,26 @@
     document.removeEventListener("click", blockClick, true);
   }
 
-  /* 渲染静态登录页壳：不依赖任何数据脚本，立即替换「加载中…」占位 */
+  /* 品牌加载页：骨架已内联在 index.html（首帧可见），这里兜底注入并接管进度 */
   function shell() {
+    document.body.classList.add("boot-loading");
     var app = $("app");
-    if (!app) return;
-    app.innerHTML =
-      '<div class="login-wrap">' +
-        '<div class="login-hero">' +
-          '<div class="logo">⚡</div>' +
-          '<div class="name">广西专升本练习</div>' +
-          '<div class="sub">登录后云端同步学习进度</div>' +
-        '</div>' +
-        '<div class="login-tabs" role="tablist">' +
-          '<button type="button" class="is-on" role="tab" aria-selected="true">登录</button>' +
-          '<button type="button" role="tab" aria-selected="false">注册</button>' +
-        '</div>' +
-        '<div class="card" style="padding:24px">' +
-          '<div class="login-field"><label for="bootEmail">邮箱</label><input id="bootEmail" type="email" placeholder="your@email.com" disabled /></div>' +
-          '<div class="login-field"><label for="bootPwd">密码</label><input id="bootPwd" type="password" placeholder="至少6位" disabled /></div>' +
-          '<button type="button" class="login-submit" disabled>登录</button>' +
-          '<div class="login-msg"></div>' +
-          '<button type="button" class="login-forgot" disabled>忘记密码？</button>' +
-        '</div>' +
-        '<button type="button" class="login-guest" disabled>先逛逛，稍后登录</button>' +
-      '</div>' +
-      '<div id="bootToast" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;' +
-        'background:rgba(17,24,39,.88);color:#fff;font-size:13px;padding:9px 14px;text-align:center;">正在加载题库数据…</div>';
+    if (app && !app.querySelector(".boot")) {
+      app.innerHTML =
+        '<div class="boot">' +
+          '<div class="boot-logo">⚡</div>' +
+          '<div class="boot-name">广西专升本练习</div>' +
+          '<div class="boot-sub" id="bootSub">正在加载题库数据…</div>' +
+          '<div class="boot-track"><div class="boot-bar" id="bootBar"></div></div>' +
+          '<div class="boot-count" id="bootCount">0 / ' + SCRIPTS.length + '</div>' +
+        '</div>';
+    }
+    setProgress(0, SCRIPTS.length);
     document.addEventListener("click", blockClick, true);
-    toast("正在加载题库数据…");
   }
 
-  /* 加载单个脚本，超时或错误即 reject */
-  function loadScript(src, timeout) {
+  /* 加载单个脚本：下载成功后校验其定义的全局键，防「假成功」（如 SW 兜底返回 HTML） */
+  function loadScript(src, timeout, verify) {
     return new Promise(function (resolve, reject) {
       var s = document.createElement("script");
       s.src = src;
@@ -105,6 +118,11 @@
         if (done) return;
         done = true;
         clearTimeout(timer);
+        if (verify && !(typeof window !== "undefined" && window[verify])) {
+          try { document.head.removeChild(s); } catch (e) {}
+          reject(new Error("verify:" + src + " (missing " + verify + ")"));
+          return;
+        }
         resolve();
       };
       s.onerror = function () {
@@ -122,12 +140,12 @@
   async function loadWithRetry(script, index, total) {
     for (var attempt = 0; attempt <= MAX_RETRY; attempt++) {
       try {
-        await loadScript(script.src + "?v=" + V, TIMEOUT);
-        toast("正在加载题库数据 " + Math.min(index + 1, total) + " / " + total + "…");
+        await loadScript(script.src + "?v=" + V, TIMEOUT, script.verify);
+        setProgress(index + 1, total);
         return null;
       } catch (e) {
         if (attempt < MAX_RETRY) {
-          toast(script.label + "加载失败，正在重试…");
+          toast(script.label + "加载失败，正在重试…", 2600);
           await new Promise(function (r) { setTimeout(r, 500); });
         } else {
           return script.label;
@@ -151,9 +169,9 @@
       toastFail(failed);
       return;
     }
-    /* 全部就绪 → 注入 app.js 完成初始化（app.js 读取 window.STUDY_DATA 时数据已可用） */
+    /* 全部就绪 → 恢复导航壳，注入 app.js 完成初始化（数据已可用） */
     unblockClick();
-    toastDone();
+    document.body.classList.remove("boot-loading");
     var appJs = document.createElement("script");
     appJs.src = "app.js?v=" + V;
     appJs.onerror = function () {
