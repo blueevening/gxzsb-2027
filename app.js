@@ -851,7 +851,8 @@
   }
 
   /* ========== 学习数据重置（只清学习记录） ========== */
-  const STUDY_KEYS = [LS.attempts, LS.wrong, LS.fav, LS.notes, LS.marks, LS.last, LS.streak, LS.history, LS.reports];
+  const STUDY_KEYS = [LS.attempts, LS.wrong, LS.fav, LS.notes, LS.marks, LS.last, LS.streak, LS.history, LS.reports,
+    "gxzsb.wb.prog", "gxzsb.wb.today", "gxzsb.wb.order"];
   function resetLearningData() {
     STUDY_KEYS.forEach((k) => localStorage.removeItem(k));
     localStorage.removeItem("gxzsb.session");
