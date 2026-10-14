@@ -2893,15 +2893,14 @@ function formulaFilter() {
           <span class="wb-today-label">今日任务</span>
           <span class="wb-today-num">${S.today.learned||0}<span>/${goal} 新词</span></span>
         </div>
-        ${dueReview.length > 0 ? `
-          <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button">
-            立即复习 · ${dueReview.length} 个到期词
-          </button>
-        ` : `
+        <div style="display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-primary btn-block" data-act="wb-start-new" type="button">
-            开始学习新词 · ${goal} 个
+            学习新词 · 今日已学 ${S.today.learned||0}/${goal}
           </button>
-        `}
+          <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button">
+            复习单词 · ${dueReview.length} 个到期
+          </button>
+        </div>
       </div>
 
       <div class="section-title">练习模式</div>
