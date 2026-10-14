@@ -1298,7 +1298,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
           "steps": [
             "断开负载，求两端开路电压 U_oc。",
             "独立源置零（压源短路、流源开路），求等效内阻 R_eq。",
-            "接上负载 RL，I = U_frac{oc}{R_eq + RL}。"
+            "接上负载 RL，I = frac{U_oc}{R_eq + RL}。"
           ],
           "example": "若 U_oc=12V，R_eq=2Ω，接 RL=4Ω，求电流。",
           "answer": "I = frac{12}{2+4} = 2A",
@@ -1512,7 +1512,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "逻辑代数基本公式",
-          "formula": "A+0=A；A·1=A；A+A=A；A·A=A；A+ A̅ =1；A· A̅ =0；德摩根：overline{A+B}=overline{A}·overline{B}",
+          "formula": "A+0=A；A·1=A；A+A=A；A·A=A；A+ A̅ =1；A· A̅ =0；德摩根：(A+B)̅=(A)̅·(B)̅",
           "plain": "逻辑变量只有 0 和 1。加是或，乘是与，上横线是非。化简全靠这些恒等式。",
           "use": "化简逻辑表达式、证明等式、设计电路。",
           "steps": [
@@ -1707,7 +1707,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "门电路基础",
-          "formula": "与 Y=A·B；或 Y=A+B；非 Y=bar{A}；与非 Y=overline{AB}；或非 Y=overline{A+B}；异或 Y=A⊕B",
+          "formula": "与 Y=A·B；或 Y=A+B；非 Y=A̅；与非 Y=(AB)̅；或非 Y=(A+B)̅；异或 Y=A⊕B",
           "plain": "门电路是数字世界的开关逻辑：与是「都成立」，或是「有一个」，非是「取反」。",
           "use": "判断逻辑功能、写真值表、化简表达式。",
           "steps": [
@@ -1715,7 +1715,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "按门功能逐级算出输出。",
             "写出最简逻辑表达式，必要时用摩根律。"
           ],
-          "example": "A=1, B=0，求 Y=overline{A·B}。",
+          "example": "A=1, B=0，求 Y=(A·B)̅。",
           "answer": "A·B=0，Y=1",
           "wrong": "错在与非先取反再相与；应先与后非。；错在把异或当或；异或相异为 1。；错在真值表少写组合；n 变量有 2^n 行。",
           "tip": "口诀：与都或有非取反，与非或非序不变。"
