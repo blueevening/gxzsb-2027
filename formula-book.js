@@ -610,7 +610,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为实义动词在一般现在时三单要变第三人称单数形式，所以 go 变 goes。",
             "所以句子是 She goes to school every day。"
           ],
-          "example": "She ____ (go) to school every day.",
+          "example": "She ______ (go) to school every day.",
           "answer": "goes",
           "wrong": "错在写成 go；she 是三单，必须 goes。；错在三单加 s 规则乱用；go→goes，study→studies，have→has 要单独记。；错在 be 动词与实义动词混用；有 be 就用 am/is/are，有实义动词就变 s，不能同时写。",
           "tip": "口诀：三单加 s，s/x/ch/sh 加 es，辅音 y 变 ies。"
@@ -625,7 +625,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为实义动词过去式是规则变化 +ed，所以 play 变 played。",
             "否定句要加 did not 并还原动词：She did not play football yesterday。"
           ],
-          "example": "They ____ (visit) the museum last Sunday.",
+          "example": "They ______ (visit) the museum last Sunday.",
           "answer": "visited",
           "wrong": "错在过去式写原形 visit；有过去时间必须变 visited。；错在否定写 did not visited；did 后一律用原形。；错在不规则过去式记错；go→went，see→saw，take→took 要背。",
           "tip": "口诀：过去时间配过去式，did 一出现，动词回原形。"
@@ -640,7 +640,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为结构是 have/has + 过去分词，主语是 she，所以用 has。",
             "finish 的过去分词是 finished，所以填 has finished。"
           ],
-          "example": "She has already ____ (finish) her homework.",
+          "example": "She has already ______ (finish) her homework.",
           "answer": "finished",
           "wrong": "错在写成 has finished 与 yesterday 连用；具体过去时间不能配现在完成时。；错在 has 后用过去式；必须用过去分词（规则动词 +ed，不规则要背）。；错在 have/has 选错；he/she/it 用 has，其余用 have。",
           "tip": "口诀：现完看现在结果，since 接点 for 接段，already yet just 要眼熟。"
@@ -655,7 +655,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为「过去的过去」用过去完成时，结构是 had + 过去分词。",
             "所以填 had left。"
           ],
-          "example": "When we arrived, the train ____ (leave).",
+          "example": "When we arrived, the train ______ (leave).",
           "answer": "had left",
           "wrong": "错在两个动作都用一般过去；有先后时更早的用过去完成。；错在 had 后用过去式；had 后接过去分词 left。；错在没找参照过去时间就乱用；先定「过去的过去」再用 had done。",
           "tip": "口诀：过去完成是「过去的过去」，had done 抢先到。"
@@ -670,7 +670,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为临时决定用 will + 原形，所以填 will open。",
             "若是「我早就打算买票」，则用 am going to buy。"
           ],
-          "example": "—The phone is ringing. —I ____ (answer) it.",
+          "example": "—The phone is ringing. —I ______ (answer) it.",
           "answer": "will answer",
           "wrong": "错在一律用 will；有计划、有迹象时用 be going to 更准。；错在 will 后加 to 或 ing；will 后必须动词原形。；错在 be going to 漏 be；going 前要有 am/is/are。",
           "tip": "口诀：当场决定用 will，早有打算 going to。"
@@ -685,7 +685,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为时态是一般过去时，be 用 was/were，主语三单用 was。",
             "build 的过去分词是 built，所以填 was built。"
           ],
-          "example": "The bridge ____ (build) in 2010.",
+          "example": "The bridge ______ (build) in 2010.",
           "answer": "was built",
           "wrong": "错在写成 was build；被动必须用过去分词 built。；错在时态动词 was/were 选错；按原句时态选 be，再配过去分词。；错在及物动词才有被动；不及物动词（happen, take place）没有被动语态。",
           "tip": "口诀：被动 be + done，时态全在 be 上，done 不变。"
@@ -700,7 +700,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为人在从句作主语，关系词用 who/that。",
             "所以填 who/that is singing over there。"
           ],
-          "example": "The girl ____ is singing over there is my sister.",
+          "example": "The girl ______ is singing over there is my sister.",
           "answer": "who / that",
           "wrong": "错在先行词是人却用 which；指人用 who/whom/that。；错在从句成分已完整还用 who/that 不省略；作宾语且介词不前置时可省略。；错在 what 引导定语从句；what 不能引导定语从句，只能引导名词性从句。",
           "tip": "口诀：人 who 物 which，主语 who/that，宾语可省，介词前置用 whom/which。"
@@ -715,7 +715,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为「他是否会来」不确定，用 whether（不能用 if 放句首）。",
             "从句用陈述语序：whether he will come，所以填 Whether he will come is unknown。"
           ],
-          "example": "____ he will come is still unknown.",
+          "example": "______ he will come is still unknown.",
           "answer": "Whether",
           "wrong": "错在主语从句用 if；句首主语从句只能用 whether。；错在从句用疑问语序；名词性从句一律陈述语序（whether he will come，不是 will he come）。；错在 that 在宾语从句中一般可省，但在主语从句/同位语从句中不能随便省。",
           "tip": "口诀：名从陈述语序，句首是否用 whether，that 只负责「无意义」。"
@@ -735,7 +735,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为「主将从现」：主句将来时，从句用一般现在时表将来。",
             "所以从句填 come（原形三单为 comes）。"
           ],
-          "example": "If it ____ (rain) tomorrow, we will stay at home.",
+          "example": "If it ______ (rain) tomorrow, we will stay at home.",
           "answer": "rains",
           "wrong": "错在 if 从句用 will rain；条件状语从句用一般现在时表将来。；错在 although 与 but 连用；中文「虽然…但是…」，英文只能留一个。；错在 until/not…until 意思搞反；not…until 是「直到…才…」。",
           "tip": "口诀：主将从现；虽然不连但是；直到才用 not…until。"
@@ -750,7 +750,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 want to do sth 是固定结构，所以填 to join。",
             "目的状语也用 to：He came here to study English。"
           ],
-          "example": "I want ____ (join) the club.",
+          "example": "I want ______ (join) the club.",
           "answer": "to join",
           "wrong": "错在写成 want join 或 want joining；want 后只能 to do。；错在使役/感官动词后乱加 to；make/let/have + sb + do（不带 to），see/hear + sb + do/doing。；错在不定式符号 to 后用动名词；to do 的 to 是不定式符号，后接原形。",
           "tip": "口诀：想要决定计划都 to do，to 后原形别丢。"
@@ -765,7 +765,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 enjoy doing sth，所以填 reading。",
             "介词后也如此：by reading books（by 是介词）。"
           ],
-          "example": "She enjoys ____ (read) novels.",
+          "example": "She enjoys ______ (read) novels.",
           "answer": "reading",
           "wrong": "错在 enjoy 后用 to read；enjoy 只接 doing。；错在介词后用原形或 to do；介词（in/on/at/by/about…）后必用 doing。；错在 forget/remember/stop to do 与 doing 混；to do 表未做/去做，doing 表已做/停止正在做的事。",
           "tip": "口诀：enjoy finish mind practice 双 V-ing；介词后面必是 ing。"
@@ -780,7 +780,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为会议将于明天讨论该问题，是将来被动。",
             "所以填 to be discussed。"
           ],
-          "example": "The question ____ (discuss) tomorrow is very important.",
+          "example": "The question ______ (discuss) tomorrow is very important.",
           "answer": "to be discussed",
           "wrong": "错在用 to discuss；问题是被讨论，必须被动。；错在时间是明天却用 done；done 表已完成或泛指被动。；错在 being done 与 to be done 混；进行被动 vs 将来被动看时间。",
           "tip": "口诀：非谓语看主客：主动 doing/to do，被动 done/to be done。"
@@ -795,7 +795,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为与过去相反：if 从句用 had + 过去分词。",
             "主句用 would have + 过去分词，所以填 If you had been, you would have seen me。"
           ],
-          "example": "If you ____ (be) here yesterday, you would have seen me.",
+          "example": "If you ______ (be) here yesterday, you would have seen me.",
           "answer": "had been",
           "wrong": "错在与过去相反却用一般过去；必须 had done。；错在主句用 will have；虚拟主句是 would/could/might/should + have done。；错在 be 的虚拟写成 was；虚拟语气 be 统一用 were 更规范。",
           "tip": "口诀：现在假过去式，过去假 had done，主句 would 系列。"
@@ -810,7 +810,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为结构是 (should) + 动词原形，should 可省略。",
             "所以填 (should) start，即 We suggest that he (should) start at once。"
           ],
-          "example": "We suggest that he ____ (start) at once.",
+          "example": "We suggest that he ______ (start) at once.",
           "answer": "(should) start",
           "wrong": "错在 suggest 后用第三人称单数 starts；虚拟用原形。；错在 insist 表「坚持认为」也用虚拟；只有「坚持要求」才虚拟。；错在漏掉 should 可省规则；写 start 或 should start 都对，但不能 starts。",
           "tip": "口诀：一坚持二命令三建议四要求，从句 should + 原形。"
@@ -825,7 +825,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 each + of + 复数名词，谓语仍用单数。",
             "所以填 has。"
           ],
-          "example": "Each of the students ____ (have) a book.",
+          "example": "Each of the students ______ (have) a book.",
           "answer": "has",
           "wrong": "错在被复数 students 迷惑用 have；核心是 each，谓语单数。；错在 with/together with 后的名词抢走谓语数；A with B 谓语随 A。；错在 there be 就近看错；there be 的 be 与最近的主语一致。",
           "tip": "口诀：主语看中心，with 不管它，or 系就最近。"
@@ -840,7 +840,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 tall 是短音节，比较级加 -er：taller。",
             "所以填 taller，完整为 Tom is taller than Jim。"
           ],
-          "example": "Tom is ____ (tall) than Jim.",
+          "example": "Tom is ______ (tall) than Jim.",
           "answer": "taller",
           "wrong": "错在三者以上也用比较级；of all/in the class 要用最高级。；错在双音节以上形容词加 -er；多用 more + 原级。；错在 very 修饰比较级；比较级用 much/even/a little，very 修饰原级。",
           "tip": "口诀：两者比用 er，三者比用 est，as…as 中间原级。"
@@ -860,7 +860,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为否定副词置首，把助动词 had 提到主语前。",
             "所以填 Never had I seen such a beautiful place。"
           ],
-          "example": "Never ____ I seen such a beautiful place.",
+          "example": "Never ______ I seen such a beautiful place.",
           "answer": "had",
           "wrong": "错在否定词置首仍用正常语序；必须倒装。；错在完全倒装与部分倒装混；完全倒装是整个谓语提前，部分倒装只提前助动词。；错在 only 放句首就倒装却忽略「only + 状语」才倒装；only + 主语不倒装。",
           "tip": "口诀：否定 only 状语提句首，助动 be 提前走。",
@@ -876,7 +876,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为强调句结构是 It was + 被强调部分 + that + 其余。",
             "所以填 It was Tom that/whom I met yesterday。"
           ],
-          "example": "It was Tom ____ I met yesterday.",
+          "example": "It was Tom ______ I met yesterday.",
           "answer": "that / whom",
           "wrong": "错在写成 which；强调人用 who/whom 或 that。；错在与定语从句、主语从句混淆；去掉 It is…that 后句子通顺才是强调句。；错在强调句中用倒装；强调句本身不倒装。",
           "tip": "口诀：It is/was…that，抽掉还原还成立才是强调。",
@@ -892,7 +892,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为常用形式主语 it 占位：It is important to…。",
             "所以填 It is important to learn English well。"
           ],
-          "example": "____ is important to learn English well.",
+          "example": "______ is important to learn English well.",
           "answer": "It",
           "wrong": "错在用 that/to 直接开头；形式主语只能是 it。；错在 it 指代不清；前文应有明确名词可指，或用形式主/宾语。；错在 forget it / take it for granted 等固定搭配记错；当词组整体记忆。",
           "tip": "口诀：to do/that 从句长，it 出面占主位。"
@@ -907,7 +907,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 did 替代了 went to school，所以省略重复部分。",
             "不确定用 I’m afraid not，肯定替代用 I hope so。"
           ],
-          "example": "—Did you finish it? —Yes, I ___.",
+          "example": "—Did you finish it? —Yes, I ______.",
           "answer": "did",
           "wrong": "错在答 Yes, I finished it 显得冗长（语法不算错但考省略）；标准简答用助动词。；错在 hope so/not 用错；肯定 so，否定 not。；错在状语从句主语不同也省略；只有主从句主语一致才可省略主语+be。",
           "tip": "口诀：问 did 答 did，问 be 答 be，怕的是 I’m afraid not。"
@@ -922,7 +922,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为前肯后否，助动词 be 提前。",
             "所以填 aren’t you。"
           ],
-          "example": "You are a student, ____ you?",
+          "example": "You are a student, ______ you?",
           "answer": "aren’t",
           "wrong": "错在前后肯否一致；必须前肯后否、前否后肯。；错在 Let’s 的反意疑问用 don’t you；Let’s 用 shall we，Let us 用 will you。；错在 I think that… 的反意看从句；看宾语从句主谓，且主语一般不是第一人称时才变。",
           "tip": "口诀：前肯后否，前否后肯；Let’s shall we，Let us will you。",
@@ -943,7 +943,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 a/an 看音素不看字母，所以用 an。",
             "所以填 an hour；而 university 读 /juː/ 开头是辅音音素，用 a university。"
           ],
-          "example": "He waited for ____ hour.",
+          "example": "He waited for ______ hour.",
           "answer": "an",
           "wrong": "错在看字母 h 就用 a；要看发音音素。；错在球类、三餐、交通方式前加 the；play football / have breakfast / by bus 不加冠词。；错在序数词、最高级前漏 the；the first, the best 要加 the。",
           "tip": "口诀：看音素不看字母；独一无二序数词最高级前用 the。"
@@ -958,7 +958,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为 give sb sth，sb 是宾格位置，所以填 me。",
             "「我的书」名词前用形容词性物主：my book。"
           ],
-          "example": "Please give ____ the book.（I）",
+          "example": "Please give ______ the book.（I）",
           "answer": "me",
           "wrong": "错在动词/介词后用主格 I；宾格用 me。；错在 your 与 yours 混；your 后要接名词，yours 相当于 your + 名词。；错在反身代词主宾不一致；enjoy oneself / help oneself 要与主语人称对应。",
           "tip": "口诀：主格主语位，宾格动介后，my 后有名词，mine 独立用。"
@@ -973,7 +973,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为介词后接动名词，所以填 seeing。",
             "同理：be used to doing（习惯于）也用 doing。"
           ],
-          "example": "I look forward to ____ (see) you.",
+          "example": "I look forward to ______ (see) you.",
           "answer": "seeing",
           "wrong": "错在 look forward to 后用原形/ to see；此处 to 是介词，必须 seeing。；错在 arrive in 大地点 / arrive at 小地点混用；in+国家城市，at+小场所。；错在 listen to 漏 to；不及物动词常靠介词接宾语。",
           "tip": "口诀：to 是介词就 ing：look forward to / be used to / object to。"
@@ -1033,7 +1033,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为「不必」用 needn’t 或 don’t have to。",
             "所以填 needn’t / don’t have to。"
           ],
-          "example": "You ____ buy another one; you’ve already got one.",
+          "example": "You ______ buy another one; you’ve already got one.",
           "answer": "needn’t / don’t have to",
           "wrong": "错在 mustn’t 与 needn’t 混；mustn’t 是禁止，needn’t 是不必。；错在情态动词后加 to 或 ing；后接动词原形。；错在 must have done 与 must do 混；must have done 表对过去的推测。",
           "tip": "口诀：情态后原形；mustn’t 禁止，needn’t 不必，must have done 是猜过去。"
@@ -1048,7 +1048,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "因为伴随状语用 doing，所以填 waiting。",
             "若是被动/完成则用 done：Given more time, we could do it better。"
           ],
-          "example": "He sat there, ____ (wait) for the bus.",
+          "example": "He sat there, ______ (wait) for the bus.",
           "answer": "waiting",
           "wrong": "错在两个谓语动词直接并列却无连词；必须非谓语或加连词。；错在主动关系用 done；done 表被动或已完成。；错在 to do 与 doing 时间搞反；to do 多表未发生目的，doing 多表同时或进行。",
           "tip": "口诀：主动 doing 被动 done，目的 to do，主客先分清。"
@@ -1063,7 +1063,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "选 be 动词时态：现在 am/is/are，过去 was/were。",
             "实义动词加 -ing（去 e/双写规则）。"
           ],
-          "example": "While I ____ (read), the phone rang.",
+          "example": "While I ______ (read), the phone rang.",
           "answer": "was reading",
           "wrong": "错在用一般过去 read；while 从句常用过去进行表背景。；错在写成 is reading；主句是 rang，时间在过去。；错在漏 be 动词；进行时必须有 be。",
           "tip": "口诀：进行时 be+ing，while 配过去进行。"
@@ -1078,7 +1078,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "动作晚于参照点 → would + 原形。",
             "was going to 表示当时打算做。"
           ],
-          "example": "He said he ____ me the next day.",
+          "example": "He said he ______ me the next day.",
           "answer": "would help",
           "wrong": "错在用 will help；said 之后应用过去将来。；错在用 was helping；这不是进行意义。；错在 next day 仍用一般现在；时间状语从句才「主将从现」。",
           "tip": "口诀：过去看未来，would 最常在。"
@@ -1093,7 +1093,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "写 have/has been + doing。",
             "若动作已结束且只强调结果，改用现在完成时 have done。"
           ],
-          "example": "I ____ (wait) for you since two o'clock.",
+          "example": "I ______ (wait) for you since two o'clock.",
           "answer": "have been waiting",
           "wrong": "错在用现在完成 have waited；强调一直等到现在用完成进行更贴切。；错在写成 have been waited；wait 是不及物，用主动 -ing。；错在 since 与 for 混用；since 接点，for 接段。",
           "tip": "口诀：完成进行 been doing，强调持续到如今。"

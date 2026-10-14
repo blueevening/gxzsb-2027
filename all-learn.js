@@ -475,7 +475,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           ],
           steps: ["看时间状语", "主语三单加 s"],
           example: {
-            stem: "He ____ (go) to school every day.",
+            stem: "He ______ (go) to school every day.",
             analysis: "goes。every day 用一般现在；主语 He 三单。",
           },
           mistakes: ["三单不加 s"],
@@ -494,7 +494,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           ],
           steps: ["找过去时间", "动词用过去式"],
           example: {
-            stem: "I ____ (see) him yesterday.",
+            stem: "I ______ (see) him yesterday.",
             analysis: "saw。",
           },
           mistakes: ["用现在时"],
@@ -510,7 +510,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           core: [{ k: "形式", v: "am/is/are + doing" }],
           steps: ["找 now/look/listen", "be + 动词 ing"],
           example: {
-            stem: "Look! The children ____ (play).",
+            stem: "Look! The children ______ (play).",
             analysis: "are playing。",
           },
           mistakes: ["漏 be"],
@@ -529,7 +529,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           ],
           steps: ["认标志词", "选 have/has", "动词过去分词"],
           example: {
-            stem: "He ____ (live) here for 3 years.",
+            stem: "He ______ (live) here for 3 years.",
             analysis: "has lived。for + 完成时。",
           },
           mistakes: ["for/since 用过去时"],
@@ -545,7 +545,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           core: [{ k: "形式", v: "had + done" }],
           steps: ["找两个过去时间", "更早的用 had done"],
           example: {
-            stem: "When I arrived, the meeting ____ (begin).",
+            stem: "When I arrived, the meeting ______ (begin).",
             analysis: "had begun。",
           },
           mistakes: ["两个都用一般过去"],
@@ -561,7 +561,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           core: [{ k: "结构", v: "be + done (+by…)" }],
           steps: ["判断主被动", "按时态变 be", "加过去分词"],
           example: {
-            stem: "The bridge ____ (build) next year.",
+            stem: "The bridge ______ (build) next year.",
             analysis: "will be built。",
           },
           mistakes: ["漏 be"],
@@ -580,7 +580,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           ],
           steps: ["圈时间状语", "判断是否延续", "选结构"],
           example: {
-            stem: "I ____ my keys. I can't find them.",
+            stem: "I ______ my keys. I can't find them.",
             analysis: "have lost（对现在影响）。",
           },
           mistakes: ["只看中文不管时态标志"],
@@ -596,7 +596,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           core: [{ k: "常见", v: "want, need, be worth + doing" }],
           steps: ["看主语是否承受动作", "是否已有固定主动表被动"],
           example: {
-            stem: "The book is worth ____.",
+            stem: "The book is worth ______.",
             analysis: "reading（不用 being read）。",
           },
           mistakes: ["全部改成被动"],
@@ -620,7 +620,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           ],
           steps: ["看前接词", "判断是否表将来/目的"],
           example: {
-            stem: "I want ____ (go).",
+            stem: "I want ______ (go).",
             analysis: "to go。",
           },
           mistakes: ["want doing"],
@@ -636,7 +636,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           core: [{ k: "口诀", v: "介词后跟 doing" }],
           steps: ["看是否介词后", "look forward to 等 to 是介词"],
           example: {
-            stem: "I look forward to ____ (hear) from you.",
+            stem: "I look forward to ______ (hear) from you.",
             analysis: "hearing。",
           },
           mistakes: ["to 一律当不定式"],
@@ -652,7 +652,7 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY = {
           core: [{ k: "判断", v: "与逻辑主语是主动还是被动" }],
           steps: ["找逻辑主语", "判断主被动", "选 doing/done"],
           example: {
-            stem: "The man ____ (stand) at the door is my teacher.",
+            stem: "The man ______ (stand) at the door is my teacher.",
             analysis: "standing（主动）。",
           },
           mistakes: ["主动被动混"],
@@ -1269,15 +1269,15 @@ window.STUDY_DATA.LEARN_BOOK_LEGACY["英语"] = [
     points: [
       {
         id: "en-kp-101", name: "固定搭配与短语", level: "基础", minutes: 8, kp: "词汇",
-        content: "【高频动词短语】\nbreak up 分手/破裂/解散\nbreak down 出故障/崩溃\nbreak out 爆发\nset up 建立/设立/搭建\nset off 出发/引爆\nturn up 出现/调大音量\nturn down 拒绝/调小\nget up 起床\nget over 克服\nlook up 查阅\nlook forward to 期待（+doing）\nput off 推迟（+doing）\ngive up 放弃（+doing）\n\n【高频介词短语】\nin time 及时\non time 准时\nin the end 最后\nat the end of 在...末尾\nby the way 顺便问一下\non the way to 在去...的路上\n\n【例题】\nThe company will ___ a new office in the city.\nA. break up  B. set up  C. turn up  D. get up\n答案：B（建立新办公室）\n\n【易错点】\n- look forward to 后面加doing，不是do\n- be used to doing 习惯于\n- used to do 过去常常"
+        content: "【高频动词短语】\nbreak up 分手/破裂/解散\nbreak down 出故障/崩溃\nbreak out 爆发\nset up 建立/设立/搭建\nset off 出发/引爆\nturn up 出现/调大音量\nturn down 拒绝/调小\nget up 起床\nget over 克服\nlook up 查阅\nlook forward to 期待（+doing）\nput off 推迟（+doing）\ngive up 放弃（+doing）\n\n【高频介词短语】\nin time 及时\non time 准时\nin the end 最后\nat the end of 在...末尾\nby the way 顺便问一下\non the way to 在去...的路上\n\n【例题】\nThe company will ______ a new office in the city.\nA. break up  B. set up  C. turn up  D. get up\n答案：B（建立新办公室）\n\n【易错点】\n- look forward to 后面加doing，不是do\n- be used to doing 习惯于\n- used to do 过去常常"
       },
       {
         id: "en-kp-102", name: "时态语态", level: "强化", minutes: 10, kp: "语法",
-        content: "【一、常用时态】\n1. 一般现在时：经常性动作\n   He goes to school every day.\n   第三人称单数动词加s/es\n\n2. 一般过去时：过去发生\n   I visited my grandma last week.\n\n3. 现在进行时：be+doing\n   They are watching TV now.\n\n4. 现在完成时：have/has+done\n   I have lived here for 5 years.\n   标志词：already, yet, since, for, ever, never\n\n5. 过去进行时：was/were+doing\n   At 8 pm yesterday, I was reading.\n\n【二、被动语态】\nbe + 过去分词\nThe bridge was built in 1990.\nEnglish is spoken in many countries.\n\n【三、时间标志词】\nyesterday → 过去时\nsince 2020 → 现在完成时\nfor 3 years → 现在完成时\nlook! / now → 进行时\nevery day → 一般现在时\n\n【例题】\nI ___ this book for three days.\nA. read  B. have read  C. am reading  D. will read\n答案：B（for three days用现在完成时）"
+        content: "【一、常用时态】\n1. 一般现在时：经常性动作\n   He goes to school every day.\n   第三人称单数动词加s/es\n\n2. 一般过去时：过去发生\n   I visited my grandma last week.\n\n3. 现在进行时：be+doing\n   They are watching TV now.\n\n4. 现在完成时：have/has+done\n   I have lived here for 5 years.\n   标志词：already, yet, since, for, ever, never\n\n5. 过去进行时：was/were+doing\n   At 8 pm yesterday, I was reading.\n\n【二、被动语态】\nbe + 过去分词\nThe bridge was built in 1990.\nEnglish is spoken in many countries.\n\n【三、时间标志词】\nyesterday → 过去时\nsince 2020 → 现在完成时\nfor 3 years → 现在完成时\nlook! / now → 进行时\nevery day → 一般现在时\n\n【例题】\nI ______ this book for three days.\nA. read  B. have read  C. am reading  D. will read\n答案：B（for three days用现在完成时）"
       },
       {
         id: "en-kp-103", name: "从句", level: "强化", minutes: 10, kp: "从句",
-        content: "【一、宾语从句】\n引导词：that/if/whether/what/when/where\n语序：陈述语序（主语+谓语）\n\n例：\nI don't know where he lives.（不是where does he live）\nCan you tell me what time it is?\n\n【二、定语从句】\n先行词是人：who/that/whom\n先行词是物：which/that\n所属关系：whose\n\n例：\nThe man who is talking is my teacher.\nThe book which/that you bought is interesting.\n\n【三、状语从句】\n时间：when/while/before/after/until\n原因：because/since/as\n条件：if/unless\n让步：though/although\n结果：so...that/such...that\n目的：so that\n\n【例题】\nI don't know ___.\nA. where does he live  B. where he lives\nC. where he live  D. he lives where\n答案：B（宾语从句用陈述语序）"
+        content: "【一、宾语从句】\n引导词：that/if/whether/what/when/where\n语序：陈述语序（主语+谓语）\n\n例：\nI don't know where he lives.（不是where does he live）\nCan you tell me what time it is?\n\n【二、定语从句】\n先行词是人：who/that/whom\n先行词是物：which/that\n所属关系：whose\n\n例：\nThe man who is talking is my teacher.\nThe book which/that you bought is interesting.\n\n【三、状语从句】\n时间：when/while/before/after/until\n原因：because/since/as\n条件：if/unless\n让步：though/although\n结果：so...that/such...that\n目的：so that\n\n【例题】\nI don't know ______.\nA. where does he live  B. where he lives\nC. where he live  D. he lives where\n答案：B（宾语从句用陈述语序）"
       }
     ]
   },

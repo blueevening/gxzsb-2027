@@ -16,7 +16,7 @@
     {
       id:"syl-m2", module:"public", subject:"高等数学", chapter:"ch-math-1", knowledgePoint:"函数定义域",
       type:"blank", typeLabel:"填空", difficulty:2, difficultyLabel:"强化",
-      stem:"设 f(x) = lg|x-1| / √(2x+1)，则 f(x) 的定义域是____。",
+      stem:"设 f(x) = lg|x-1| / √(2x+1)，则 f(x) 的定义域是______。",
       answer:"(-1/2, 1) ∪ (1, +∞)",
       analysis:"【解析】两个限制：① 分母 √(2x+1) 要求 2x+1>0 → x>-1/2；② lg 的真数 |x-1|>0 → x≠1。综合得 (-1/2,1)∪(1,+∞)。注意是开区间，且 x=1 必须剔除。",
       source:"2027官方考纲", tags:["函数定义域","考纲样题"]
@@ -41,7 +41,7 @@
     {
       id:"syl-e1", module:"public", subject:"英语", chapter:"ch-en-grammar", knowledgePoint:"连词",
       type:"choice", typeLabel:"单选", difficulty:1, difficultyLabel:"基础",
-      stem:"I didn't receive the email ___ I could not connect to the Internet.",
+      stem:"I didn't receive the email ______ I could not connect to the Internet.",
       options:["if","unless","although","because"],
       answer:"because",
       analysis:"【解析】后句“无法联网”是前句“没收到邮件”的原因，选 because。if 表条件；unless=if not；although 表让步。句意为“我没收到邮件，因为连不上网”。",
@@ -50,7 +50,7 @@
     {
       id:"syl-e2", module:"public", subject:"英语", chapter:"ch-en-grammar", knowledgePoint:"动词短语",
       type:"choice", typeLabel:"单选", difficulty:1, difficultyLabel:"基础",
-      stem:"The famous technology company will ___ a new research center in the university.",
+      stem:"The famous technology company will ______ a new research center in the university.",
       options:["break up","set up","turn up","get up"],
       answer:"set up",
       analysis:"【解析】set up 建立/设立，set up a research center 建立研究中心。break up 分手/打碎；turn up 出现/调大；get up 起床。",
@@ -77,7 +77,7 @@
     {
       id:"syl-e5", module:"public", subject:"英语", chapter:"ch-en-read", knowledgePoint:"阅读词义",
       type:"choice", typeLabel:"阅读", difficulty:2, difficultyLabel:"强化",
-      stem:"（阅读）The words \"sucked up\" in the passage means ___.",
+      stem:"（阅读）The words \"sucked up\" in the passage means ______.",
       options:["made","lifted","used","blew"],
       answer:"lifted",
       analysis:"【解析】suck up 在此语境指龙卷风把动物“吸起/卷起”，近义 lifted（举起）。made 制造；used 使用；blew 吹。",
@@ -113,7 +113,7 @@
     {
       id:"syl-e9", module:"public", subject:"英语", chapter:"ch-en-read", knowledgePoint:"阅读填空",
       type:"blank", typeLabel:"阅读填空", difficulty:2, difficultyLabel:"强化",
-      stem:"（阅读·Teacher招聘）What is the name of the employment organization? It is New England ____.",
+      stem:"（阅读·Teacher招聘）What is the name of the employment organization? It is New England ______.",
       answer:"Child Care Academy",
       analysis:"【解析】原文标题 New England Child Care Academy，招聘组织名称即此。",
       source:"2027官方考纲", tags:["阅读填空","考纲样题"]
@@ -175,7 +175,7 @@
     {
       id:"syl-c3", module:"major", subject:"C语言", chapter:"ch-c-6", knowledgePoint:"数组",
       type:"blank", typeLabel:"填空", difficulty:1, difficultyLabel:"基础",
-      stem:"int a[5]={6,9,12,15,18}; 则 a[0]+a[3]=____。",
+      stem:"int a[5]={6,9,12,15,18}; 则 a[0]+a[3]=______。",
       answer:"21",
       analysis:"【解析】数组下标从 0 开始：a[0]=6, a[3]=15。6+15=21。",
       source:"2027官方考纲", tags:["数组","考纲样题"]
@@ -211,7 +211,7 @@
     {
       id:"syl-n4", module:"major", subject:"电工", chapter:"ch-ee-2", knowledgePoint:"电阻并联",
       type:"blank", typeLabel:"填空", difficulty:1, difficultyLabel:"基础",
-      stem:"R₁=30Ω，R₂=60Ω，并联等效电阻为____Ω。",
+      stem:"R₁=30Ω，R₂=60Ω，并联等效电阻为______Ω。",
       answer:"20",
       analysis:"【解析】并联：1/R=1/30+1/60=3/60=1/20 → R=20Ω。",
       source:"2027官方考纲", tags:["电阻","并联","考纲样题"]
@@ -219,7 +219,7 @@
     {
       id:"syl-n5", module:"major", subject:"计网", chapter:"ch-net-overview", knowledgePoint:"网络组成",
       type:"blank", typeLabel:"填空", difficulty:1, difficultyLabel:"基础",
-      stem:"计算机网络系统由通信子网和____子网组成。",
+      stem:"计算机网络系统由通信子网和______子网组成。",
       answer:"资源",
       analysis:"【解析】传统网络两分法：通信子网（负责数据传输）+ 资源子网（负责信息处理与共享）。",
       source:"2027官方考纲", tags:["网络组成","考纲样题"]

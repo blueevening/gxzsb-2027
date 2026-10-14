@@ -502,7 +502,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "看空格左右的词性与固定结构，用搭配排除。",
             "再核对词义是否符合句意（develop habits、by bus 等）。"
           ],
-          example: "We should ____ good habits of reading.（develop / improve / make / take）",
+          example: "We should ______ good habits of reading.（develop / improve / make / take）",
           answer: "develop。develop good habits 是固定搭配「养成好习惯」。",
           warn: "把 make habits、take habits 当正确搭配；只看中文不管搭配；忽略冠词与介词。",
           examTip: "口诀：介后 doing，enjoy finish mind 跟 doing；习惯用 develop 不用 make。",
@@ -520,7 +520,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "看动作先后：过去的过去用 had done；到将来某时为止用 will have done。",
             "主句从句时态呼应，从句在「真理/习惯」中可用一般现在。"
           ],
-          example: "By the end of last term, we ____ 50 lessons.（learned / had learned / have learned / will learn）",
+          example: "By the end of last term, we ______ 50 lessons.（learned / had learned / have learned / will learn）",
           answer: "had learned。by the end of last term 是「过去的过去」。",
           warn: "完成时和过去时混用；忽略 by+过去时间点；主将从现不会用。",
           examTip: "口诀：for since 配完成；ago 配过去；by the end of last 用过去完成。",
@@ -538,7 +538,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "定时态：am/is/are done；was/were done；have/has been done；will be done。",
             "含情态：can/must/should be done。"
           ],
-          example: "The bridge ____ last year.（built / was built / has built / is built）",
+          example: "The bridge ______ last year.（built / was built / has built / is built）",
           answer: "was built。桥是被建的，last year 用一般过去时被动。",
           warn: "把主动写成被动；完成时被动漏 been；双宾语被动结构错。",
           examTip: "口诀：be + 过去分词；时态看 be 动词。中文「被/由/受到」提示被动。",
@@ -556,7 +556,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "注意就近：neither…nor、either…or、not only…but also、there be。",
             "注意就远：together with、as well as、except 不影响主语单复数。"
           ],
-          example: "Neither he nor his friends ____ going.（is / are / was / has）",
+          example: "Neither he nor his friends ______ going.（is / are / was / has）",
           answer: "are。neither…nor 就近原则，靠近的是 friends，用复数。",
           warn: "被中间的 with 短语干扰；each of 后动词用单数；people/police 作复数却用单数动词。",
           examTip: "口诀：就近看最近，就远丢修饰；each every 不定式，动词用单数。",
@@ -574,7 +574,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "选关系词：指人 who/whom/that；指物 which/that；地点 where；时间 when；原因 why。",
             "看从句缺不缺成分：缺成分用关系代词；不缺用关系副词。"
           ],
-          example: "The book ____ I bought is useful.（which / what / who / where）",
+          example: "The book ______ I bought is useful.（which / what / who / where）",
           answer: "which（或 that）。先行词 book 在从句中作 bought 的宾语，缺成分。",
           warn: "what 不能引导定语从句；关系副词误代宾语；逗号后用 that。",
           examTip: "口诀：缺成分用代词，不缺用副词；逗号后 which 不用 that。",
@@ -592,7 +592,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "选连接词：that（无意义）、whether/if（是否）、what/who/which（疑问）。",
             "从句一律用陈述语序（主+谓），不倒装。"
           ],
-          example: "I don't know ____ he will come.（that / if / what / which）",
+          example: "I don't know ______ he will come.（that / if / what / which）",
           answer: "if（或 whether）。意思是「是否」，引导宾语从句。",
           warn: "宾语从句用疑问语序；that/what 混用；whether 与 if 在介词后/不定式前不用 if。",
           examTip: "口诀：名词性从句陈述序；that 无义 what 有义；「是否」用 whether。",
@@ -610,7 +610,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "主将从现：if/when/as soon as 引导的从句用一般现在表将来。",
             "注意 so…that 与 such…that、too…to 的转换。"
           ],
-          example: "If it ____ tomorrow, we will stay at home.（rains / will rain / rained / would rain）",
+          example: "If it ______ tomorrow, we will stay at home.（rains / will rain / rained / would rain）",
           answer: "rains。if 条件句主句将来时，从句一般现在时（主将从现）。",
           warn: "条件句用 will；although 与 but 连用；because 与 so 连用（中式英语）。",
           examTip: "口诀：主将从现；让步不与 but 连；时间条件句用现在表将来。",
@@ -628,7 +628,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "判逻辑主语关系：主动用 doing/to do，被动用 done/to be done。",
             "判时间：将来/目的 to do；进行/主动 doing；完成/被动 done。"
           ],
-          example: "____ from the hill, the city looks beautiful.（Seeing / Seen / To see / See）",
+          example: "______ from the hill, the city looks beautiful.（Seeing / Seen / To see / See）",
           answer: "Seen。逻辑主语 the city 是「被看」，用过去分词。",
           warn: "悬垂非谓语（逻辑主语不一致）；介词后用 to do；使役动词后宾补形式错。",
           examTip: "口诀：主动 doing 被动 done；目的将来 to do。介后一律 doing。",
@@ -646,7 +646,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "对过去虚拟：从句 had done，主句 would/could/might + have done。",
             "固定句型：wish/suggest/demand 后从句用 (should) + 动词原形。"
           ],
-          example: "If I ____ you, I would take the job.（am / was / were / be）",
+          example: "If I ______ you, I would take the job.（am / was / were / be）",
           answer: "were。对现在虚拟，be 动词一律用 were。",
           warn: "把虚拟当真实条件句；wish 后时态回退不够；suggest 后不用原形。",
           examTip: "口诀：现在往过去退，过去往 had done 退；would 三兄弟 + 原形/have done。",
@@ -664,7 +664,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "代词：主格 I/he、宾格 me/him、物主 my/mine；反身代词与主语一致。",
             "比较级：than 前用比较级；最高级前 the；倍数表达 twice as…as。"
           ],
-          example: "This book is not mine. It's ____.（her / hers / she / herself）",
+          example: "This book is not mine. It's ______.（her / hers / she / herself）",
           answer: "hers。= her book，名词性物主代词。",
           warn: "a university（辅音音素）；比较级与最高级混用；it's 与 its 不分。",
           examTip: "口诀：an 看音不看形；mine yours 可独立；比较级配 than，最高级配 the。",
@@ -682,7 +682,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "回文定位，比对选项与原文，优先同义替换。",
             "主旨题概括各段首句，排除过宽/过窄/无中生有项。"
           ],
-          example: "The passage mainly tells us ____.（A. a story B. the main idea C. a detail D. an example）",
+          example: "The passage mainly tells us ______.（A. a story B. the main idea C. a detail D. an example）",
           answer: "选概括全文的选项（B 类）。细节、例子、片面项都不对。",
           warn: "凭常识选而不是回文；主旨选成细节；绝对化词汇（all/never）常为干扰。",
           examTip: "口诀：细节回定位，主旨看首尾；绝对化选项慎选。",
@@ -700,7 +700,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "词义：看破折号、that is、同位语、转折 but/however。",
             "作者态度：注意评价性形容词与情态动词。"
           ],
-          example: "The word \"it\" in paragraph 2 refers to ____.（前文某名词）",
+          example: "The word \"it\" in paragraph 2 refers to ______.（前文某名词）",
           answer: "回看前一句与它逻辑最近的名词，保持单复数与人称一致。",
           warn: "推断过头；代词指代看错单复数；态度题把客观当褒义。",
           examTip: "口诀：推断不越界；代词往前找；but 后是重点。",
