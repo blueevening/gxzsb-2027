@@ -1,13 +1,14 @@
 /* gxzsb boot v355 — 首屏加载管理器
    解决：11 个 defer 脚本串行阻塞首屏渲染（任一挂起即永久卡「加载中…」）
-   方案：界面壳先渲染 + 数据脚本按序加载（15s 超时 / 失败重试 1 次 / 失败提示重试按钮），
-         全部就绪后再动态注入 app.js 完成初始化，app.js 内部逻辑零改动。
+   方案：先渲染静态登录页壳（复用 styles.css 的 login-* 样式，不依赖任何数据脚本），
+         数据脚本在后台按序加载（30s 超时 / 失败重试 1 次 / 失败给出重试入口），
+         全部就绪后再动态注入 app.js 完成真实初始化，app.js 内部逻辑零改动。
    非必要脚本（supabase 登录组件）失败仅降级登录，不阻塞主流程。 */
 (function () {
   "use strict";
 
   var V = "355";          // 与 index.html 的版本号保持一致
-  var TIMEOUT = 15000;    // 单个脚本加载超时（毫秒）
+  var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
   var SCRIPTS = [
@@ -26,46 +27,65 @@
 
   function $(id) { return document.getElementById(id); }
 
-  /* 渲染加载壳：不依赖任何数据脚本，立即替换「加载中…」占位 */
+  /* ---------- 提示条 ---------- */
+  function toast(msg) {
+    var t = $("bootToast");
+    if (t) { t.textContent = msg; t.style.display = "block"; }
+  }
+  function toastDone() {
+    var t = $("bootToast");
+    if (t) t.style.display = "none";
+  }
+  function toastFail(failedLabels) {
+    var t = $("bootToast");
+    if (!t) return;
+    t.style.background = "#B91C1C";
+    t.innerHTML = "部分数据加载失败：" + failedLabels.join("、") +
+      " <button id=\"bootRetry\" type=\"button\" style=\"margin-left:10px;padding:4px 14px;border:1px solid #fff;border-radius:6px;background:transparent;color:#fff;cursor:pointer;\">重新加载</button>";
+    var btn = $("bootRetry");
+    if (btn) btn.addEventListener("click", function () { location.reload(); });
+  }
+
+  /* 数据加载完成前，拦截页面内所有业务点击，仅提示原因 */
+  function blockClick(e) {
+    if (e.target && e.target.closest && e.target.closest("[data-act],[data-nav]")) {
+      e.preventDefault();
+      e.stopPropagation();
+      toast("题库数据加载中，请稍候…");
+    }
+  }
+  function unblockClick() {
+    document.removeEventListener("click", blockClick, true);
+  }
+
+  /* 渲染静态登录页壳：不依赖任何数据脚本，立即替换「加载中…」占位 */
   function shell() {
     var app = $("app");
     if (!app) return;
     app.innerHTML =
-      '<div class="boot" style="text-align:center;padding:48px 16px;">' +
-        '<div class="boot-logo" style="width:56px;height:56px;margin:0 auto 16px;border-radius:16px;' +
-          'background:var(--accent,#3B82F6);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;">✓</div>' +
-        '<div id="bootMsg" style="font-size:15px;color:#646A73;">正在加载题库数据…</div>' +
-        '<div style="width:200px;height:4px;margin:14px auto 0;background:#E5E7EB;border-radius:2px;overflow:hidden;">' +
-          '<div id="bootBar" style="height:100%;width:0%;background:var(--accent,#3B82F6);transition:width .3s;"></div>' +
+      '<div class="login-wrap">' +
+        '<div class="login-hero">' +
+          '<div class="logo">⚡</div>' +
+          '<div class="name">广西专升本练习</div>' +
+          '<div class="sub">登录后云端同步学习进度</div>' +
         '</div>' +
-        '<div id="bootDetail" style="font-size:12px;color:#9CA3AF;margin-top:10px;"></div>' +
-      '</div>';
-  }
-
-  function progress(done, total, label) {
-    var msg = $("bootMsg"), bar = $("bootBar"), det = $("bootDetail");
-    if (msg && label) msg.textContent = label;
-    if (bar) bar.style.width = Math.max(4, Math.round(done / total * 100)) + "%";
-    if (det) det.textContent = done + " / " + total;
-  }
-
-  /* 数据加载失败降级页：给出明确原因与重试入口，不再无限转圈 */
-  function failUI(failedLabels) {
-    var app = $("app");
-    if (!app) return;
-    app.innerHTML =
-      '<div class="boot" style="text-align:center;padding:48px 16px;">' +
-        '<div class="boot-logo" style="width:56px;height:56px;margin:0 auto 16px;border-radius:16px;' +
-          'background:#F59E0B;color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;">!</div>' +
-        '<div style="font-size:16px;font-weight:600;">题库数据加载失败</div>' +
-        '<div style="font-size:13px;color:#6B7280;margin:10px auto 0;max-width:340px;">' +
-          '以下资源未能加载：' + failedLabels.join("、") + '。请检查网络后重试，或稍后再访问。</div>' +
-        '<button id="bootRetry" type="button" class="btn btn-primary" ' +
-          'style="margin-top:20px;padding:10px 30px;border:0;border-radius:8px;background:var(--accent,#3B82F6);' +
-          'color:#fff;font-size:15px;cursor:pointer;">重新加载</button>' +
-      '</div>';
-    var btn = $("bootRetry");
-    if (btn) btn.addEventListener("click", function () { location.reload(); });
+        '<div class="login-tabs" role="tablist">' +
+          '<button type="button" class="is-on" role="tab" aria-selected="true">登录</button>' +
+          '<button type="button" role="tab" aria-selected="false">注册</button>' +
+        '</div>' +
+        '<div class="card" style="padding:24px">' +
+          '<div class="login-field"><label for="bootEmail">邮箱</label><input id="bootEmail" type="email" placeholder="your@email.com" disabled /></div>' +
+          '<div class="login-field"><label for="bootPwd">密码</label><input id="bootPwd" type="password" placeholder="至少6位" disabled /></div>' +
+          '<button type="button" class="login-submit" disabled>登录</button>' +
+          '<div class="login-msg"></div>' +
+          '<button type="button" class="login-forgot" disabled>忘记密码？</button>' +
+        '</div>' +
+        '<button type="button" class="login-guest" disabled>先逛逛，稍后登录</button>' +
+      '</div>' +
+      '<div id="bootToast" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;' +
+        'background:rgba(17,24,39,.88);color:#fff;font-size:13px;padding:9px 14px;text-align:center;">正在加载题库数据…</div>';
+    document.addEventListener("click", blockClick, true);
+    toast("正在加载题库数据…");
   }
 
   /* 加载单个脚本，超时或错误即 reject */
@@ -100,15 +120,14 @@
 
   /* 单脚本加载：带超时与重试，返回失败标签（null 表示成功） */
   async function loadWithRetry(script, index, total) {
-    progress(index, total, "正在加载" + script.label + "…");
     for (var attempt = 0; attempt <= MAX_RETRY; attempt++) {
       try {
         await loadScript(script.src + "?v=" + V, TIMEOUT);
-        progress(index + 1, total, "正在加载" + script.label + "…");
+        toast("正在加载题库数据 " + Math.min(index + 1, total) + " / " + total + "…");
         return null;
       } catch (e) {
         if (attempt < MAX_RETRY) {
-          progress(index, total, script.label + "加载失败，正在重试…");
+          toast(script.label + "加载失败，正在重试…");
           await new Promise(function (r) { setTimeout(r, 500); });
         } else {
           return script.label;
@@ -129,14 +148,16 @@
       // 非必要脚本（supabase）失败：继续主流程，仅登录功能降级
     }
     if (failed.length) {
-      failUI(failed);
+      toastFail(failed);
       return;
     }
     /* 全部就绪 → 注入 app.js 完成初始化（app.js 读取 window.STUDY_DATA 时数据已可用） */
+    unblockClick();
+    toastDone();
     var appJs = document.createElement("script");
     appJs.src = "app.js?v=" + V;
     appJs.onerror = function () {
-      failUI(["主程序 app.js"]);
+      toastFail(["主程序 app.js"]);
     };
     document.head.appendChild(appJs);
   }
