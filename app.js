@@ -1093,11 +1093,6 @@
       <section class="home-hero">
         <div class="hh-left">
           <div class="hh-tag">2027 广西专升本 · 电子与信息大类</div>
-          <div class="hh-pdfs">
-            <a href="${attr(SYL_PDF.math.href)}" download="${attr(SYL_PDF.math.name)}" target="_blank" rel="noopener">数学大纲</a>
-            <a href="${attr(SYL_PDF.en.href)}" download="${attr(SYL_PDF.en.name)}" target="_blank" rel="noopener">英语大纲</a>
-            <a href="${attr(SYL_PDF.maj.href)}" download="${attr(SYL_PDF.maj.name)}" target="_blank" rel="noopener">专业大纲</a>
-          </div>
         </div>
         <div class="hh-right">
           <div class="ring" style="--p:${Math.round(totalDone/totalQ*100)}">
@@ -1105,11 +1100,6 @@
               <b>${Math.round(totalDone/totalQ*100)}%</b>
               <span>题库进度</span>
             </div>
-          </div>
-          <div class="hh-stats">
-            <div><b>${totalDone}</b><span>已练题目</span></div>
-            <div><b>${acc == null ? "—" : acc + "%"}</b><span>总正确率</span></div>
-            <div><b>${streakN}</b><span>连续打卡</span></div>
           </div>
         </div>
       </section>
@@ -1147,87 +1137,48 @@
 
       <!-- 按大纲：三卷学习进度 -->
       <section>
-        <div class="section-title">按大纲备考 <span class="muted" style="font-weight:400;font-size:12px">公共两科各 150 · 专业合卷 300</span></div>
-        ${outlineCard({
-          title: "高等数学",
-          sub: "公共基础课 · 单独考试 · 一元微积分 + 常微分方程",
-          score: 150,
-          minutes: 120,
-          form: "闭卷笔试",
-          extra: "考纲 2 大块",
-          typesHtml: typePill(SYL_MATH),
-          progLabel: "已练 " + mathP.done + " / " + mathP.total + " 题",
-          progText: (mathP.acc == null ? "正确率 —" : "正确率 " + mathP.acc + "%"),
-          pct: mathP.pct,
-          plan: "math-full",
-          subjectNav: "bank",
-          subjectName: "高等数学",
-          barCls: "sub-math",
-          pdf: SYL_PDF.math.href,
-          pdfName: SYL_PDF.math.name
-        })}
-        ${outlineCard({
-          title: "英语",
-          sub: "公共基础课 · 单独考试 · 词汇语法 / 阅读 / 翻译 / 写作",
-          score: 150,
-          minutes: 120,
-          form: "闭卷笔试",
-          extra: "考纲 4 部分",
-          typesHtml: typePill(SYL_EN),
-          progLabel: "已练 " + enP.done + " / " + enP.total + " 题",
-          progText: (enP.acc == null ? "正确率 —" : "正确率 " + enP.acc + "%"),
-          pct: enP.pct,
-          plan: "english-full",
-          subjectNav: "bank",
-          subjectName: "英语",
-          barCls: "sub-en",
-          pdf: SYL_PDF.en.href,
-          pdfName: SYL_PDF.en.name
-        })}
-        ${outlineCard({
-          title: "专业基础综合课（合卷）",
-          sub: "电工电子 100 + C语言 100 + 计算机网络 100 · 同卷连考",
-          score: 300,
-          minutes: 150,
-          form: "合卷 150 分钟",
-          extra: "单选/判断/填空/应用",
-          typesHtml: typePill(SYL_MAJ),
-          progLabel: "三科合计进度（按 100 分权重）",
-          progText: majP.acc == null ? "正确率 —" : "正确率 " + majP.acc + "%",
-          pct: majP.pct,
-          plan: "major-combined",
-          subjectNav: "bank",
-          barCls: "sub-maj",
-          pdf: SYL_PDF.maj.href,
-          pdfName: SYL_PDF.maj.name
-        })}
+        <div class="section-title">科目进度</div>
+        <div class="subj-progress" style="display:flex;flex-direction:column;gap:10px;padding:0 4px">
+          <button class="sp-row" data-nav="bank" data-subj="math" type="button" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:left">
+            <span style="flex:1;font-weight:600">高等数学</span>
+            <span style="flex:2;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:${mathP.pct}%;background:var(--math,#2563EB);border-radius:3px"></i></span>
+            <span style="font-size:12px;color:var(--muted);width:40px;text-align:right">${mathP.pct}%</span>
+          </button>
+          <button class="sp-row" data-nav="bank" data-subj="english" type="button" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:left">
+            <span style="flex:1;font-weight:600">英语</span>
+            <span style="flex:2;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:${enP.pct}%;background:var(--en,#16A34A);border-radius:3px"></i></span>
+            <span style="font-size:12px;color:var(--muted);width:40px;text-align:right">${enP.pct}%</span>
+          </button>
+          <button class="sp-row" data-nav="bank" data-subj="major" type="button" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:left">
+            <span style="flex:1;font-weight:600">专业合卷</span>
+            <span style="flex:2;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:${majP.pct}%;background:var(--maj,#9333EA);border-radius:3px"></i></span>
+            <span style="font-size:12px;color:var(--muted);width:40px;text-align:right">${majP.pct}%</span>
+          </button>
+        </div>
       </section>
 
-      <!-- 考纲套卷（精简，结构与大纲一致） -->
+      <!-- 考纲套卷 -->
       <section>
-        <div class="section-title">考纲套卷 <span class="muted" style="font-weight:400;font-size:12px">严格按 2027 题型分值</span></div>
+        <div class="section-title">考纲套卷</div>
         <div class="exam-stack">
           <button class="exam-card" data-act="exam" data-plan="math-full" type="button">
             <span class="exam-ico">数</span>
             <span class="exam-main">
-              <span class="exam-t">高数考纲卷 · 150 分</span>
-              <span class="exam-s">单选10×5 · 填空4×5 · 解答7×8 · 应用2×12</span>
+              <span class="exam-t">高数考纲卷</span>
             </span>
             <span class="exam-go">开始</span>
           </button>
           <button class="exam-card" data-act="exam" data-plan="english-full" type="button">
             <span class="exam-ico en">英</span>
             <span class="exam-main">
-              <span class="exam-t">英语考纲卷 · 150 分</span>
-              <span class="exam-s">词汇语法40 · 阅读60 · 翻译32 · 写作18</span>
+              <span class="exam-t">英语考纲卷</span>
             </span>
             <span class="exam-go">开始</span>
           </button>
           <button class="exam-card" data-act="exam" data-plan="major-combined" type="button">
             <span class="exam-ico maj">专</span>
             <span class="exam-main">
-              <span class="exam-t">专业合卷 · 300 分</span>
-              <span class="exam-s">单选30×4 + 判断15×3 + 填空30×2 + 应用6×12.5</span>
+              <span class="exam-t">专业合卷</span>
             </span>
             <span class="exam-go">开始</span>
           </button>
