@@ -2216,13 +2216,13 @@
             if (kind === "wrong") {
               const reasonLabel = { concept: "概念不清", calc: "计算失误", read: "审题偏差", formula: "公式记错" }[w && w.reason] || "";
               return (
-                '<div class="list-row" style="display:flex;align-items:center;gap:4px">' +
-                '<button data-act="open-q" data-id="' + attr(q.id) + '" type="button" style="flex:1;text-align:left;background:none;border:none;display:flex;align-items:center;gap:10px;padding:12px 16px">' +
+                '<div class="list-row" style="display:flex;align-items:center;gap:4px;position:relative">' +
+                '<button data-act="open-q" data-id="' + attr(q.id) + '" type="button" style="flex:1;text-align:left;background:none;border:none;display:flex;align-items:center;gap:10px;padding:12px 16px;padding-right:56px">' +
                 '<span class="dot" style="background:' + (subjOf(q.subject).color || "#2563EB") + ';flex-shrink:0"></span>' +
                 '<span class="main" style="flex:1;min-width:0"><span class="t" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + mathHtml(String(q.stem).slice(0, 50)) + '</span>' +
                 '<span class="s" style="display:block;font-size:12px;color:#888;margin-top:2px">' + esc(q.typeLabel || "题") + " · " + esc(q.subject) + " · 错" + (w ? w.n : 1) + "次" + (reasonLabel ? " · " + reasonLabel : "") + (isDue ? " · 到期" : "") + '</span></span>' +
                 '</button>' +
-                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" type="button" style="background:none;border:none;color:#ef4444;font-size:18px;padding:14px 16px;cursor:pointer">✕</button>' +
+                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#ef4444;font-size:18px;padding:8px;cursor:pointer">✕</button>' +
                 '</div>'
               );
             }
