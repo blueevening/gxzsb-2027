@@ -1136,6 +1136,21 @@
         </div>
       </section>
 
+      <!-- 快捷入口 -->
+      <section>
+        <div class="quick-3">
+          <button class="qi" data-act="daily" type="button"><span class="ico">${iconStar()}</span>每日 30 题</button>
+          <button class="qi" data-nav="bank" type="button"><span class="ico">${iconBook()}</span>章节 / 顺序</button>
+          <button class="qi" data-nav="mock" type="button"><span class="ico">${iconClock()}</span>模拟考</button>
+          <button class="qi" data-act="due" type="button"><span class="ico">${iconClock()}</span>错题重练</button>
+          <button class="qi" data-act="weak" type="button"><span class="ico">${iconChart()}</span>薄弱考点</button>
+          <button class="qi" data-nav="words" type="button"><span class="ico">${iconType()}</span>背单词</button>
+          <button class="qi" data-nav="formula" type="button"><span class="ico">${iconBook()}</span>公式速查</button>
+          <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
+          <button class="qi" data-nav="stats" type="button"><span class="ico">${iconChart()}</span>数据分析</button>
+        </div>
+      </section>
+
       <!-- 按大纲：三卷学习进度 -->
       <section>
         <div class="section-title">按大纲备考 <span class="muted" style="font-weight:400;font-size:12px">公共两科各 150 · 专业合卷 300</span></div>
@@ -1192,34 +1207,6 @@
           pdf: SYL_PDF.maj.href,
           pdfName: SYL_PDF.maj.name
         })}
-      </section>
-
-      <!-- 快捷入口：按大纲备考动线 -->
-      <section>
-        <div class="section-title">快捷入口</div>
-        <div class="qi-group-label">刷题</div>
-        <div class="quick-3">
-          <button class="qi" data-act="daily" type="button"><span class="ico">${iconStar()}</span>每日 30 题</button>
-          <button class="qi" data-nav="bank" type="button"><span class="ico">${iconBook()}</span>章节 / 顺序</button>
-          <button class="qi" data-nav="mock" type="button"><span class="ico">${iconClock()}</span>模拟考（限时）</button>
-        </div>
-        <div class="qi-group-label">补强</div>
-        <div class="quick-3">
-          <button class="qi" data-act="due" type="button"><span class="ico">${iconClock()}</span>错题重练</button>
-          <button class="qi" data-act="weak" type="button"><span class="ico">${iconChart()}</span>薄弱考点</button>
-          <button class="qi" data-act="practice-fav" type="button"><span class="ico">${iconStar()}</span>收藏题</button>
-        </div>
-        <div class="qi-group-label">辅助</div>
-        <div class="quick-3">
-          <button class="qi" data-nav="words" type="button"><span class="ico">${iconType()}</span>背单词</button>
-          <button class="qi" data-nav="formula" type="button"><span class="ico">${iconBook()}</span>公式速查</button>
-          <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
-        </div>
-        <div class="qi-group-label">资料</div>
-        <div class="quick-3 quick-2">
-          <button class="qi" data-nav="syllabus" type="button"><span class="ico">${iconBook()}</span>2027 考纲</button>
-          <button class="qi" data-nav="stats" type="button"><span class="ico">${iconChart()}</span>数据分析</button>
-        </div>
       </section>
 
       <!-- 考纲套卷（精简，结构与大纲一致） -->
