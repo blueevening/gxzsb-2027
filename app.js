@@ -1268,7 +1268,11 @@
   }
   function viewBank() {
     setTitle("题库", true);
-    const allP = subjStat("") ;
+    const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
+    const totalQ = (D.questions || []).length || 0;
+    const totalDone = doneIds.size;
+    const okN = state.attempts.filter((a) => a.correct).length;
+    const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
     const groups = [
       { title: "公共基础课（各 150 分）", names: ["高等数学", "英语"] },
       { title: "专业基础综合课（合卷 300 分）", names: ["电工电子技术基础", "C语言程序设计", "计算机网络基础"] },
