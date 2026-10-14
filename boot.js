@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "371";          // 与 index.html 的版本号保持一致
+  var V = "372";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -133,21 +133,13 @@
     '</div>';
   }
 
-  /* 首帧：有登录态→品牌加载页（加载完进首页）；无登录态→登录壳 */
+  /* 首帧：有登录态→极简小转圈（静默加载）；无登录态→登录壳 */
   function shell() {
     document.body.classList.add("boot-loading");
     var app = $("app");
     if (app) {
       if (isLoggedIn()) {
-        app.innerHTML =
-          '<div class="boot">' +
-            '<div class="boot-logo">⚡</div>' +
-            '<div class="boot-name">广西专升本练习</div>' +
-            '<div class="boot-sub" id="bootSub">正在加载题库数据…</div>' +
-            '<div class="boot-track"><div class="boot-bar" id="bootBar"></div></div>' +
-            '<div class="boot-count" id="bootCount">0 / ' + DATA_SCRIPTS.length + '</div>' +
-          '</div>';
-        setProgress(0, DATA_SCRIPTS.length);
+        app.innerHTML = '<div class="boot" style="padding-top:40vh;text-align:center;opacity:.5">⟳</div>';
       } else {
         app.innerHTML = loginShellHtml();
       }
