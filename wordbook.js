@@ -48,8 +48,13 @@ window.WORDS = (function () {
     return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
   }
   function getTodayLearned() {
-    var t = load(LS.today, {});
-    if (t.date !== getTodayKey()) return { date: getTodayKey(), learned: 0, reviewed: 0 };
+    var todayKey = getTodayKey();
+    var t = load(LS.today, null);
+    if (!t || t.date !== todayKey) {
+      // 跨天了，清掉旧数据
+      try { localStorage.removeItem(LS.today); } catch(e) {}
+      return { date: todayKey, learned: 0, reviewed: 0 };
+    }
     return t;
   }
   function incToday(kind) {
