@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "366";          // 与 index.html 的版本号保持一致
+  var V = "367";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -197,7 +197,6 @@
     for (var attempt = 0; attempt <= MAX_RETRY; attempt++) {
       try {
         await loadScript(script.src + "?v=" + V, TIMEOUT, script.verify);
-        setProgress(index + 1, total);
         return null;
       } catch (e) {
         if (attempt < MAX_RETRY) {
@@ -234,12 +233,18 @@
     document.body.classList.remove("boot-loading");
     injectAppJs();
 
-    /* PHASE2：题库数据后台静默加载（已登录用户可见进度条，未登录无感） */
+    /* PHASE2：题库数据并行加载（同时下载9个文件，总时间≈最大文件时间） */
+    var doneCount = 0;
+    var total = DATA_SCRIPTS.length;
     var failed = [];
-    for (var j = 0; j < DATA_SCRIPTS.length; j++) {
-      var f = await loadWithRetry(DATA_SCRIPTS[j], j, DATA_SCRIPTS.length);
-      if (f && DATA_SCRIPTS[j].required) failed.push(f);
-    }
+    var promises = DATA_SCRIPTS.map(function(script, idx) {
+      return loadWithRetry(script, idx, total).then(function(f) {
+        doneCount++;
+        setProgress(doneCount, total);
+        if (f && script.required) failed.push(f);
+      });
+    });
+    await Promise.all(promises);
     if (failed.length) { toastFail(failed); return; }
     /* 就绪：通知 app.js 重建题库快照并重渲染（监听在 window 上，须在 window 派发） */
     window.GXZSB_DATA_READY = true;
