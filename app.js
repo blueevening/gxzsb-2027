@@ -3245,16 +3245,8 @@ function formulaFilter() {
     state.route = route;
     window.scrollTo(0, 0);
     const app = $("#app");
-    // 题库数据未就绪：静默加载，不显示大加载页
-    if (!window.GXZSB_DATA_READY && route !== "login" && !(sb && !state.user)) {
-      if (state.user) {
-        app.innerHTML = '<div style="padding-top:40vh;text-align:center;opacity:.5;font-size:28px">⟳</div>';
-      } else {
-        app.innerHTML = viewLogin();
-      }
-      hideNav();
-      return;
-    }
+    // 数据未就绪也直接渲染首页（空数据），后台加载完自动刷新
+    // 不再卡住转圈
     if (sb && !state.user && route !== "login") {
       app.innerHTML = viewLogin();
       hideNav();
