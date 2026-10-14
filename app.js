@@ -2361,15 +2361,18 @@ function ensureExplain(q) {
 
   function viewLearnDetail(id) {
     const book = (window.STUDY_DATA && window.STUDY_DATA.LEARN_BOOK) || {};
-    let pt = null;
+    let allPoints = [];
     Object.keys(book).forEach(function (subj) {
       (book[subj] || []).forEach(function (ch) {
         (ch.points || []).forEach(function (p) {
-          if (p.id === id) pt = { p: p, subj: subj, chapter: ch.chapter, outline: ch.outline };
+          allPoints.push({ p: p, subj: subj, chapter: ch.chapter });
         });
       });
     });
+    let idx = allPoints.findIndex(function (x) { return x.p.id === id; });
+    let pt = idx >= 0 ? allPoints[idx] : null;
     if (!pt) return '<div class="card"><div class="empty">未找到知识点</div></div>';
+    const nextPt = idx < allPoints.length - 1 ? allPoints[idx + 1] : null;
     const p = pt.p;
     setTitle(p.name, true);
     const sc = subjOf(pt.subj);
@@ -2406,6 +2409,7 @@ function ensureExplain(q) {
       "</div></div>" +
       '<div style="display:flex;flex-direction:column;gap:8px;margin:16px 0 8px">' +
       '<button class="btn btn-primary btn-block" data-act="learn-practice" data-p="' + attr(p.kp || p.name) + '" data-subj="' + attr(pt.subj) + '" type="button">去练习该考点</button>' +
+      (nextPt ? '<a class="btn btn-ghost btn-block" href="#/learn-point/' + attr(nextPt.p.id) + '" type="button">下一个：' + esc(nextPt.p.name) + '</a>' : '') +
       '<button class="btn btn-ghost btn-block" data-act="learn-mark" data-id="' + attr(p.id) + '" type="button">标记已学</button>' +
       '<button class="btn btn-ghost btn-block" data-act="learn-back-list" type="button">返回知识列表</button>' +
       "</div>"
