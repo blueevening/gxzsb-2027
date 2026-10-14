@@ -2877,7 +2877,7 @@ function formulaFilter() {
     return `
       <div class="wb-hero">
         <div class="wb-hero-title">英语核心词汇 ${S.total}</div>
-        <div class="wb-hero-sub">艾宾浩斯遗忘曲线 · 科学复习</div>
+        <div class="wb-hero-sub">SM-2 间隔重复 · 科学抗遗忘</div>
         <div class="wb-stats-row">
           <div class="wb-stat"><div class="wb-stat-num">${S.mastered}</div><div class="wb-stat-label">已掌握</div></div>
           <div class="wb-stat"><div class="wb-stat-num">${S.reviewing}</div><div class="wb-stat-label">复习中</div></div>
@@ -2888,7 +2888,23 @@ function formulaFilter() {
         <div class="wb-progress-text">已掌握 ${pct}% · 今日学 ${S.today.learned||0} 复习 ${S.today.reviewed||0}</div>
       </div>
 
-      <div class="section-title">学习模式</div>
+      <div class="wb-today-card">
+        <div class="wb-today-row">
+          <span class="wb-today-label">今日任务</span>
+          <span class="wb-today-num">${S.today.learned||0}<span>/${goal} 新词</span></span>
+        </div>
+        ${dueReview.length > 0 ? `
+          <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button">
+            立即复习 · ${dueReview.length} 个到期词
+          </button>
+        ` : `
+          <button class="btn btn-primary btn-block" data-act="wb-start-new" type="button">
+            开始学习新词 · ${goal} 个
+          </button>
+        `}
+      </div>
+
+      <div class="section-title">练习模式</div>
       <div class="wb-mode-grid">
         <button class="wb-mode-card" data-act="wb-start-quiz" data-mode="meaning" type="button">
           <div class="wb-mode-ico">📖</div>
@@ -2912,16 +2928,8 @@ function formulaFilter() {
         </button>
       </div>
 
-      <div class="section-title">快速入口</div>
+      <div class="section-title">其他</div>
       <div class="wb-actions">
-        ${dueReview.length > 0 ? `
-          <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button">
-            复习 ${dueReview.length} 个到期词
-          </button>
-        ` : ""}
-        <button class="btn btn-primary btn-block" data-act="wb-start-new" type="button">
-          卡片学习 · 今日新词 ${goal} 个
-        </button>
         <button class="btn btn-ghost btn-block" data-nav="word-list" type="button">
           浏览全部词汇 A-Z
         </button>

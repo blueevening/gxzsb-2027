@@ -1048,11 +1048,12 @@ sup.math-sup .frac .den { padding-top: 1px; }
 
 /* ========== 背单词模块 ========== */
 .wb-hero {
-  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  background: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
   border-radius: 16px;
   padding: 24px 20px;
   margin-bottom: 16px;
   color: #fff;
+  box-shadow: 0 4px 20px rgba(14,165,233,0.3);
 }
 .wb-hero-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
 .wb-hero-sub { font-size: 13px; opacity: 0.85; margin-bottom: 16px; }
@@ -1072,6 +1073,22 @@ sup.math-sup .frac .den { padding-top: 1px; }
   transition: width 0.3s ease;
 }
 .wb-progress-text { font-size: 12px; opacity: 0.9; }
+
+/* 今日任务大卡片 */
+.wb-today-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+.wb-today-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.wb-today-label { font-size: 14px; color: var(--text-sub); }
+.wb-today-num { font-size: 28px; font-weight: 800; color: var(--text); }
+.wb-today-num span { font-size: 14px; color: var(--text-sub); font-weight: 400; }
 
 .wb-actions { margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
 .btn-wb-review {
