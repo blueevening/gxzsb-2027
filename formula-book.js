@@ -164,16 +164,16 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "变上限积分求导",
-          "formula": "frac{d}{dx} int_{a}^{u(x)} f(t)dt = f(u(x))·u'(x)；frac{d}{dx} int_{v(x)}^{b} f(t)dt = -f(v(x))·v'(x)",
+          "formula": "frac{d}{dx} ∫_{a}^{u(x)} f(t)dt = f(u(x))·u'(x)；frac{d}{dx} ∫_{v(x)}^{b} f(t)dt = -f(v(x))·v'(x)",
           "plain": "变上限积分对 x 求导：把上限代进被积函数，再乘上限对 x 的导数。上限若在下限位置，前面加负号。",
           "use": "见到 int_a^{u(x)} 或上下限都含 x 的积分对 x 求导，立即套变限求导公式；注意链式法则乘 u'(x)。",
           "steps": [
             "识别变上限：上限是 x^2 而非 x，属复合变限积分。",
-            "公式：frac{d}{dx} int_{a}^{u(x)} f(t)dt = f(u(x))·u'(x)。",
-            "故 F'(x)=sin(x^2)·2x=2x sin(x^2)；代入 x=sqrt{π/2} 得 F'=2·sqrt{π/2}·sin(π/2)=2sqrt{frac{π}{2}}。"
+            "公式：frac{d}{dx} ∫_{a}^{u(x)} f(t)dt = f(u(x))·u'(x)。",
+            "故 F'(x)=sin(x^2)·2x=2x sin(x^2)；代入 x=√(π/2) 得 F'=2·√(π/2)·sin(π/2)=2√(frac{π}{2})。"
           ],
-          "example": "设 F(x)=int_{0}^{x^2} sin t dt，求 F'(x) 与 F'(sqrt{frac{π}{2}})。",
-          "answer": "F'(x)=2x sin(x^2)；F'(sqrt{π/2})=2sqrt{frac{π}{2}}",
+          "example": "设 F(x)=∫_{0}^{x^2} sin t dt，求 F'(x) 与 F'(√(frac{π}{2}))。",
+          "answer": "F'(x)=2x sin(x^2)；F'(√(π/2))=2√(frac{π}{2})",
           "wrong": "错在漏乘 u'(x)；上限是复合函数必须链式。；错在上下限颠倒不加负号；下限出现时公式带负号。；错在把 sin t 的 t 换成 x；应把「上限」代入 t。",
           "tip": "口诀：上限代入再乘上限导，下限取反。"
         },
@@ -468,7 +468,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "再看对称性：定义域关于原点对称才谈奇偶；算 f(-x) 与 f(x) 比较。",
             "单调性看导数符号或作差 f(x1)-f(x2)；周期性找最小正 T。"
           ],
-          "example": "求 f(x)=frac{1}{x-1}+sqrt{x+2} 的定义域。",
+          "example": "求 f(x)=frac{1}{x-1}+√(x+2) 的定义域。",
           "answer": "x≥-2 且 x≠1，即 [-2,1)∪(1,+∞)",
           "wrong": "错在漏掉 x≠1；分母为零无意义。；错在只写 x≥-2；两个限制要同时满足。；错在把值域当定义域；定义域是自变量范围。",
           "tip": "口诀：分母不为零，根号下非负，对数要正数，三条取交集。"
@@ -483,8 +483,8 @@ window.STUDY_DATA.FORMULA_BOOK = {
             "复合分解：设 u=内层，y=外层，先写 y=f(u)、u=g(x)。",
             "验算：f(f^{-1}(x))=x 且 f^{-1}(f(x))=x 在定义域内成立。"
           ],
-          "example": "求 f(x)=2x+3 的反函数，并把 y=sqrt{1-x^2} 分解。",
-          "answer": "f^{-1}(x)=frac{x-3}{2}；分解：y=sqrt{u}, u=1-x^2（|x|≤1）",
+          "example": "求 f(x)=2x+3 的反函数，并把 y=√(1-x^2) 分解。",
+          "answer": "f^{-1}(x)=frac{x-3}{2}；分解：y=√(u), u=1-x^2（|x|≤1）",
           "wrong": "错在反函数不换定义域；反函数定义域是原函数值域。；错在分解顺序颠倒；先内层后外层。；错在忘掉限制条件；开方要求 u≥0。",
           "tip": "口诀：反函数解 x 换 x y；复合分解由外向内剥洋葱。"
         },
@@ -1367,7 +1367,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "正弦交流三要素",
-          "formula": "u = U_m sin(ωt + φ)；三要素：最大值 U_m、角频率 ω、初相 φ；有效值 U = frac{U_m}{sqrt{2}}",
+          "formula": "u = U_m sin(ωt + φ)；三要素：最大值 U_m、角频率 ω、初相 φ；有效值 U = frac{U_m}{√(2)}",
           "plain": "正弦波由「多高、多快、起点在哪」三件事决定。有效值是计算功率时用的等效直流值。",
           "use": "写瞬时值表达式、求有效值、比较相位差。",
           "steps": [
@@ -1382,7 +1382,7 @@ window.STUDY_DATA.FORMULA_BOOK = {
         },
         {
           "name": "阻抗与相量",
-          "formula": "Z = R + jX；|Z| = sqrt{R²+X²}；X_L=ωL；X_C=frac{1}{ωC}；I = frac{U}{|Z|}",
+          "formula": "Z = R + jX；|Z| = √(R²+X²)；X_L=ωL；X_C=frac{1}{ωC}；I = frac{U}{|Z|}",
           "plain": "交流电路里电阻和电抗合成阻抗。电感抗随频率升，电容抗随频率降，两者可抵消。",
           "use": "求电流大小、阻抗角、谐振；或 RLC 串联电路计算。",
           "steps": [
