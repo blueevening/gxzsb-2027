@@ -2215,7 +2215,7 @@
             if (kind === "wrong") {
               const reasonLabel = { concept: "概念不清", calc: "计算失误", read: "审题偏差", formula: "公式记错" }[w && w.reason] || "";
               return (
-                '<div class="list-row" style="display:flex;align-items:center;gap:4px">' +
+                '<div class="list-row" style="display:flex;align-items:flex-start;gap:4px">' +
                 '<button data-act="open-q" data-id="' + attr(q.id) + '" type="button" style="flex:1;text-align:left;background:none;border:none;display:flex;align-items:center;gap:10px;padding:12px 16px">' +
                 '<span class="dot" style="background:' + (subjOf(q.subject).color || "#2563EB") + ';flex-shrink:0"></span>' +
                 '<span class="main" style="flex:1;min-width:0"><span class="t" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(String(q.stem).slice(0, 38)) + '</span>' +
@@ -2764,7 +2764,7 @@ function formulaFilter() {
       return "@@KF" + (keep.length - 1) + "@@";
     });
     function isTok(ch) {
-      return /[A-Za-z0-9^.()|]/.test(ch) || (ch && ch.charCodeAt(0) > 127);
+      return /[A-Za-z0-9^.|]/.test(ch) || (ch && ch.charCodeAt(0) > 127);
     }
     function rightEnd(s, i) {
       while (i < s.length && /\s/.test(s[i])) i++;
