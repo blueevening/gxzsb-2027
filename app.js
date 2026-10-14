@@ -1089,15 +1089,10 @@
     const majPlan = plans["major-combined"];
 
     return `
-      <!-- 考情 Hero：对齐 2027 大纲 600 分制 -->
+      <!-- 考情 Hero -->
       <section class="home-hero">
         <div class="hh-left">
           <div class="hh-tag">2027 广西专升本 · 电子与信息大类</div>
-          <div class="hh-days">
-            <span class="hh-num">${days}</span>
-            <span class="hh-unit">天后考试<br/><i>2027-04-24</i></span>
-          </div>
-          <div class="hh-note">公共课 150×2 + 专业合卷 300 = <b>600 分</b> · 全卷闭卷笔试</div>
           <div class="hh-pdfs">
             <a href="${attr(SYL_PDF.math.href)}" download="${attr(SYL_PDF.math.name)}" target="_blank" rel="noopener">数学大纲</a>
             <a href="${attr(SYL_PDF.en.href)}" download="${attr(SYL_PDF.en.name)}" target="_blank" rel="noopener">英语大纲</a>
@@ -1105,7 +1100,7 @@
           </div>
         </div>
         <div class="hh-right">
-          <div class="ring" style="--p:${ready}">
+          <div class="ring" style="--p:${ready}" data-nav="bank" type="button" role="button">
             <div class="ring-in">
               <b>${ready}%</b>
               <span>备考完成度</span>
