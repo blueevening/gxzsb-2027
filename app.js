@@ -2222,7 +2222,7 @@
                 '<span class="main" style="flex:1;min-width:0"><span class="t" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(String(q.stem).slice(0, 38)) + '</span>' +
                 '<span class="s" style="display:block;font-size:12px;color:#888;margin-top:2px">' + esc(q.typeLabel || "题") + " · " + esc(q.subject) + " · 错" + (w ? w.n : 1) + "次" + (reasonLabel ? " · " + reasonLabel : "") + (isDue ? " · 到期" : "") + '</span></span>' +
                 '</button>' +
-                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" type="button" style="background:none;border:none;color:#ef4444;font-size:18px;padding:8px 12px;cursor:pointer">✕</button>' +
+                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" type="button" style="background:none;border:none;color:#ef4444;font-size:18px;padding:14px 16px;cursor:pointer;align-self:center">✕</button>' +
                 '</div>'
               );
             }
