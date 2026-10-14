@@ -243,6 +243,7 @@
   const state = {
     route: "home",
     params: {},
+    authLoading: true,
     attempts: load(LS.attempts, []),
     wrong: load(LS.wrong, {}),
     fav: load(LS.fav, {}),
@@ -945,7 +946,7 @@
   const TAB_NAV = NAV.filter(function(n){ return TAB_NAV_IDS.indexOf(n.id) >= 0; });
   function renderNav() {
     // 登录页不显示导航；其余页面一律恢复底部 tab / 侧栏
-    const isLoginRoute = state.route === "login" || (!state.user && sb);
+    const isLoginRoute = state.route === "login" || (!state.user && sb && !state.authLoading);
     if (isLoginRoute) {
       hideNav();
       return;
@@ -4085,6 +4086,7 @@ function formulaFilter() {
   // 恢复Supabase session
   if (sb) {
     sb.auth.getSession().then(function(res) {
+      state.authLoading = false;
       if (res.data.session) {
         state.user = res.data.session.user;
         pullAndMerge().then(subscribeRealtime);
@@ -4092,6 +4094,8 @@ function formulaFilter() {
       render();
       resetIdleTimer();
     });
+  } else {
+    state.authLoading = false;
   }
   // 恢复上次答题
   var restored = restoreSession();
