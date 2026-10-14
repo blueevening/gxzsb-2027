@@ -7,21 +7,26 @@
     try { sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key); } catch(e) {}
   }
 
-  const D = window.STUDY_DATA || {};
-  const Q = (D.questions || []).map((q, qi) => {
-    if (q.type === "choice") q.type = "single";
-    if (q.type === "blank") q.type = "fill";
-    return {
-    ...q,
-    _ord: qi,
-    difficultyLabel: q.difficultyLabel || ({ 1: "基础", 2: "强化", 3: "冲刺" })[q.difficulty] || "基础",
-    typeLabel:
-      q.typeLabel ||
-      ({ single: "单选", judge: "判断", fill: "填空", calc: "计算", apply: "应用", translate: "翻译", write: "写作" })[q.type] ||
-      "单选",
-    };
-  });
-  const Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
+  /* 题库快照：app.js 先于数据就绪注入（登录页不依赖数据），
+     数据后台静默加载完成后由 gxzsb:data-ready 重建 */
+  let D = window.STUDY_DATA || {};
+  function buildQ(dd) {
+    return ((dd && dd.questions) || []).map((q, qi) => {
+      if (q.type === "choice") q.type = "single";
+      if (q.type === "blank") q.type = "fill";
+      return {
+      ...q,
+      _ord: qi,
+      difficultyLabel: q.difficultyLabel || ({ 1: "基础", 2: "强化", 3: "冲刺" })[q.difficulty] || "基础",
+      typeLabel:
+        q.typeLabel ||
+        ({ single: "单选", judge: "判断", fill: "填空", calc: "计算", apply: "应用", translate: "翻译", write: "写作" })[q.type] ||
+        "单选",
+      };
+    });
+  }
+  let Q = buildQ(D);
+  let Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
 
   const SUBJ = {
     高等数学: { cls: "sc-math", short: "高数", color: "#3B82F6", group: "public", score: 150, order: 1 },
@@ -3276,6 +3281,19 @@ function formulaFilter() {
     const { route, params } = parseHash();
     state.route = route;
     const app = $("#app");
+    // 题库数据未就绪：仅登录页（不依赖数据）可渲染，其余显示加载占位，就绪后自动重渲染
+    if (!window.GXZSB_DATA_READY && route !== "login" && !(sb && !state.user)) {
+      app.innerHTML =
+        '<div class="boot">' +
+          '<div class="boot-logo">⚡</div>' +
+          '<div class="boot-name">广西专升本练习</div>' +
+          '<div class="boot-sub" id="bootSub">正在加载题库数据…</div>' +
+          '<div class="boot-track"><div class="boot-bar" id="bootBar"></div></div>' +
+          '<div class="boot-count" id="bootCount">0 / 9</div>' +
+        '</div>';
+      hideNav();
+      return;
+    }
     if (sb && !state.user && route !== "login") {
       app.innerHTML = viewLogin();
       hideNav();
@@ -3723,6 +3741,7 @@ function formulaFilter() {
       var pw = document.getElementById("loginPwd").value;
       var msg = document.getElementById("loginMsg");
       if (!em || !pw) { msg.textContent = "请输入邮箱和密码"; return; }
+      if (!sb) { msg.textContent = "登录组件加载失败，请刷新页面重试"; return; }
       var lockSec = loginLocked();
       if (lockSec > 0) { msg.textContent = "失败次数过多，请 " + lockSec + " 秒后再试"; return; }
       msg.textContent = "登录中...";
@@ -3752,6 +3771,7 @@ function formulaFilter() {
       var pw2b = document.getElementById("loginPwd2");
       var msg2 = document.getElementById("loginMsg");
       if (!em2 || !pw2) { msg2.textContent = "请输入邮箱和密码"; return; }
+      if (!sb) { msg2.textContent = "登录组件加载失败，请刷新页面重试"; return; }
       if (pw2.length < 6) { msg2.textContent = "密码至少6位"; return; }
       if (pw2b && pw2b.value !== pw2) { msg2.textContent = "两次输入的密码不一致"; return; }
       msg2.textContent = "注册中...";
@@ -4070,6 +4090,15 @@ function formulaFilter() {
   });
 
   window.addEventListener("hashchange", render);
+  // 数据后台静默加载完成：重建题库快照并重新渲染（app.js 先于数据就绪注入）
+  window.addEventListener("gxzsb:data-ready", function () {
+    D = window.STUDY_DATA || {};
+    Q = buildQ(D);
+    Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
+    restoreSession();
+    render();
+    ensureExamTimer();
+  });
   document.documentElement.setAttribute("data-theme", state.theme);
   // 密码不落 localStorage（若历史版本写过则清除）
   scrubPasswords();

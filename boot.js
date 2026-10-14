@@ -1,33 +1,52 @@
-/* gxzsb boot v357 — 首屏加载管理器
-   解决：11 个 defer 脚本串行阻塞首屏渲染（任一挂起即永久卡「加载中…」）
-   方案：首屏即渲染与 App 同风格的品牌加载页（logo + 站点名 + 主题色进度条，
-         骨架内联在 index.html，第一帧即可见），数据脚本后台按序加载
-         （30s 超时 / 失败重试 1 次 / 失败给出重试入口），加载期间隐藏
-         topbar/tabbar/side-nav 等空壳导航避免割裂，全部就绪后注入 app.js
-         完成真实初始化，app.js 内部逻辑零改动。
-   非必要脚本（supabase 登录组件）失败仅降级登录，不阻塞主流程。 */
+/* gxzsb boot v358 — 登录优先加载管理器
+   体验：打开即见登录界面（表单可输入），题库数据在登录后/浏览时后台静默加载。
+   流程：
+     ① 渲染首帧：未登录 → 登录壳（可输入，提交前轻提示"正在初始化登录组件"）；
+                  已登录 → 品牌加载页（logo + 进度条）。
+     ② PHASE1 加载登录最小依赖 supabase + sb-config → 注入 app.js，登录页立即可操作。
+     ③ PHASE2 后台静默加载 9 个数据脚本 → 全部就绪后置 GXZSB_DATA_READY=true
+               并派发 gxzsb:data-ready，app.js 据此重建题库快照并重渲染。
+   失败：必选脚本失败给出重试卡片；supabase 失败仅降级登录，不阻塞主流程。 */
 (function () {
   "use strict";
 
-  var V = "357";          // 与 index.html 的版本号保持一致
+  var V = "358";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
-  var SCRIPTS = [
+  /* 登录所需最小依赖（先加载，注入 app.js 后登录页立即可操作） */
+  var AUTH_SCRIPTS = [
     { src: "vendor/supabase.min.js", required: false, label: "登录组件", verify: "" },
-    { src: "sb-config.js",           required: true,  label: "配置",     verify: "SB_CONFIG" },
-    { src: "all-bank.js",            required: true,  label: "题库",     verify: "STUDY_DATA" },
-    { src: "all-learn.js",           required: true,  label: "考点精讲", verify: "STUDY_DATA" },
-    { src: "learn-book-2027.js",     required: true,  label: "学习手册", verify: "STUDY_DATA" },
-    { src: "formula-book.js",        required: true,  label: "公式书",   verify: "STUDY_DATA" },
-    { src: "wordbook.js",            required: true,  label: "单词书",   verify: "WORDS" },
-    { src: "kp-detail.js",           required: true,  label: "考点详解", verify: "KP_DETAIL" },
-    { src: "syllabus.js",            required: true,  label: "考纲",     verify: "SYLLABUS" },
-    { src: "syllabus-sample.js",     required: true,  label: "样卷",     verify: "STUDY_DATA" },
-    { src: "exam-plans-v2.js",       required: true,  label: "考纲卷",   verify: "STUDY_DATA" }
+    { src: "sb-config.js",           required: true,  label: "配置",     verify: "SB_CONFIG" }
+  ];
+  /* 题库等大数据脚本：登录后后台静默加载 */
+  var DATA_SCRIPTS = [
+    { src: "all-bank.js",        required: true, label: "题库",     verify: "STUDY_DATA" },
+    { src: "all-learn.js",       required: true, label: "考点精讲", verify: "STUDY_DATA" },
+    { src: "learn-book-2027.js", required: true, label: "学习手册", verify: "STUDY_DATA" },
+    { src: "formula-book.js",    required: true, label: "公式书",   verify: "STUDY_DATA" },
+    { src: "wordbook.js",        required: true, label: "单词书",   verify: "WORDS" },
+    { src: "kp-detail.js",       required: true, label: "考点详解", verify: "KP_DETAIL" },
+    { src: "syllabus.js",        required: true, label: "考纲",     verify: "SYLLABUS" },
+    { src: "syllabus-sample.js", required: true, label: "样卷",     verify: "STUDY_DATA" },
+    { src: "exam-plans-v2.js",   required: true, label: "考纲卷",   verify: "STUDY_DATA" }
   ];
 
   function $(id) { return document.getElementById(id); }
+
+  /* 登录态：supabase 把 session 持久化为 localStorage 的 "sb-*-auth-token" */
+  function isLoggedIn() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("sb-") === 0 && k.indexOf("-auth-token") > 0) {
+          var raw = localStorage.getItem(k);
+          if (raw && raw !== "null") return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
 
   /* ---------- 加载页进度 ---------- */
   function setProgress(done, total) {
@@ -70,7 +89,6 @@
     var btn = $("bootRetry");
     if (btn) btn.addEventListener("click", function () { location.reload(); });
   }
-
   /* 加载成功：立即隐藏所有浮层提示，避免残留 */
   function toastDone() {
     if (toastTimer) clearTimeout(toastTimer);
@@ -78,33 +96,64 @@
     if (t) t.classList.add("is-hide");
   }
 
-  /* 数据加载完成前，拦截页面内所有业务点击，仅提示原因 */
+  /* 登录壳阶段：拦截登录/注册/先逛逛等点击，提示初始化中（PHASE1 秒级完成） */
   function blockClick(e) {
     if (e.target && e.target.closest && e.target.closest("[data-act],[data-nav]")) {
       e.preventDefault();
       e.stopPropagation();
-      toast("题库数据加载中，请稍候…");
+      toast("正在初始化登录组件，请稍候…");
     }
   }
   function unblockClick() {
     document.removeEventListener("click", blockClick, true);
   }
 
-  /* 品牌加载页：骨架已内联在 index.html（首帧可见），这里兜底注入并接管进度 */
+  /* 登录壳：与 app.js viewLogin 同视觉（可输入），app.js 注入后无缝接管 */
+  function loginShellHtml() {
+    return '<div class="login-wrap">' +
+      '<div class="login-hero">' +
+        '<div class="logo">⚡</div>' +
+        '<div class="name">广西专升本练习</div>' +
+        '<div class="sub">登录后云端同步学习进度</div>' +
+      '</div>' +
+      '<div class="login-tabs" role="tablist">' +
+        '<button type="button" class="is-on" role="tab" aria-selected="true" data-act="boot-login">登录</button>' +
+        '<button type="button" role="tab" aria-selected="false" data-act="boot-register">注册</button>' +
+      '</div>' +
+      '<div class="card" style="padding:24px">' +
+        '<div class="login-field"><label for="bootLoginEmail">邮箱</label>' +
+        '<input id="bootLoginEmail" type="email" placeholder="your@email.com" autocomplete="email" /></div>' +
+        '<div class="login-field"><label for="bootLoginPwd">密码</label>' +
+        '<input id="bootLoginPwd" type="password" placeholder="至少6位" autocomplete="current-password" /></div>' +
+        '<button type="button" class="login-submit" data-act="boot-submit">登录</button>' +
+        '<div class="login-msg" id="bootLoginMsg"></div>' +
+        '<button type="button" class="login-forgot" data-act="boot-forgot">忘记密码？</button>' +
+      '</div>' +
+      '<button type="button" class="login-guest" data-act="boot-guest">先逛逛，稍后登录</button>' +
+    '</div>';
+  }
+
+  /* 首帧：按登录态渲染（未登录→登录壳静默加载；已登录→品牌加载页带进度） */
   function shell() {
     document.body.classList.add("boot-loading");
     var app = $("app");
-    if (app && !app.querySelector(".boot")) {
-      app.innerHTML =
-        '<div class="boot">' +
-          '<div class="boot-logo">⚡</div>' +
-          '<div class="boot-name">广西专升本练习</div>' +
-          '<div class="boot-sub" id="bootSub">正在加载题库数据…</div>' +
-          '<div class="boot-track"><div class="boot-bar" id="bootBar"></div></div>' +
-          '<div class="boot-count" id="bootCount">0 / ' + SCRIPTS.length + '</div>' +
-        '</div>';
+    if (app) {
+      if (isLoggedIn()) {
+        if (!app.querySelector(".boot")) {
+          app.innerHTML =
+            '<div class="boot">' +
+              '<div class="boot-logo">⚡</div>' +
+              '<div class="boot-name">广西专升本练习</div>' +
+              '<div class="boot-sub" id="bootSub">正在加载题库数据…</div>' +
+              '<div class="boot-track"><div class="boot-bar" id="bootBar"></div></div>' +
+              '<div class="boot-count" id="bootCount">0 / ' + DATA_SCRIPTS.length + '</div>' +
+            '</div>';
+        }
+        setProgress(0, DATA_SCRIPTS.length);
+      } else {
+        app.innerHTML = loginShellHtml();
+      }
     }
-    setProgress(0, SCRIPTS.length);
     document.addEventListener("click", blockClick, true);
   }
 
@@ -162,30 +211,40 @@
     return script.label;
   }
 
+  function injectAppJs() {
+    var appJs = document.createElement("script");
+    appJs.src = "app.js?v=" + V;
+    appJs.onerror = function () { toastFail(["主程序 app.js"]); };
+    document.head.appendChild(appJs);
+  }
+
   async function boot() {
     shell();
-    var total = SCRIPTS.length;
-    var failed = [];
-    for (var i = 0; i < SCRIPTS.length; i++) {
-      var s = SCRIPTS[i];
-      var fail = await loadWithRetry(s, i, total);
-      if (fail && s.required) failed.push(s.label);
-      // 非必要脚本（supabase）失败：继续主流程，仅登录功能降级
+
+    /* PHASE1：登录最小依赖就绪 → 注入 app.js（登录页立即可操作） */
+    var authFailed = [];
+    for (var i = 0; i < AUTH_SCRIPTS.length; i++) {
+      var af = await loadWithRetry(AUTH_SCRIPTS[i], i, AUTH_SCRIPTS.length);
+      if (af && AUTH_SCRIPTS[i].required) authFailed.push(af);
+      // 非必要（supabase）失败：继续，登录功能由 app.js 降级处理
     }
-    if (failed.length) {
-      toastFail(failed);
-      return;
-    }
-    /* 全部就绪 → 恢复导航壳，注入 app.js 完成初始化（数据已可用） */
+    if (authFailed.length) { toastFail(authFailed); return; }
     unblockClick();
     toastDone();
     document.body.classList.remove("boot-loading");
-    var appJs = document.createElement("script");
-    appJs.src = "app.js?v=" + V;
-    appJs.onerror = function () {
-      toastFail(["主程序 app.js"]);
-    };
-    document.head.appendChild(appJs);
+    injectAppJs();
+
+    /* PHASE2：题库数据后台静默加载（已登录用户可见进度条，未登录无感） */
+    var failed = [];
+    for (var j = 0; j < DATA_SCRIPTS.length; j++) {
+      var f = await loadWithRetry(DATA_SCRIPTS[j], j, DATA_SCRIPTS.length);
+      if (f && DATA_SCRIPTS[j].required) failed.push(f);
+    }
+    if (failed.length) { toastFail(failed); return; }
+    /* 就绪：通知 app.js 重建题库快照并重渲染（监听在 window 上，须在 window 派发） */
+    window.GXZSB_DATA_READY = true;
+    toastDone();
+    try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
   }
 
   if (document.readyState === "loading") {
