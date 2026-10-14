@@ -3245,16 +3245,13 @@ function formulaFilter() {
     state.route = route;
     window.scrollTo(0, 0);
     const app = $("#app");
-    // 题库数据未就绪：仅登录页（不依赖数据）可渲染，其余显示加载占位，就绪后自动重渲染
+    // 题库数据未就绪：静默加载，不显示大加载页
     if (!window.GXZSB_DATA_READY && route !== "login" && !(sb && !state.user)) {
-      app.innerHTML =
-        '<div class="boot">' +
-          '<div class="boot-logo">⚡</div>' +
-          '<div class="boot-name">广西专升本练习</div>' +
-          '<div class="boot-sub" id="bootSub">正在加载题库数据…</div>' +
-          '<div class="boot-track"><div class="boot-bar" id="bootBar"></div></div>' +
-          '<div class="boot-count" id="bootCount">0 / 9</div>' +
-        '</div>';
+      if (state.user) {
+        app.innerHTML = '<div style="padding-top:40vh;text-align:center;opacity:.5;font-size:28px">⟳</div>';
+      } else {
+        app.innerHTML = viewLogin();
+      }
       hideNav();
       return;
     }
