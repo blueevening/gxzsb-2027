@@ -78,7 +78,8 @@ window.WORDS = (function () {
     for (var id in prog) {
       var p = prog[id];
       if (p.box >= 3) continue;
-      if (p.next <= now) {
+      // stage=0的新词立刻算到期（学完马上复习），其他按时间到期
+      if (p.stage === 0 || p.next <= now) {
         var w = null;
         for (var i = 0; i < WORDS.length; i++) {
           if (WORDS[i].id === id) { w = WORDS[i]; break; }
