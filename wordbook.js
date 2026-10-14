@@ -94,7 +94,8 @@ window.WORDS = (function () {
     // quality: 3=认识, 2=模糊, 1=不认识
     var prog = getProgress();
     var now = Date.now();
-    if (!prog[id]) prog[id] = { stage: 0, next: 0, box: 1, reps: 0 };
+    var isNew = !prog[id];
+    if (isNew) prog[id] = { stage: 0, next: 0, box: 1, reps: 0 };
     var p = prog[id];
     if (quality >= 3) {
       // 认识：进一级
@@ -113,7 +114,8 @@ window.WORDS = (function () {
     p.next = now + delayMin * 60 * 1000;
     p.last = now;
     setProgress(prog);
-    incToday(quality >= 3 ? "reviewed" : "learned");
+    // 新词算learned，复习过的词算reviewed
+    incToday(isNew ? "learned" : "reviewed");
   }
 
   function getStats() {
