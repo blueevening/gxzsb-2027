@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "442";          // 与 index.html 的版本号保持一致
+  var V = "443";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -21,7 +21,7 @@
   ];
   /* 题库等大数据脚本：登录后后台静默加载 */
   var DATA_SCRIPTS = [
-    { src: "all-bank.js",        required: true, label: "题库",     verify: "STUDY_DATA" },
+    { src: "all-bank.js",        required: true, label: "题库概览", verify: "STUDY_DATA" },
     { src: "all-learn.js",       required: true, label: "考点精讲", verify: "STUDY_DATA" },
     { src: "learn-book-2027.js", required: true, label: "学习手册", verify: "STUDY_DATA" },
     { src: "formula-book.js",    required: true, label: "公式书",   verify: "STUDY_DATA" },
@@ -31,6 +31,34 @@
     { src: "syllabus-sample.js", required: true, label: "样卷",     verify: "STUDY_DATA" },
     { src: "exam-plans-v2.js",   required: true, label: "考纲卷",   verify: "STUDY_DATA" }
   ];
+
+  /* 科目题库按需加载：点进哪个科目才下载哪个科目的题目 */
+  var SUBJECT_BANK_MAP = {
+    "高等数学": "math-bank.js",
+    "英语": "english-bank.js",
+    "电工电子技术基础": "ee-bank.js",
+    "C语言程序设计": "c-bank.js",
+    "计算机网络基础": "net-bank.js"
+  };
+  var _loadedSubjectBanks = {};  // 已加载的科目缓存
+  window.loadSubjectBank = function(subject) {
+    return new Promise(function(resolve, reject) {
+      if (_loadedSubjectBanks[subject]) { resolve(); return; }
+      var src = SUBJECT_BANK_MAP[subject];
+      if (!src) { resolve(); return; }
+      var s = document.createElement("script");
+      s.src = src + "?v=" + V;
+      s.onload = function() {
+        _loadedSubjectBanks[subject] = true;
+        resolve();
+      };
+      s.onerror = function() { reject(new Error("加载失败: " + subject)); };
+      document.head.appendChild(s);
+    });
+  };
+  window.isSubjectBankLoaded = function(subject) {
+    return !!_loadedSubjectBanks[subject];
+  };
 
   function $(id) { return document.getElementById(id); }
 

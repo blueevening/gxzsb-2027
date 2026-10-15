@@ -3565,6 +3565,21 @@ function formulaFilter() {
     } else if (act === "learn-mark") {
       t.textContent = "已学 \u2713";
     } else if (act === "daily") {
+      // 按需加载科目题库：每日30题需要所有科目
+      var allSubjects = ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"];
+      var notLoadedDaily = allSubjects.filter(function(s) { return !window.isSubjectBankLoaded || !window.isSubjectBankLoaded(s); });
+      if (notLoadedDaily.length) {
+        toast("正在加载题库…", 2000);
+        var selfD = t;
+        Promise.all(notLoadedDaily.map(function(s) { return window.loadSubjectBank(s); })).then(function() {
+          D = window.STUDY_DATA || {};
+          Q = buildQ(D);
+          render();
+          var evt = new Event('click');
+          setTimeout(function() { selfD.dispatchEvent(evt); }, 100);
+        }).catch(function() { toast("题库加载失败，请刷新重试"); });
+        return;
+      }
       // 只恢复「每日 30 题」本身，绝不能把题库练习误当成每日任务
       if (restoreSession(true)) { go("practice"); render(); return; }
       const dailyIds = getDaily30();
@@ -3656,7 +3671,22 @@ function formulaFilter() {
     }
     else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
     else if (act === "chapter") startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习" });
-    else if (act === "seq-practice") startSession({ subject: t.getAttribute("data-name"), limit: 20, title: "顺序练习", ordered: true });
+    else if (act === "seq-practice") {
+      var subjName = t.getAttribute("data-name");
+      if (!window.isSubjectBankLoaded || !window.isSubjectBankLoaded(subjName)) {
+        toast("正在加载题库…", 2000);
+        var selfS = t;
+        window.loadSubjectBank(subjName).then(function() {
+          D = window.STUDY_DATA || {};
+          Q = buildQ(D);
+          render();
+          var evt = new Event('click');
+          setTimeout(function() { selfS.dispatchEvent(evt); }, 100);
+        }).catch(function() { toast("题库加载失败，请刷新重试"); });
+        return;
+      }
+      startSession({ subject: subjName, limit: 20, title: "顺序练习", ordered: true });
+    }
     else if (act === "seq-obj") {
       const name = t.getAttribute("data-name");
       startSession({ subject: name, limit: 20, title: name + " · 客观题", filterKind: "obj", ordered: true });
@@ -3810,6 +3840,32 @@ function formulaFilter() {
         }
       }
       if (!plan) { toast("试卷配置加载中，请稍后再试"); return; }
+
+      // 按需加载科目题库：检查这套卷需要哪些科目，先加载再组卷
+      var neededSubjects = [];
+      (plan.sections || []).forEach(function(sec) {
+        if (sec.subject && neededSubjects.indexOf(sec.subject) < 0) neededSubjects.push(sec.subject);
+      });
+      if (plan.subject && neededSubjects.indexOf(plan.subject) < 0) neededSubjects.push(plan.subject);
+      // 检查是否所有需要的科目题库都已加载
+      var notLoaded = neededSubjects.filter(function(s) { return !window.isSubjectBankLoaded || !window.isSubjectBankLoaded(s); });
+      if (notLoaded.length) {
+        toast("正在加载题库…", 2000);
+        var self = t;
+        Promise.all(notLoaded.map(function(s) { return window.loadSubjectBank(s); })).then(function() {
+          // 加载完后重建题库快照，再重新触发组卷
+          D = window.STUDY_DATA || {};
+          Q = buildQ(D);
+          render();
+          // 重新执行 exam 动作
+          var evt = new Event('click');
+          setTimeout(function() { self.dispatchEvent(evt); }, 100);
+        }).catch(function() {
+          toast("题库加载失败，请刷新重试");
+        });
+        return;
+      }
+
       // 组卷 - 按大纲章节比例抽题
       const items = [];
       const used = new Set();
