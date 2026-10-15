@@ -3759,13 +3759,19 @@ function formulaFilter() {
         const E = (D.EXAM_PLANS || {})["english-full"];
         const MJ = (D.EXAM_PLANS || {})["major-combined"];
         if (M && E && MJ) {
+          // 修正专业合卷分值：每科从105分调到100分（判断3→4分，计算15→10分）
+          const fixMix = (mix) => mix.map(m => {
+            if (m.type === "judge") return { ...m, each: 4 };
+            if (m.type === "calc") return { ...m, each: 10 };
+            return m;
+          });
           plan = {
             id: "full-combined", title: "全真模拟卷", bySubject: true,
             minutes: 180, totalScore: 600,
             sections: [
               { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
               { key: "english", label: "英语", subject: "英语", mix: E.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
-              ...MJ.sections.map(sec => ({ key: sec.key, label: sec.label, subject: sec.subject, mix: sec.mix }))
+              ...MJ.sections.map(sec => ({ key: sec.key, label: sec.label, subject: sec.subject, mix: fixMix(sec.mix) }))
             ]
           };
         }
