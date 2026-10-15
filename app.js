@@ -1836,6 +1836,7 @@
         <div class="q-nav-row">
           <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
           <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
+          ${s.submitted ? "" : `<button class="btn btn-ghost" data-act="submit" type="button">提交</button>`}
           <button class="btn btn-primary" data-act="next" type="button">${s.i >= s.q.length - 1 ? "完成" : "下一题"}</button>
         </div>
         ${
