@@ -2007,7 +2007,7 @@
     setTitle("答题历史", true);
     const planId = state.examHistoryPlan;
     const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
-    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","major-combined":"专业合卷","full-combined":"全真模拟卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
+    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","public-combined":"文化综合合卷","major-combined":"专业合卷","full-combined":"全真模拟卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
     const plan = (D.EXAM_PLANS || {})[planId] || {};
     const planTitle = plan.title || PLAN_TITLES[planId] || planId;
     if (!list.length) {
@@ -2127,6 +2127,7 @@
     const cards = [
       { id: "math-full", label: "高数考纲卷", desc: "单选/填空/计算/应用 · 120 分钟", color: "#3B82F6", icon: "数" },
       { id: "english-full", label: "英语考纲卷", desc: "词汇语法/阅读/翻译/写作 · 120 分钟", color: "#8B5CF6", icon: "英" },
+      { id: "public-combined", label: "文化综合合卷", desc: "数学 + 英语 · 120 分钟", color: "#6366f1", icon: "文" },
       { id: "ee-special", label: "电工专项", desc: "50 道高频易错 · 60 分钟", color: "#F97316", icon: "电" },
       { id: "c-special", label: "C 语言专项", desc: "50 道高频易错 · 60 分钟", color: "#10B981", icon: "C" },
       { id: "net-special", label: "计网专项", desc: "50 道高频易错 · 60 分钟", color: "#06B6D4", icon: "网" },
@@ -2137,7 +2138,7 @@
       <div class="section-title">选择试卷</div>
       <div class="exam-stack">
         ${cards.map((c) => `
-          <button class="exam-card" data-act="exam" data-plan="${attr(c.id)}" type="button" ${(c.id === "full-combined" || plans[c.id]) ? "" : "disabled"}>
+          <button class="exam-card" data-act="exam" data-plan="${attr(c.id)}" type="button" ${(c.id === "full-combined" || c.id === "public-combined" || plans[c.id]) ? "" : "disabled"}>
             <span class="exam-ico" style="background:${c.color}">${c.icon}</span>
             <span class="exam-main">
               <span class="exam-t">${esc(c.label)}</span>
@@ -3754,7 +3755,7 @@ function formulaFilter() {
     } else if (act === "exam") {
       const planId = t.getAttribute("data-plan");
       let plan = (D.EXAM_PLANS || {})[planId];
-      // 全科终极卷：动态合并数学+英语+专业合卷
+      // 全真模拟卷：动态合并数学+英语+专业合卷
       if (!plan && planId === "full-combined") {
         const M = (D.EXAM_PLANS || {})["math-full"];
         const E = (D.EXAM_PLANS || {})["english-full"];
@@ -3773,6 +3774,21 @@ function formulaFilter() {
               { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
               { key: "english", label: "英语", subject: "英语", mix: E.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
               ...MJ.sections.map(sec => ({ key: sec.key, label: sec.label, subject: sec.subject, mix: fixMix(sec.mix) }))
+            ]
+          };
+        }
+      }
+      // 文化综合合卷：动态合并数学+英语
+      if (!plan && planId === "public-combined") {
+        const M = (D.EXAM_PLANS || {})["math-full"];
+        const E = (D.EXAM_PLANS || {})["english-full"];
+        if (M && E) {
+          plan = {
+            id: "public-combined", title: "文化综合合卷", bySubject: true,
+            minutes: 120, totalScore: 300,
+            sections: [
+              { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
+              { key: "english", label: "英语", subject: "英语", mix: E.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) }
             ]
           };
         }
