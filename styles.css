@@ -211,6 +211,21 @@ body.boot-loading .shell { padding: 32px 16px; }
   .q-actions { bottom: calc(var(--keyboard-h, 0px) + 8px); }
 }
 
+/* P2-1 打印样式：只留题目内容，隐藏导航/按钮 */
+@media print {
+  .topbar, .tabbar, .side-nav, .q-actions, .btn, .chip, .section-title, .stat-grid, .seg-top { display: none !important; }
+  body { padding: 0; background: #fff; color: #000; }
+  .card { box-shadow: none; border: 1px solid #999; break-inside: avoid; }
+}
+
+/* P2-3 深色模式细节：主观题参考区/解析区对比度 */
+[data-theme="dark"] .subj-view,
+[data-theme="dark"] .ref-answer { background: rgba(255,255,255,0.04); color: var(--text); }
+[data-theme="dark"] .fill-input { border-bottom-color: var(--border); color: var(--text); }
+[data-theme="dark"] .q-dot { background: rgba(255,255,255,0.1); }
+[data-theme="dark"] .q-dot.ok { background: #16a34a; }
+[data-theme="dark"] .q-dot.bad { background: #dc2626; }
+
 /* ===== 卡片 / 间距 ===== */
 .card {
   background: var(--card);

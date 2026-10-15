@@ -239,6 +239,11 @@
     }
     return v;
   }
+  function applyFontSize() {
+    var k = state.fontSize || "md";
+    var scale = k === "sm" ? 0.9 : (k === "lg" ? 1.12 : 1.0);
+    document.documentElement.style.fontSize = (16 * scale) + "px";
+  }
 
   const state = {
     route: "home",
@@ -257,6 +262,7 @@
     session: null, wrongTab: "wrong",
     practiceMode: load("gxzsb.practiceMode", "test"),
     forgetCurve: load("gxzsb.forgetCurve", "mid"),
+    fontSize: load("gxzsb.fontSize", "md"),
     filters: normalizeFilters(load('gxzsb.filters', null)),
     formulaTab: "高等数学",
     searchQ: "",
@@ -823,6 +829,10 @@
     save("gxzsb.daily30", d);
     return ids;
   }
+  // P2-4：按指定日期取那一天的 30 题（用于补做）
+  function getDaily30ByDate(dateKey) {
+    return seededPick(Q.map((q) => q.id), "gxzsb-daily-" + dateKey, 30);
+  }
   function todayDoneCount() {
     const d = load("gxzsb.daily30", null);
     const key = localDayKey();
@@ -926,7 +936,8 @@
       }
     }
     save(LS.wrong, state.wrong);
-    touchStreak();
+    // P2-4：补做历史题不计连续打卡
+    if (!(state.session && state.session.reviewMode)) touchStreak();
     scheduleSync();
   }
   function setWrongReason(qid, reason) {
@@ -1149,6 +1160,7 @@
             <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续今日 30 题" : "开始今日 30 题"}</button>
             <button class="btn btn-ghost btn-block" data-act="due" type="button">到期错题 ${due || 0}</button>
             <button class="btn btn-ghost btn-block" data-act="last" type="button">${last ? "继续上次" : "综合练习"}</button>
+            <button class="btn btn-ghost btn-block btn-sm" data-act="review-daily" type="button" style="font-size:12px;opacity:.7">补做历史题</button>
           </div>
         </div>
       </section>
@@ -1460,6 +1472,7 @@
       lastSeenAt: Date.now(),
       ordered: !!opts.ordered,
       daily: !!opts.daily,
+      reviewMode: !!opts.reviewMode,
     };
     // 若已有预填结果，从第一道未做题开始
     if (state.session.results && Object.keys(state.session.results).length) {
@@ -2388,6 +2401,10 @@
         '<div class="section-title">错题列表（点题看解析，✓ 标记掌握）</div>' + rows(pageItems, "wrong") +
         (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "") +
         masteredSection +
+        (allItems.length ? '<div style="margin:12px 0;display:flex;gap:8px">' +
+          '<button class="btn btn-ghost btn-sm" data-act="export-txt" type="button" style="flex:1">导出 TXT</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="export-print" type="button" style="flex:1">打印 / PDF</button>' +
+        '</div>' : "") +
         (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">清空错题本</button></div>' : "");
     } else if (tab === "fav") {
       body =
@@ -2701,6 +2718,15 @@ function ensureExplain(q) {
       <div class="section-title">设置</div>
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
+        <div class="list-row" style="display:flex;align-items:center;gap:8px;padding:12px 16px">
+          <span class="main" style="flex:1"><span class="t">字号大小</span></span>
+          <div style="display:flex;gap:4px">
+            ${["sm","md","lg"].map(function(k){
+              var on = (state.fontSize || "md") === k;
+              return '<button class="chip' + (on ? " is-active" : "") + '" data-act="font-size" data-v="' + k + '" type="button">' + ({sm:"小",md:"中",lg:"大"})[k] + "</button>";
+            }).join("")}
+          </div>
+        </div>
         <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机数据</span></span><span class="end">›</span></button>
       </div>
@@ -3506,6 +3532,15 @@ function formulaFilter() {
         pre[a.questionId] = !!a.correct;
       });
       startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true, results: pre });
+    } else if (act === "review-daily") {
+      // P2-4：补做历史某日的 30 题，不计连续打卡
+      var dv = prompt("补做哪一天的题？输入日期（YYYY-MM-DD）：", localDayKey(new Date(Date.now() - 86400000)));
+      if (!dv) return;
+      dv = dv.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dv)) { toastLite("日期格式不对，应为 YYYY-MM-DD"); return; }
+      var ids = getDaily30ByDate(dv);
+      if (!ids.length) { toastLite("那天没有题"); return; }
+      startSession({ ids: ids, title: "补做 " + dv, ordered: true, reviewMode: true });
     }
     else if (act === "review-exam") {
       // 当前模拟考已交卷，直接进入逐题回看（解析已在会话中）
@@ -3864,12 +3899,38 @@ function formulaFilter() {
       save("gxzsb.forgetCurve", state.forgetCurve);
       toastLite("遗忘曲线已切换为「" + (FORGET_CURVES[state.forgetCurve] || {}).label + "」档，未来到期题按新节奏排期");
       render();
-    } else if (act === "export") {
-      const blob = new Blob([JSON.stringify(state.wrong, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
+    } else if (act === "font-size") {
+      state.fontSize = t.getAttribute("data-v") || "md";
+      save("gxzsb.fontSize", state.fontSize);
+      applyFontSize();
+      render();
+    } else if (act === "export-txt") {
+      // P2-1：导出 TXT（题目+答案+解析），错题本/收藏通用
+      var ids = state.wrongTab === "fav"
+        ? Object.keys(state.fav).filter(function(id){ return state.fav[id] && qById(id); })
+        : Object.keys(state.wrong).filter(function(id){ return qById(id); });
+      if (!ids.length) { toastLite("暂无内容可导出"); return; }
+      var lines = ["# gxzsb 导出 · " + (state.wrongTab === "fav" ? "收藏题" : "错题本") + " · 共 " + ids.length + " 题", ""];
+      ids.forEach(function(id, i){
+        var q = qById(id);
+        if (!q) return;
+        lines.push((i+1) + ". " + String(q.stem || "").replace(/<[^>]+>/g, ""));
+        lines.push("   【科目】" + (q.subject || "") + "  【考点】" + (q.knowledgePoint || ""));
+        if (q.options && q.options.length) q.options.forEach(function(o, idx){ lines.push("   " + "ABCD"[idx] + ". " + String(o).replace(/<[^>]+>/g, "")); });
+        lines.push("   【答案】" + String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || "")));
+        var exp = ensureExplain(q) || q.analysis || "";
+        lines.push("   【解析】" + String(exp).replace(/<[^>]+>/g, "").slice(0, 500));
+        lines.push("");
+      });
+      var blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+      var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "gxzsb-wrong.json";
-      a.click();
+      a.download = "gxzsb-" + (state.wrongTab === "fav" ? "favs" : "wrong") + ".txt";
+      document.body.appendChild(a); a.click(); a.remove();
+      toastLite("已导出 TXT");
+    } else if (act === "export-print") {
+      // P2-1：调浏览器打印，可另存为 PDF
+      window.print();
     } else if (act === "switch-login") {
       state.loginMode = t.getAttribute("data-mode");
       render();
@@ -4330,6 +4391,7 @@ function formulaFilter() {
     ensureExamTimer();
   });
   document.documentElement.setAttribute("data-theme", state.theme);
+  applyFontSize();
   // 密码不落 localStorage（若历史版本写过则清除）
   scrubPasswords();
   // 闲置自动登出：任意交互续期
