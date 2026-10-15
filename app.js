@@ -2010,9 +2010,11 @@
     setTitle("答题历史", true);
     const planId = state.examHistoryPlan;
     const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
+    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","major-combined":"专业合卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
     const plan = (D.EXAM_PLANS || {})[planId] || {};
+    const planTitle = plan.title || PLAN_TITLES[planId] || planId;
     if (!list.length) {
-      return `<div class="empty">还没有考过「${esc(plan.title || planId)}」<div><button class="btn btn-primary" data-act="exam" data-plan="${attr(planId)}" type="button">去考一次</button></div></div>`;
+      return `<div class="empty">还没有考过「${esc(planTitle)}」<div><button class="btn btn-primary" data-act="exam" data-plan="${attr(planId)}" type="button">去考一次</button></div></div>`;
     }
     const scoreColor = (score, full) => {
       const pct = full ? score / full : 0;
@@ -2022,7 +2024,7 @@
     };
     return `
       <div class="card" style="margin-bottom:12px">
-        <strong>${esc(plan.title || planId)}</strong>
+        <strong>${esc(planTitle)}</strong>
         <span class="muted" style="font-size:12px;margin-left:8px">共 ${list.length} 次记录</span>
       </div>
       <div class="exam-stack">
