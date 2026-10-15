@@ -255,6 +255,8 @@
     history: load(LS.history, []),
     reports: load(LS.reports, []),
     session: null, wrongTab: "wrong",
+    practiceMode: load("gxzsb.practiceMode", "test"),
+    forgetCurve: load("gxzsb.forgetCurve", "mid"),
     filters: normalizeFilters(load('gxzsb.filters', null)),
     formulaTab: "高等数学",
     searchQ: "",
@@ -885,6 +887,16 @@
     resetLearningData();
   }
 
+  /* P1-L1 遗忘曲线三档：单位天。wrong[n]=第 n+1 次错后的间隔；right[n]=答对降级后的间隔 */
+  const FORGET_CURVES = {
+    fast: { label: "快", wrong: [0, 1, 3, 7], right: [1, 3, 7, 15] },
+    mid:  { label: "中", wrong: [0, 1, 2, 4, 7, 15], right: [3, 7, 15, 30] },
+    slow: { label: "慢", wrong: [0, 2, 5, 10, 20, 30], right: [5, 10, 20, 30] }
+  };
+  function getCurve() {
+    var k = state.forgetCurve || "mid";
+    return FORGET_CURVES[k] || FORGET_CURVES.mid;
+  }
   function record(q, ok) {
     state.attempts.push({
       questionId: q.id,
@@ -897,20 +909,19 @@
     if (state.attempts.length > 1500) state.attempts = state.attempts.slice(-1500);
     save(LS.attempts, state.attempts);
     const prev = state.wrong[q.id] || {};
+    const curve = getCurve();
     if (!ok) {
       const n = (prev.n || 0) + 1;
-      // 第1次错立刻到期（今天就能复习）；之后1天、3天、7天、15天
-      const gap = n === 1 ? 0 : [1, 3, 7, 15][Math.min(n - 2, 3)] * 86400000;
+      const gapIdx = Math.min(n - 1, curve.wrong.length - 1);
+      const gap = curve.wrong[gapIdx] * 86400000;
       const reason = prev.reason || guessWrongReason(q);
-      // 手动掌握 > 自动调度：但又做错了说明没掌握，自动解除 mastered
-      const mastered = prev.mastered ? false : false;
-      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason, mastered };
+      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason, mastered: false };
     } else if (prev.n) {
       const n = Math.max(prev.n - 1, 0);
       if (!n && !prev.mastered) delete state.wrong[q.id];
       else {
-        const gap = [3, 7, 15, 30][Math.min(n - 1, 3)] * 86400000;
-        // 手动掌握的题即使答对也保留记录（折叠在已掌握区），不参与到期调度
+        const gapIdx = Math.min(n - 1, curve.right.length - 1);
+        const gap = curve.right[gapIdx] * 86400000;
         state.wrong[q.id] = { ...prev, n, last: Date.now(), due: prev.mastered ? Number.MAX_SAFE_INTEGER : Date.now() + gap, mastered: !!prev.mastered };
       }
     }
@@ -1671,9 +1682,12 @@
           })
           .join("")}
       </div>
-      <div class="row-between" style="margin:4px 0 8px">
+      <div class="row-between" style="margin:4px 0 8px;flex-wrap:wrap;gap:4px">
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
-        <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}</span>
+        <span style="display:inline-flex;gap:4px;align-items:center">
+          ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习" : "📝 测试") + "</button>"}
+          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}</span>
+        </span>
       </div>
 
       <div class="practice-wrap">
@@ -2179,6 +2193,26 @@
         `).join("")}
       </div>
 
+      <div class="section-title">题型正确率</div>
+      <div class="card">
+        ${(function() {
+          var types = [["single","单选"],["judge","判断"],["fill","填空"],["calc","计算"],["apply","应用"]];
+          var rows = types.map(function(t){
+            var arr = state.attempts.filter(function(a){ var q = qById(a.questionId); return q && q.type === t[0]; });
+            var ok = arr.filter(function(a){ return a.correct; }).length;
+            return { name: t[1], n: arr.length, ok: ok, acc: arr.length ? Math.round(ok/arr.length*100) : null };
+          });
+          if (!rows.some(function(r){ return r.n > 0; })) return '<div class="empty">暂无题型数据</div>';
+          return rows.map(function(r){
+            return '<div class="hbar-row">' +
+              '<div class="label">' + r.name + '</div>' +
+              '<div class="hbar-track"><div class="hbar-fill" style="width:' + (r.acc == null ? 0 : Math.max(3, r.acc)) + '%;background:' + (r.acc == null ? 'var(--border)' : (r.acc >= 70 ? 'var(--success)' : 'var(--warning)')) + '"></div></div>' +
+              '<div class="val">' + (r.acc == null ? "暂无数据" : r.acc + "% · " + r.n) + '</div>' +
+            '</div>';
+          }).join("");
+        })()}
+      </div>
+
       <div class="section-title">薄弱知识点 TOP</div>
       ${weak.length ? `<div class="card" style="padding:0">
         ${weak.map((w, i) => `
@@ -2335,6 +2369,13 @@
         "</div>" +
         '<div class="section-title">按科目筛选</div>' +
         '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + subjChips + "</div>" +
+        '<div class="section-title">遗忘曲线节奏</div>' +
+        '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' +
+        ["fast","mid","slow"].map(function(k){
+          var c = FORGET_CURVES[k];
+          return '<button class="chip' + (state.forgetCurve === k ? " is-active" : "") + '" data-act="curve" data-v="' + k + '" type="button">' + c.label + ' (' + c.wrong.slice(1).join("/") + 'd)</button>';
+        }).join("") +
+        "</div>" +
         '<div class="section-title">按错误次数筛选</div>' +
         '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + nChips + "</div>" +
         '<div class="section-title">按错因补练</div>' +
@@ -3570,7 +3611,17 @@ function formulaFilter() {
       if (!s || s.submitted) return;
       if (!lockAction(180)) return;
       s.sel = t.getAttribute("data-opt");
-      saveSession(); render();
+      saveSession();
+      render();
+      // P1-L2 练习模式：选完即判，立即出解析
+      if (state.practiceMode === "practice") {
+        setTimeout(function () { submitQ(); }, 150);
+      }
+    } else if (act === "toggle-mode") {
+      state.practiceMode = state.practiceMode === "practice" ? "test" : "practice";
+      save("gxzsb.practiceMode", state.practiceMode);
+      toastLite(state.practiceMode === "practice" ? "练习模式：选完即判" : "测试模式：做完统一判分");
+      render();
     } else if (act === "submit") {
       if (!lockAction(350)) return;
       submitQ();
@@ -3807,6 +3858,11 @@ function formulaFilter() {
       render();
     } else if (act === "wrong-mastered-toggle") {
       state.wrongMasteredOpen = !state.wrongMasteredOpen;
+      render();
+    } else if (act === "curve") {
+      state.forgetCurve = t.getAttribute("data-v") || "mid";
+      save("gxzsb.forgetCurve", state.forgetCurve);
+      toastLite("遗忘曲线已切换为「" + (FORGET_CURVES[state.forgetCurve] || {}).label + "」档，未来到期题按新节奏排期");
       render();
     } else if (act === "export") {
       const blob = new Blob([JSON.stringify(state.wrong, null, 2)], { type: "application/json" });
@@ -4169,6 +4225,98 @@ function formulaFilter() {
     } else if (e.key === "ArrowRight") { nextQ(); saveSession(); }
     else if (e.key === "ArrowLeft") { prevQ(); saveSession(); }
   });
+
+  /* ===== P1-M1 软键盘适配：visualViewport 监听，聚焦时把当前题目滚动到可视区 ===== */
+  (function setupSoftKeyboard() {
+    if (!window.visualViewport) return;
+    var vv = window.visualViewport;
+    var scrollTimer = null;
+    function onViewportChange() {
+      // 键盘高度 = 视口高度 - 视觉视口高度
+      var kbH = window.innerHeight - vv.height;
+      document.body.style.setProperty("--keyboard-h", kbH + "px");
+      var active = document.activeElement;
+      if (active && /input|textarea/i.test(active.tagName)) {
+        if (scrollTimer) clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(function () {
+          // 把聚焦元素滚动到视口中部（考虑键盘高度）
+          active.scrollIntoView({ block: "center", behavior: "smooth" });
+        }, 120);
+      }
+    }
+    vv.addEventListener("resize", onViewportChange);
+    vv.addEventListener("scroll", onViewportChange);
+    // 聚焦时主动触发一次
+    document.addEventListener("focusin", function (e) {
+      if (/input|textarea/i.test(e.target.tagName)) {
+        setTimeout(onViewportChange, 200); // iOS 键盘弹出时机晚于 focus
+      }
+    });
+  })();
+
+  /* ===== P1-M2 手势：做题页左右滑切题；错题/收藏列表长按快捷菜单 ===== */
+  (function setupGestures() {
+    var touchStartX = 0, touchStartY = 0, touchStartTime = 0, longPressTimer = null, longFired = false;
+    document.addEventListener("touchstart", function (e) {
+      if (!e.touches.length) return;
+      var t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      touchStartTime = Date.now();
+      longFired = false;
+      // 长按检测：只在错题/收藏列表行上生效
+      var row = e.target.closest(".list-row, [data-act='open-q']");
+      if (row && state.route === "wrong") {
+        if (longPressTimer) clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(function () {
+          longFired = true;
+          if (navigator.vibrate) navigator.vibrate(10);
+          var id = row.getAttribute("data-id");
+          if (!id) return;
+          var w = state.wrong[id];
+          if (!w) return;
+          if (w.mastered) {
+            confirmModal("恢复错题", "把这道题恢复到待复习队列？", function () {
+              w.mastered = false; w.due = Date.now();
+              save(LS.wrong, state.wrong); scheduleSync();
+              toastLite("已恢复到待复习"); render();
+            });
+          } else {
+            confirmModal("标记已掌握", "把这道题标记为已掌握？将从待复习队列移除。", function () {
+              w.mastered = true; w.due = Number.MAX_SAFE_INTEGER;
+              save(LS.wrong, state.wrong); scheduleSync();
+              toastLite("已标记掌握"); render();
+            });
+          }
+        }, 500);
+      }
+    }, { passive: true });
+    document.addEventListener("touchmove", function (e) {
+      // 手指移动超过 10px 就取消长按（认为是滚动）
+      if (longPressTimer && e.touches.length) {
+        var t = e.touches[0];
+        if (Math.abs(t.clientX - touchStartX) > 10 || Math.abs(t.clientY - touchStartY) > 10) {
+          clearTimeout(longPressTimer); longPressTimer = null;
+        }
+      }
+    }, { passive: true });
+    document.addEventListener("touchend", function (e) {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      if (longFired) { e.preventDefault(); return; }
+      if (!e.changedTouches.length) return;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - touchStartX;
+      var dy = t.clientY - touchStartY;
+      var dt = Date.now() - touchStartTime;
+      // 左右滑切题：水平 >50px，垂直 <30px，时间 <500ms
+      if (state.route !== "practice" || !state.session) return;
+      if (Math.abs(dx) < 50 || Math.abs(dy) > 30 || dt > 500) return;
+      // 不要在 input 聚焦时切题
+      if (document.activeElement && /input|textarea/i.test(document.activeElement.tagName)) return;
+      if (dx < 0) { nextQ(); saveSession(); }
+      else { prevQ(); saveSession(); }
+    });
+  })();
 
   window.addEventListener("hashchange", render);
   // 数据后台静默加载完成：重建题库快照并重新渲染（app.js 先于数据就绪注入）

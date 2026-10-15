@@ -189,10 +189,27 @@ body.boot-loading .shell { padding: 32px 16px; }
 }
 .tab-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; font-size: 11px; color: var(--text-sub); min-height: 44px;
+  gap: 2px; font-size: 11px; color: var(--text-sub);
+  min-height: 48px; /* ≥48dp 点击热区，防误触 */
+  padding: 6px 4px;
+  -webkit-tap-highlight-color: transparent;
 }
-.tab-item .ico { font-size: 18px; line-height: 1; }
+.tab-item .ico { font-size: 20px; line-height: 1; }
 .tab-item.is-active { color: var(--primary); font-weight: 700; }
+
+/* P1-M1：软键盘弹起时，底部操作区上浮到键盘上方 */
+.q-actions {
+  position: sticky;
+  bottom: calc(var(--tab-h, 60px) + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  padding: 8px 0;
+  z-index: 5;
+  margin-top: 12px;
+}
+:root { --keyboard-h: 0px; }
+@media (max-width: 768px) {
+  .q-actions { bottom: calc(var(--keyboard-h, 0px) + 8px); }
+}
 
 /* ===== 卡片 / 间距 ===== */
 .card {
@@ -631,6 +648,16 @@ html.qa-modal-open { overflow: hidden; }
 /* 填空卡片内长答案不撑破布局 */
 .card .ref-answer, .card .smart-grade, .card .subj-view {
   overflow-wrap: anywhere; word-break: break-word;
+}
+/* 公式/数学渲染容器：禁止横向滚动条，超出等比缩小 */
+.q-stem, .opt, .explain-body, .ref-answer, .mistake-box {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.q-stem .frac, .opt .frac, .explain-body .frac, .ref-answer .frac {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== 空状态 ===== */
