@@ -1019,9 +1019,8 @@
     // 全库已练 / 正确率（去重题目）
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
     const realQ = (D.questions || []).length;
-    const estQ = (D.meta && D.meta.estimatedQuestions) || 1;
-    // 题库还没全部加载完时，显示预估总题数
-    const totalQ = (estQ > 1 && realQ < estQ) ? estQ : (realQ || estQ);
+    // 题库还没全部加载完时，显示预估总题数1500
+    const totalQ = realQ < 1500 ? 1500 : realQ;
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
@@ -1296,9 +1295,8 @@
     setTitle("题库", true);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
     const realQ = (D.questions || []).length;
-    const estQ = (D.meta && D.meta.estimatedQuestions) || 0;
-    // 题库还没全部加载完时，显示预估总题数
-    const totalQ = (estQ && realQ < estQ) ? estQ : (realQ || estQ || 0);
+    // 题库还没全部加载完时，显示预估总题数1500
+    const totalQ = realQ < 1500 ? 1500 : realQ;
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
