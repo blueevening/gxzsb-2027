@@ -744,7 +744,11 @@
       _subjTotalCache = {};
       Q.forEach((q) => { _subjTotalCache[q.subject] = (_subjTotalCache[q.subject] || 0) + 1; });
     }
-    const total = _subjTotalCache[name] || 0;
+    let total = _subjTotalCache[name] || 0;
+    // 题库还没加载完时，用预估题数显示
+    if (!total && D.meta && D.meta.estimatedPerSubject && D.meta.estimatedPerSubject[name]) {
+      total = D.meta.estimatedPerSubject[name];
+    }
     const at = state.attempts.filter((a) => a.subject === name);
     const done = new Set(at.map((a) => a.questionId).filter(Boolean)).size;
     const acc = at.length ? Math.round((at.filter((a) => a.correct).length / at.length) * 100) : null;
