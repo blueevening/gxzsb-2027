@@ -1229,7 +1229,7 @@
           ${[
             { planId: "math-full", ico: "数", icoCls: "",    title: "高数考纲卷" },
             { planId: "english-full", ico: "英", icoCls: " en", title: "英语考纲卷" },
-            { planId: "public-combined", ico: "文", icoCls: " pub", title: "文化综合合卷" },
+            { planId: "public-combined", ico: "文", icoCls: " pub", title: "文化合卷" },
             { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" },
             { planId: "full-combined", ico: "全", icoCls: " full", title: "全真模拟卷" }
           ].map((p) => {
@@ -2008,7 +2008,7 @@
     setTitle("答题历史", true);
     const planId = state.examHistoryPlan;
     const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
-    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","public-combined":"文化综合合卷","major-combined":"专业合卷","full-combined":"全真模拟卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
+    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","public-combined":"文化合卷","major-combined":"专业合卷","full-combined":"全真模拟卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
     const plan = (D.EXAM_PLANS || {})[planId] || {};
     const planTitle = plan.title || PLAN_TITLES[planId] || planId;
     if (!list.length) {
@@ -2128,7 +2128,7 @@
     const cards = [
       { id: "math-full", label: "高数考纲卷", desc: "单选/填空/计算/应用 · 120 分钟", color: "#3B82F6", icon: "数" },
       { id: "english-full", label: "英语考纲卷", desc: "词汇语法/阅读/翻译/写作 · 120 分钟", color: "#8B5CF6", icon: "英" },
-      { id: "public-combined", label: "文化综合合卷", desc: "数学 + 英语 · 120 分钟", color: "#6366f1", icon: "文" },
+      { id: "public-combined", label: "文化合卷", desc: "数学 + 英语 · 120 分钟", color: "#6366f1", icon: "文" },
       { id: "ee-special", label: "电工专项", desc: "50 道高频易错 · 60 分钟", color: "#F97316", icon: "电" },
       { id: "c-special", label: "C 语言专项", desc: "50 道高频易错 · 60 分钟", color: "#10B981", icon: "C" },
       { id: "net-special", label: "计网专项", desc: "50 道高频易错 · 60 分钟", color: "#06B6D4", icon: "网" },
@@ -3785,7 +3785,7 @@ function formulaFilter() {
         const E = (D.EXAM_PLANS || {})["english-full"];
         if (M && E) {
           plan = {
-            id: "public-combined", title: "文化综合合卷", bySubject: true,
+            id: "public-combined", title: "文化合卷", bySubject: true,
             minutes: 120, totalScore: 300,
             sections: [
               { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
