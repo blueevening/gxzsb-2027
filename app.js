@@ -3757,10 +3757,12 @@ function formulaFilter() {
     else if (act === "view-history") {
       const hid = t.getAttribute("data-id");
       const h = (state.history || []).find((x) => x.id === hid);
-      if (!h) return;
+      if (!h) { toast("记录不存在"); return; }
+      const qs = h.ids.map(qById).filter(Boolean);
+      if (!qs.length) { toast("题目数据已更新，无法回看"); return; }
       state.session = {
-        title: h.title + "（历史回看）",
-        q: h.ids.map(qById).filter(Boolean),
+        title: (h.title || "历史回看") + "（历史回看）",
+        q: qs,
         i: 0, sel: null, submitted: true,
         results: h.results || {}, scores: h.scores || {},
         flags: {}, showExp: false,
@@ -3772,7 +3774,7 @@ function formulaFilter() {
     } else if (act === "exam") {
       const planId = t.getAttribute("data-plan");
       const plan = (D.EXAM_PLANS || {})[planId];
-      if (!plan) return;
+      if (!plan) { toast("试卷配置加载中，请稍后再试"); return; }
       // 组卷 - 按大纲章节比例抽题
       const items = [];
       const used = new Set();
