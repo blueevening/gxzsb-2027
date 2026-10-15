@@ -1719,9 +1719,11 @@
                 })
                 .join("")
             : q.type === "translate" || q.type === "write"
-            ? `<div class="mistake-box" style="background:#eef6ff;border-left:3px solid #3b82f6">${q.type === "translate" ? "✍️ 翻译题 · 直接看译文学习" : "📝 应用文写作 · 直接看范文学习"}</div>
+            ? (s.exam && !s.examSubmitted
+                ? `<div class="mistake-box" style="background:#f0f9ff;border-left:3px solid #6366f1;padding:12px;border-radius:8px;color:#6366f1;font-size:14px">📝 ${q.type === "translate" ? "翻译题" : "写作题"} · 交卷后查看${q.type === "translate" ? "译文" : "范文"}</div>`
+                : `<div class="mistake-box" style="background:#eef6ff;border-left:3px solid #3b82f6">${q.type === "translate" ? "✍️ 翻译题 · 直接看译文学习" : "📝 应用文写作 · 直接看范文学习"}</div>
                <div class="ref-answer" style="margin:10px 0 4px"><b>${q.type === "translate" ? "译文：" : "范文："}</b></div>
-               <div class="subj-view" style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:14px;line-height:1.8;white-space:pre-wrap;font-size:15px">${mathHtml(String(q.sample && String(q.sample).trim() ? q.sample : (Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "见下方解析")))}</div>`
+               <div class="subj-view" style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:14px;line-height:1.8;white-space:pre-wrap;font-size:15px">${mathHtml(String(q.sample && String(q.sample).trim() ? q.sample : (Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "见下方解析")))}</div>`)
             : (function () {
                 // 下划线式填空：size 按参考答案字符数预估，最小 6、最大 20，避免短答案留白/长答案溢出
                 var ansLen = String(Array.isArray(q.answer) ? q.answer[0] : (q.answer || "")).replace(/\s+/g, "").length || 6;
@@ -1736,9 +1738,16 @@
             ? (function () {
                 const ok = !!s.results[q.id];
                 const isSubj = q.type === "translate" || q.type === "write";
+                const inExam = s.exam && !s.examSubmitted;
+                // 模拟考模式：范文学习类不显示反馈
+                if (isSubj && inExam) return "";
                 // 范文学习模式：直接展示译文/范文，无评分无自评
                 if (isSubj) {
                   return `<div class="feedback ok">✓ 已学习（范文/译文已在上方展示）</div>`;
+                }
+                // 模拟考模式：只显示对错条，不显示参考答案/自评/错因
+                if (inExam) {
+                  return `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}</div>`;
                 }
                 const sc = s.scores && s.scores[q.id] != null ? s.scores[q.id] : null;
                 // 填空若智能评分有值，同样展示，与 S2「部分 fill」对齐
@@ -1786,6 +1795,7 @@
             : ""
         }
 
+        ${(s.exam && !s.examSubmitted) ? "" : `
         <div class="explain ${s.showExp && s.submitted ? "is-open" : ""}">
           <button class="explain-toggle" data-act="toggle-exp" type="button"><span>查看解析</span><span class="muted">${s.showExp && s.submitted ? "收起" : "展开"}</span></button>
           <div class="explain-body">
@@ -1835,6 +1845,7 @@
             </div>
           </div>
         </div>
+        `}
       </div>
 
       <div class="q-actions">
