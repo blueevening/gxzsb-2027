@@ -4120,7 +4120,15 @@ function formulaFilter() {
       if (!qq) return;
       const prompt = buildAiPrompt(qq);
       if (act === "ai-copy" || true) {
-        if (navigator.clipboard) navigator.clipboard.writeText(prompt);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(prompt).then(function () {
+            toastLite("题目已复制");
+          }).catch(function () {
+            fallbackCopy(prompt);
+          });
+        } else {
+          fallbackCopy(prompt);
+        }
       }
       if (act === "ai-deepseek") {
         window.open("https://chat.deepseek.com/", "_blank", "noopener");
