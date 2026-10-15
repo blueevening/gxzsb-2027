@@ -1230,27 +1230,21 @@
           <button class="exam-card" data-act="exam" data-plan="math-full" type="button">
             <span class="exam-ico">数</span>
             <span class="exam-main">
-              <span class="exam-t">高数考纲卷 · 150 分</span>
-              <span class="exam-prog"><span class="muted">已练 ${mathP.done}/${mathP.total}</span> <span>${mathP.acc == null ? "正确率 —" : mathP.acc + "%"}</span></span>
-              <span class="bar sub-math"><i style="width:${mathP.pct}%"></i></span>
+              <span class="exam-t">高数考纲卷</span>
             </span>
             <span class="exam-go">开始</span>
           </button>
           <button class="exam-card" data-act="exam" data-plan="english-full" type="button">
             <span class="exam-ico en">英</span>
             <span class="exam-main">
-              <span class="exam-t">英语考纲卷 · 150 分</span>
-              <span class="exam-prog"><span class="muted">已练 ${enP.done}/${enP.total}</span> <span>${enP.acc == null ? "正确率 —" : enP.acc + "%"}</span></span>
-              <span class="bar sub-en"><i style="width:${enP.pct}%"></i></span>
+              <span class="exam-t">英语考纲卷</span>
             </span>
             <span class="exam-go">开始</span>
           </button>
           <button class="exam-card" data-act="exam" data-plan="major-combined" type="button">
             <span class="exam-ico maj">专</span>
             <span class="exam-main">
-              <span class="exam-t">专业合卷 · 300 分</span>
-              <span class="exam-prog"><span class="muted">三科合计（按 100 分权重）</span> <span>${majP.acc == null ? "正确率 —" : majP.acc + "%"}</span></span>
-              <span class="bar sub-maj"><i style="width:${majP.pct}%"></i></span>
+              <span class="exam-t">专业合卷</span>
             </span>
             <span class="exam-go">开始</span>
           </button>
