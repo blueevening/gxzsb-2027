@@ -1227,44 +1227,32 @@
       <section>
         <div class="section-title">考纲套卷 <span class="muted" style="font-weight:400;font-size:12px">严格按 2027 题型分值</span></div>
         <div class="exam-stack">
-          <button class="exam-card" data-act="exam" data-plan="math-full" type="button">
-            <span class="exam-ico">数</span>
-            <span class="exam-main">
-              <span class="exam-t">高数考纲卷</span>
-            </span>
-            <span class="exam-go">开始</span>
-          </button>
-          <button class="exam-card" data-act="exam" data-plan="english-full" type="button">
-            <span class="exam-ico en">英</span>
-            <span class="exam-main">
-              <span class="exam-t">英语考纲卷</span>
-            </span>
-            <span class="exam-go">开始</span>
-          </button>
-          <button class="exam-card" data-act="exam" data-plan="major-combined" type="button">
-            <span class="exam-ico maj">专</span>
-            <span class="exam-main">
-              <span class="exam-t">专业合卷</span>
-            </span>
-            <span class="exam-go">开始</span>
-          </button>
-        </div>
-        <div style="margin-top:14px">
-          <div class="section-title" style="margin-bottom:8px">历史成绩</div>
-          ${(state.history && state.history.length) ? `<div class="exam-stack">
-            ${state.history.slice(0, 10).map((h) => {
-              const d = new Date(h.at);
-              const md = (d.getMonth()+1) + "/" + d.getDate();
-              return `<button class="exam-card" data-act="view-history" data-id="${attr(h.id)}" type="button">
-                <span class="exam-ico maj">历</span>
+          ${[
+            { planId: "math-full", ico: "数", icoCls: "",    title: "高数考纲卷" },
+            { planId: "english-full", ico: "英", icoCls: " en", title: "英语考纲卷" },
+            { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" }
+          ].map((p) => {
+            const his = (state.history || []).filter((h) => h.exam && h.exam.planId === p.planId).slice(0, 3);
+            return `
+            <div class="exam-card">
+              <button class="exam-row" data-act="exam" data-plan="${attr(p.planId)}" type="button" style="width:100%;display:flex;align-items:center;gap:14px;background:none;border:none;padding:0;cursor:pointer;text-align:left">
+                <span class="exam-ico${p.icoCls}">${p.ico}</span>
                 <span class="exam-main">
-                  <span class="exam-t">${esc(h.title)}</span>
-                  <span class="exam-s">${md} · ${h.ok}/${h.total} 题 · 正确率 ${h.acc}%</span>
+                  <span class="exam-t">${p.title}</span>
                 </span>
-                <span class="exam-go" style="font-size:14px">${h.score}/${h.fullScore}分</span>
-              </button>`;
-            }).join("")}
-          </div>` : `<div class="muted" style="font-size:13px;padding:8px 4px">暂无记录，考完第一场自动保存</div>`}
+                <span class="exam-go">开始</span>
+              </button>
+              ${his.length ? `<div class="exam-his">
+                ${his.map((h) => {
+                  const d = new Date(h.at);
+                  const md = (d.getMonth()+1) + "/" + d.getDate();
+                  return `<button class="exam-his-item" data-act="view-history" data-id="${attr(h.id)}" type="button">
+                    <span>${md}</span><span>${h.score}/${h.fullScore}分</span><span>正确率 ${h.acc}%</span>
+                  </button>`;
+                }).join("")}
+              </div>` : `<div class="exam-his-empty">暂无历史成绩</div>`}
+            </div>`;
+          }).join("")}
         </div>
       </section>
 
