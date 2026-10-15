@@ -1248,18 +1248,23 @@
             </span>
             <span class="exam-go">开始</span>
           </button>
-          ${(state.history && state.history.length) ? state.history.slice(0, 10).map((h) => {
-            const d = new Date(h.at);
-            const md = (d.getMonth()+1) + "/" + d.getDate();
-            return `<button class="exam-card" data-act="view-history" data-id="${attr(h.id)}" type="button">
-              <span class="exam-ico maj">历</span>
-              <span class="exam-main">
-                <span class="exam-t">${esc(h.title)}</span>
-                <span class="exam-s">${md} · ${h.ok}/${h.total} 题 · 正确率 ${h.acc}%</span>
-              </span>
-              <span class="exam-go" style="font-size:14px">${h.score}/${h.fullScore}分</span>
-            </button>`;
-          }).join("") : ""}
+        </div>
+        <div style="margin-top:14px">
+          <div class="section-title" style="margin-bottom:8px">历史成绩</div>
+          ${(state.history && state.history.length) ? `<div class="exam-stack">
+            ${state.history.slice(0, 10).map((h) => {
+              const d = new Date(h.at);
+              const md = (d.getMonth()+1) + "/" + d.getDate();
+              return `<button class="exam-card" data-act="view-history" data-id="${attr(h.id)}" type="button">
+                <span class="exam-ico maj">历</span>
+                <span class="exam-main">
+                  <span class="exam-t">${esc(h.title)}</span>
+                  <span class="exam-s">${md} · ${h.ok}/${h.total} 题 · 正确率 ${h.acc}%</span>
+                </span>
+                <span class="exam-go" style="font-size:14px">${h.score}/${h.fullScore}分</span>
+              </button>`;
+            }).join("")}
+          </div>` : `<div class="muted" style="font-size:13px;padding:8px 4px">暂无记录，考完第一场自动保存</div>`}
         </div>
       </section>
 
