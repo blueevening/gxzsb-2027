@@ -1148,7 +1148,6 @@
             <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续今日 30 题" : "开始今日 30 题"}</button>
             <button class="btn btn-ghost btn-block" data-act="due" type="button">到期错题 ${due || 0}</button>
             <button class="btn btn-ghost btn-block" data-act="last" type="button">${last ? "继续上次" : "综合练习"}</button>
-            <button class="btn btn-ghost btn-block btn-sm" data-act="review-daily" type="button" style="font-size:12px;opacity:.7">补做历史题</button>
           </div>
         </div>
       </section>
@@ -2020,10 +2019,7 @@
       return "#dc2626";
     };
     return `
-      <div class="card" style="margin-bottom:12px">
-        <strong>${esc(planTitle)}</strong>
-        <span class="muted" style="font-size:12px;margin-left:8px">共 ${list.length} 次记录</span>
-      </div>
+      <div class="section-title">作答记录</div>
       <div class="exam-stack">
         ${list.map((h, idx) => {
           const d = new Date(h.at);
@@ -2135,7 +2131,6 @@
       { id: "c-special", label: "C 语言专项", desc: "50 道高频易错 · 60 分钟", color: "#10B981", icon: "C" },
       { id: "net-special", label: "计网专项", desc: "50 道高频易错 · 60 分钟", color: "#06B6D4", icon: "网" },
     ];
-    const hist = (state.history || []).slice(0, 10);
     return `
       <div class="section-title">选择试卷</div>
       <div class="exam-stack">
@@ -2151,18 +2146,6 @@
           </button>
         `).join("")}
       </div>
-      <div class="section-title">考试历史</div>
-      ${hist.length ? `<div class="card" style="padding:0">
-        ${hist.map((h) => `
-          <button class="list-row" data-act="exam-open" data-id="${attr(h.id)}" type="button">
-            <span class="main">
-              <span class="t">${esc(h.title || "模拟考")}</span>
-              <span class="s">${new Date(h.at || 0).toLocaleString("zh-CN")} · 得分 ${h.score != null ? h.score : "—"}/${h.fullScore != null ? h.fullScore : "—"} · 正确率 ${h.acc != null ? h.acc + "%" : "—"}${h.ids ? " · 可回看" : ""}</span>
-            </span>
-            <span class="end mono">${h.ok != null ? h.ok + "/" + h.total : ""} ›</span>
-          </button>
-        `).join("")}
-      </div>` : `<div class="empty">还没有模拟考记录，选一套卷开始吧</div>`}
       <div class="disclaimer">模拟卷按考纲结构自动组卷，交卷后可查看得分与解析。</div>
     `;
   }
@@ -3576,16 +3559,6 @@ function formulaFilter() {
         pre[a.questionId] = !!a.correct;
       });
       startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true, results: pre });
-    } else if (act === "review-daily") {
-      // P2-4：补做历史某日的 30 题，不计连续打卡
-      var dv = prompt("补做哪一天的题？输入日期（YYYY-MM-DD）：", localDayKey(new Date(Date.now() - 86400000)));
-      if (!dv) return;
-      dv = dv.trim();
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(dv)) { toastLite("日期格式不对，应为 YYYY-MM-DD"); return; }
-      var ids = getDaily30ByDate(dv);
-      if (!ids.length) { toastLite("那天没有题"); return; }
-      startSession({ ids: ids, title: "补做 " + dv, ordered: true, reviewMode: true });
-    }
     else if (act === "review-exam") {
       // 当前模拟考已交卷，直接进入逐题回看（解析已在会话中）
       const s = state.session;
