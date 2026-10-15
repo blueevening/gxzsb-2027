@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "443";          // 与 index.html 的版本号保持一致
+  var V = "444";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -276,6 +276,16 @@
     window.GXZSB_DATA_READY = true;
     toastDone();
     try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
+
+    /* 后台静默预加载所有科目题库：首页秒开，后台慢慢下载，用户点进去时大概率已加载完 */
+    setTimeout(function() {
+      Object.keys(SUBJECT_BANK_MAP).forEach(function(subj) {
+        loadSubjectBank(subj).then(function() {
+          // 每加载完一个科目，通知 app.js 重建题库快照
+          try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
+        }).catch(function() {});
+      });
+    }, 500);
   }
 
   if (document.readyState === "loading") {

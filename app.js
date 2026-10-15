@@ -1288,7 +1288,8 @@
   function viewBank() {
     setTitle("题库", true);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const totalQ = (D.questions || []).length || 0;
+    const realQ = (D.questions || []).length;
+    const totalQ = realQ || (D.meta && D.meta.estimatedQuestions) || 0;
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
