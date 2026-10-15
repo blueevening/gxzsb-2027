@@ -745,7 +745,10 @@
   let _subjTotalCache = null;
 
   function dueCount() {
-    return Object.keys(state.wrong).filter((id) => (state.wrong[id].due || 0) <= Date.now()).length;
+    return Object.keys(state.wrong).filter((id) => {
+      const w = state.wrong[id];
+      return !w.mastered && (w.due || 0) <= Date.now();
+    }).length;
   }
 
   function weakPoints(n = 5) {
@@ -899,13 +902,16 @@
       // 第1次错立刻到期（今天就能复习）；之后1天、3天、7天、15天
       const gap = n === 1 ? 0 : [1, 3, 7, 15][Math.min(n - 2, 3)] * 86400000;
       const reason = prev.reason || guessWrongReason(q);
-      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason };
+      // 手动掌握 > 自动调度：但又做错了说明没掌握，自动解除 mastered
+      const mastered = prev.mastered ? false : false;
+      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason, mastered };
     } else if (prev.n) {
       const n = Math.max(prev.n - 1, 0);
-      if (!n) delete state.wrong[q.id];
+      if (!n && !prev.mastered) delete state.wrong[q.id];
       else {
         const gap = [3, 7, 15, 30][Math.min(n - 1, 3)] * 86400000;
-        state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap };
+        // 手动掌握的题即使答对也保留记录（折叠在已掌握区），不参与到期调度
+        state.wrong[q.id] = { ...prev, n, last: Date.now(), due: prev.mastered ? Number.MAX_SAFE_INTEGER : Date.now() + gap, mastered: !!prev.mastered };
       }
     }
     save(LS.wrong, state.wrong);
@@ -1410,7 +1416,10 @@
     if (opts.filterKind === "obj") pool = pool.filter((q) => !isSubjective(q));
     if (opts.filterKind === "subj") pool = pool.filter((q) => isSubjective(q));
     if (opts.dueOnly) {
-      const dueIds = Object.keys(state.wrong).filter((id) => (state.wrong[id].due || 0) <= Date.now());
+      const dueIds = Object.keys(state.wrong).filter((id) => {
+        const w = state.wrong[id];
+        return !w.mastered && (w.due || 0) <= Date.now();
+      });
       pool = pool.filter((q) => dueIds.includes(q.id));
     }
     // ordered：顺序练习按题库录入顺序稳定取前 N；显式 ids 时保持给定顺序，不再打乱
@@ -1521,6 +1530,11 @@
       if (!d || !Array.isArray(d.ids)) return false;
       // 已做完就不恢复
       if (d.results && Object.keys(d.results).length >= d.ids.length) return false;
+      // 草稿过期清理：考试已结束超过 24h，丢弃
+      if (d.end && !d.examSubmitted && Date.now() > Number(d.end) + 24 * 3600 * 1000) {
+        try { localStorage.removeItem("gxzsb.session"); } catch(e) {}
+        return false;
+      }
       var qs = d.ids.map(qById).filter(Boolean);
       if (!qs.length) return false;
       var examRestored = null;
@@ -1600,8 +1614,14 @@
     const s = state.session;
     if (!s || !s.exam) return false;
     if (s.examSubmitted) return true;
+    // 先算未答题数，用于二次确认弹窗
+    let unfilled0 = 0;
+    s.q.forEach((q) => { if (!(q.id in s.results)) unfilled0++; });
     if (!auto) {
-      if (!confirm("确认交卷？未作答题目将按错误计分。")) return false;
+      const msg = unfilled0 > 0
+        ? "还有 " + unfilled0 + " 题未作答，确认交卷？未答题将按错误计分。"
+        : "已答完全部 " + s.q.length + " 题，确认交卷？";
+      if (!confirm(msg)) return false;
     }
     let unfilled = 0;
     s.q.forEach((q) => {
@@ -1616,7 +1636,11 @@
     s.end = null;
     stopExamTimer();
     saveExamHistory(s);
-    saveSession();
+    // 交卷成功：清除草稿，避免下次启动又自动跳回本场
+    try {
+      localStorage.removeItem("gxzsb.session");
+      localStorage.removeItem("gxzsb.dailySession");
+    } catch(e) {}
     if (auto) toastLite("考试时间到，已自动交卷" + (unfilled ? "（" + unfilled + " 道未答按错）" : ""));
     go("report");
     render();
@@ -1677,8 +1701,13 @@
             ? `<div class="mistake-box" style="background:#eef6ff;border-left:3px solid #3b82f6">${q.type === "translate" ? "✍️ 翻译题 · 直接看译文学习" : "📝 应用文写作 · 直接看范文学习"}</div>
                <div class="ref-answer" style="margin:10px 0 4px"><b>${q.type === "translate" ? "译文：" : "范文："}</b></div>
                <div class="subj-view" style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:14px;line-height:1.8;white-space:pre-wrap;font-size:15px">${mathHtml(String(q.sample && String(q.sample).trim() ? q.sample : (Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "见下方解析")))}</div>`
-            : `<label class="muted" style="font-size:12px;font-weight:650">${q.type === "fill" ? "填写答案" : "填写最终结果"}</label>
-               <input class="input" id="fillInput" style="margin:8px 0" ${s.submitted ? "disabled" : ""} value="${attr(s.sel || "")}" />`
+            : (function () {
+                // 下划线式填空：size 按参考答案字符数预估，最小 6、最大 20，避免短答案留白/长答案溢出
+                var ansLen = String(Array.isArray(q.answer) ? q.answer[0] : (q.answer || "")).replace(/\s+/g, "").length || 6;
+                var sz = Math.max(6, Math.min(20, ansLen + 2));
+                return `<label class="muted" style="font-size:12px;font-weight:650">${q.type === "fill" ? "填写答案" : "填写最终结果"}</label>
+                   <div style="margin-top:4px"><input class="fill-input" id="fillInput" size="${sz}" ${s.submitted ? "disabled" : ""} value="${attr(s.sel || "")}" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" /></div>`;
+              })()
         }
 
         ${
@@ -1806,7 +1835,10 @@
         }
         ${
           s.exam && !s.examSubmitted
-            ? `<button class="btn btn-ghost btn-block btn-sm" data-act="exit-exam" type="button" style="opacity:.65">退出考试（不计成绩）</button>`
+            ? `<div style="display:flex;gap:8px;margin-top:8px">
+                 <button class="btn btn-ghost btn-sm" data-act="pause-exam" type="button" style="flex:1">⏸ 暂停并保存</button>
+                 <button class="btn btn-ghost btn-sm" data-act="exit-exam" type="button" style="flex:1;opacity:.65">放弃本场</button>
+               </div>`
             : ""
         }
         <button class="btn btn-ghost btn-block btn-sm shortcut-link" data-act="show-shortcuts" type="button">答题快捷键</button>
@@ -2179,32 +2211,36 @@
     setTitle("错题 / 收藏", true);
     const now = Date.now();
     const tab = state.wrongTab || "wrong";
-    const items = Object.keys(state.wrong)
+    const allItems = Object.keys(state.wrong)
       .map(function (id) {
         const q = qById(id);
         const w = state.wrong[id];
-        return q ? { q: q, w: w, due: (w.due || 0) <= now } : null;
+        return q ? { q: q, w: w, due: (w.due || 0) <= now && !w.mastered } : null;
       })
       .filter(Boolean)
       .sort(function (x, y) {
         return x.due === y.due ? (x.w.last || 0) - (y.w.last || 0) : x.due ? -1 : 1;
       });
+    // 拆成「待复习」和「已掌握」两组
+    const items = allItems.filter(function (it) { return !it.w.mastered; });
+    const masteredItems = allItems.filter(function (it) { return it.w.mastered; });
     const due = items.filter(function (x) { return x.due; }).length;
-    const mastered = items.filter(function (x) { return x.w.n <= 1 && !x.due; }).length;
     const favs = Object.keys(state.fav)
       .filter(function (id) { return state.fav[id]; })
       .map(function (id) { return qById(id); })
       .filter(Boolean);
 
-    // 按科目统计错题
+    // 按科目统计错题（只统计待复习）
     const subjStats = {};
     items.forEach(function (it) {
       const s = it.q.subject;
       subjStats[s] = (subjStats[s] || 0) + 1;
     });
     const subjFilter = state.wrongSubj || "all";
+    const nFilter = state.wrongNFilter || 0; // 0=全部, 2=错≥2, 3=错≥3, 5=错≥5
     let filteredItems = items;
-    if (subjFilter !== "all") filteredItems = items.filter(function (it) { return it.q.subject === subjFilter; });
+    if (subjFilter !== "all") filteredItems = filteredItems.filter(function (it) { return it.q.subject === subjFilter; });
+    if (nFilter) filteredItems = filteredItems.filter(function (it) { return (it.w.n || 1) >= nFilter; });
     // 分页渲染，避免错题很多时一次插入过大 DOM
     const pageSize = state.wrongPageSize || 40;
     const pageNo = state.wrongPage || 1;
@@ -2232,14 +2268,19 @@
             const isDue = kind === "wrong" && it.due;
             if (kind === "wrong") {
               const reasonLabel = { concept: "概念不清", calc: "计算失误", read: "审题偏差", formula: "公式记错" }[w && w.reason] || "";
+              const isMastered = !!(w && w.mastered);
+              // 右侧两个按钮：✓ 标记掌握 / ↩ 恢复
+              const actionBtn = isMastered
+                ? '<button data-act="unmaster-wrong" data-id="' + attr(q.id) + '" title="恢复到待复习" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#16a34a;font-size:18px;padding:8px;cursor:pointer">↩</button>'
+                : '<button data-act="master-wrong" data-id="' + attr(q.id) + '" title="标记已掌握" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#16a34a;font-size:18px;padding:8px;cursor:pointer">✓</button>';
               return (
-                '<div class="list-row" style="display:flex;align-items:center;gap:4px;position:relative">' +
+                '<div class="list-row" style="display:flex;align-items:center;gap:4px;position:relative' + (isMastered ? ';opacity:.55' : '') + '">' +
                 '<button data-act="open-q" data-id="' + attr(q.id) + '" type="button" style="flex:1;text-align:left;background:none;border:none;display:flex;align-items:center;gap:10px;padding:12px 16px;padding-right:56px">' +
                 '<span class="dot" style="background:' + (subjOf(q.subject).color || "#2563EB") + ';flex-shrink:0"></span>' +
                 '<span class="main" style="flex:1;min-width:0"><span class="t" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + mathHtml(String(q.stem).slice(0, 50)) + '</span>' +
-                '<span class="s" style="display:block;font-size:12px;color:#888;margin-top:2px">' + esc(q.typeLabel || "题") + " · " + esc(q.subject) + " · 错" + (w ? w.n : 1) + "次" + (reasonLabel ? " · " + reasonLabel : "") + (isDue ? " · 到期" : "") + '</span></span>' +
+                '<span class="s" style="display:block;font-size:12px;color:#888;margin-top:2px">' + esc(q.typeLabel || "题") + " · " + esc(q.subject) + " · 错" + (w ? w.n : 1) + "次" + (reasonLabel ? " · " + reasonLabel : "") + (isMastered ? " · 已掌握" : (isDue ? " · 到期" : "")) + '</span></span>' +
                 '</button>' +
-                '<button data-act="remove-wrong" data-id="' + attr(q.id) + '" title="移除" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#ef4444;font-size:18px;padding:8px;cursor:pointer">✕</button>' +
+                actionBtn +
                 '</div>'
               );
             }
@@ -2261,21 +2302,41 @@
       Object.keys(subjStats).forEach(function (s) {
         subjChips += '<button class="chip ' + (subjFilter === s ? "is-active" : "") + '" data-act="wrong-subj" data-v="' + attr(s) + '" type="button">' + esc(subjOf(s).short) + ' ' + subjStats[s] + '</button>';
       });
+      // 错误次数筛选
+      const nOpts = [[0, "全部次数"], [2, "错≥2"], [3, "错≥3"], [5, "错≥5"]];
+      let nChips = nOpts.map(function (o) {
+        return '<button class="chip ' + (nFilter === o[0] ? "is-active" : "") + '" data-act="wrong-nfilter" data-v="' + o[0] + '" type="button">' + o[1] + '</button>';
+      }).join("");
+
+      // 已掌握折叠区
+      let masteredSection = "";
+      if (masteredItems.length) {
+        const expanded = !!state.wrongMasteredOpen;
+        masteredSection =
+          '<div class="section-title" style="margin-top:16px">' +
+          '<button class="btn btn-ghost btn-sm" data-act="wrong-mastered-toggle" type="button" style="padding:4px 10px;font-size:12px">' +
+          (expanded ? "▾ 已掌握（" + masteredItems.length + "）· 点击收起" : "▸ 已掌握（" + masteredItems.length + "）· 点击展开") +
+          "</button></div>" +
+          (expanded ? rows(masteredItems, "wrong") : "");
+      }
+
       body =
         '<div class="card"><strong>今天有 ' + due + " 道题该重做</strong>" +
-        '<p class="muted" style="font-size:12px;margin:6px 0 12px">按艾宾浩斯遗忘曲线自动排期，到期重做记得更牢</p>' +
+        '<p class="muted" style="font-size:12px;margin:6px 0 12px">按艾宾浩斯遗忘曲线自动排期，到期重做记得更牢；点 ✓ 手动标记已掌握</p>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
         '<button class="btn btn-primary" data-act="due" type="button"' + (due ? "" : " disabled") + ">开始重做到期题</button>" +
-        '<button class="btn btn-ghost" data-act="practice-wrong-all" type="button"' + (items.length ? "" : " disabled") + ">刷全部错题</button>" +
+        '<button class="btn btn-ghost" data-act="practice-wrong-all" type="button"' + (items.length ? "" : " disabled") + ">刷全部待复习错题</button>" +
         "</div></div>" +
         '<div class="stat-grid" style="margin:16px 0">' +
-        '<div class="stat-box"><div class="n">' + items.length + '</div><div class="l">总错题</div></div>' +
-        '<div class="stat-box"><div class="n">' + mastered + '</div><div class="l">已掌握</div></div>' +
-        '<div class="stat-box"><div class="n">' + Math.max(0, items.length - mastered) + '</div><div class="l">待复习</div></div>' +
+        '<div class="stat-box"><div class="n">' + items.length + '</div><div class="l">待复习</div></div>' +
+        '<div class="stat-box"><div class="n">' + masteredItems.length + '</div><div class="l">已掌握</div></div>' +
         '<div class="stat-box"><div class="n">' + due + '</div><div class="l">今日到期</div></div>' +
+        '<div class="stat-box"><div class="n">' + allItems.length + '</div><div class="l">总错题</div></div>' +
         "</div>" +
         '<div class="section-title">按科目筛选</div>' +
         '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + subjChips + "</div>" +
+        '<div class="section-title">按错误次数筛选</div>' +
+        '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + nChips + "</div>" +
         '<div class="section-title">按错因补练</div>' +
         '<div class="chip-row" style="margin-bottom:12px">' +
         '<button class="chip" data-act="by-reason" data-r="concept" type="button">概念不清</button>' +
@@ -2283,9 +2344,10 @@
         '<button class="chip" data-act="by-reason" data-r="read" type="button">审题偏差</button>' +
         '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
         "</div>" +
-        '<div class="section-title">错题列表（点题看解析，✕移除已掌握）</div>' + rows(pageItems, "wrong") +
+        '<div class="section-title">错题列表（点题看解析，✓ 标记掌握）</div>' + rows(pageItems, "wrong") +
         (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "") +
-        (items.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">清空错题本</button></div>' : "");
+        masteredSection +
+        (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">清空错题本</button></div>' : "");
     } else if (tab === "fav") {
       body =
         '<div class="section-title">我的收藏</div>' +
@@ -3682,16 +3744,25 @@ function formulaFilter() {
     } else if (act === "exit-exam") {
       const s = state.session;
       if (!s || !s.exam || s.examSubmitted) { go("mock"); render(); return; }
-      confirmModal("退出模拟考", "考试尚未交卷。退出后本场不计入成绩，也不会到点自动交卷。确定退出？", function () {
+      confirmModal("放弃本场模拟考", "考试尚未交卷。放弃后本场不计成绩，草稿也会清除。确定放弃？", function () {
         // 与文案一致：放弃本场，不写入考试历史
         s.end = null;
         s.examSubmitted = true;
         s.abandoned = true;
-        saveSession();
+        try { localStorage.removeItem("gxzsb.session"); } catch(e) {}
         go("mock");
         render();
-        toastLite("已退出模拟考（本场不计入成绩）");
+        toastLite("已放弃本场模拟考");
       });
+    } else if (act === "pause-exam") {
+      const s = state.session;
+      if (!s || !s.exam || s.examSubmitted) return;
+      // 保存草稿（saveSession 已在每次答题时调用），退出到模拟考列表；下次进入时自动恢复
+      saveSession();
+      stopExamTimer();
+      toastLite("已暂停，进度已保存。下次从模拟考入口继续。");
+      go("mock");
+      render();
     } else if (act === "wrong-tab") {
       state.wrongTab = t.getAttribute("data-v");
       state.wrongPage = 1;
@@ -3710,6 +3781,33 @@ function formulaFilter() {
         save(LS.wrong, state.wrong);
         render();
       }
+    } else if (act === "master-wrong") {
+      const id = t.getAttribute("data-id");
+      const w = state.wrong[id];
+      if (!w) return;
+      w.mastered = true;
+      w.due = Number.MAX_SAFE_INTEGER; // 不再进到期队列
+      save(LS.wrong, state.wrong);
+      scheduleSync();
+      toastLite("已标记为掌握，可在下方「已掌握」区恢复");
+      render();
+    } else if (act === "unmaster-wrong") {
+      const id = t.getAttribute("data-id");
+      const w = state.wrong[id];
+      if (!w) return;
+      w.mastered = false;
+      w.due = Date.now(); // 恢复后立即到期，下次就能复习
+      save(LS.wrong, state.wrong);
+      scheduleSync();
+      toastLite("已恢复到待复习队列");
+      render();
+    } else if (act === "wrong-nfilter") {
+      state.wrongNFilter = parseInt(t.getAttribute("data-v"), 10) || 0;
+      state.wrongPage = 1;
+      render();
+    } else if (act === "wrong-mastered-toggle") {
+      state.wrongMasteredOpen = !state.wrongMasteredOpen;
+      render();
     } else if (act === "export") {
       const blob = new Blob([JSON.stringify(state.wrong, null, 2)], { type: "application/json" });
       const a = document.createElement("a");

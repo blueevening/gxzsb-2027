@@ -609,6 +609,30 @@ html.qa-modal-open { overflow: hidden; }
   background: var(--card); color: var(--text); font-size: 15px;
 }
 
+/* 填空输入：下划线式，宽度随 size 属性自适应，最小 6ch，最长撑满卡片 */
+.fill-input {
+  display: inline-block;
+  width: auto;
+  min-width: 6ch;
+  max-width: 100%;
+  padding: 6px 4px;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 16px; /* ≥16px 防止 iOS 聚焦自动放大 */
+  text-align: center;
+  margin: 10px 0 4px;
+  transition: border-color .15s;
+}
+.fill-input:focus { outline: none; border-bottom-color: var(--primary); }
+.fill-input:disabled { color: var(--text-sub); border-bottom-style: dashed; }
+/* 填空卡片内长答案不撑破布局 */
+.card .ref-answer, .card .smart-grade, .card .subj-view {
+  overflow-wrap: anywhere; word-break: break-word;
+}
+
 /* ===== 空状态 ===== */
 .empty {
   text-align: center; padding: 32px 16px; color: var(--text-sub); font-size: 14px;
