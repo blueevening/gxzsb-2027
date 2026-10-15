@@ -1014,7 +1014,8 @@
 
     // 全库已练 / 正确率（去重题目）
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const totalQ = (D.questions || []).length || 1;
+    const realQ = (D.questions || []).length;
+    const totalQ = realQ || (D.meta && D.meta.estimatedQuestions) || 1;
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
