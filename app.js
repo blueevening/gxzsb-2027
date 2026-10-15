@@ -1232,25 +1232,22 @@
             { planId: "english-full", ico: "英", icoCls: " en", title: "英语考纲卷" },
             { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" }
           ].map((p) => {
-            const his = (state.history || []).filter((h) => h.exam && h.exam.planId === p.planId).slice(0, 3);
+            const his = (state.history || []).filter((h) => h.exam && h.exam.planId === p.planId);
+            const last = his[0];
+            const d = last ? new Date(last.at) : null;
+            const md = d ? (d.getMonth()+1) + "/" + d.getDate() : "";
             return `
             <div class="exam-card">
-              <button class="exam-row" data-act="exam" data-plan="${attr(p.planId)}" type="button" style="width:100%;display:flex;align-items:center;gap:14px;background:none;border:none;padding:0;cursor:pointer;text-align:left">
+              <div class="exam-row">
                 <span class="exam-ico${p.icoCls}">${p.ico}</span>
                 <span class="exam-main">
                   <span class="exam-t">${p.title}</span>
                 </span>
-                <span class="exam-go">开始</span>
-              </button>
-              ${his.length ? `<div class="exam-his">
-                ${his.map((h) => {
-                  const d = new Date(h.at);
-                  const md = (d.getMonth()+1) + "/" + d.getDate();
-                  return `<button class="exam-his-item" data-act="view-history" data-id="${attr(h.id)}" type="button">
-                    <span>${md}</span><span>${h.score}/${h.fullScore}分</span><span>正确率 ${h.acc}%</span>
-                  </button>`;
-                }).join("")}
-              </div>` : `<div class="exam-his-empty">暂无历史成绩</div>`}
+                <div class="exam-btns">
+                  <button class="btn btn-primary btn-sm" data-act="exam" data-plan="${attr(p.planId)}" type="button">开始</button>
+                  ${last ? `<button class="btn btn-primary btn-sm exam-his-btn" data-act="view-history" data-id="${attr(last.id)}" type="button">${md} ${last.score}/${last.fullScore}分</button>` : ""}
+                </div>
+              </div>
             </div>`;
           }).join("")}
         </div>
