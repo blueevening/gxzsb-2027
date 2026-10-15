@@ -1230,7 +1230,7 @@
             { planId: "math-full", ico: "数", icoCls: "",    title: "高数考纲卷" },
             { planId: "english-full", ico: "英", icoCls: " en", title: "英语考纲卷" },
             { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" },
-            { planId: "full-combined", ico: "全", icoCls: " full", title: "全科终极卷" }
+            { planId: "full-combined", ico: "全", icoCls: " full", title: "全真模拟卷" }
           ].map((p) => {
             const his = (state.history || []).filter((h) => h.exam && h.exam.planId === p.planId);
             const last = his[0];
@@ -2007,7 +2007,7 @@
     setTitle("答题历史", true);
     const planId = state.examHistoryPlan;
     const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
-    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","major-combined":"专业合卷","full-combined":"全科终极卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
+    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","major-combined":"专业合卷","full-combined":"全真模拟卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
     const plan = (D.EXAM_PLANS || {})[planId] || {};
     const planTitle = plan.title || PLAN_TITLES[planId] || planId;
     if (!list.length) {
@@ -3760,7 +3760,7 @@ function formulaFilter() {
         const MJ = (D.EXAM_PLANS || {})["major-combined"];
         if (M && E && MJ) {
           plan = {
-            id: "full-combined", title: "全科终极卷", bySubject: true,
+            id: "full-combined", title: "全真模拟卷", bySubject: true,
             minutes: 180, totalScore: 600,
             sections: [
               { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
