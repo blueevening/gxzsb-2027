@@ -2133,7 +2133,7 @@
       { id: "c-special", label: "C 语言专项", desc: "50 道高频易错 · 60 分钟", color: "#10B981", icon: "C" },
       { id: "net-special", label: "计网专项", desc: "50 道高频易错 · 60 分钟", color: "#06B6D4", icon: "网" },
       { id: "major-combined", label: "专业综合合卷", desc: "电工 + C + 计网 · 150 分钟", color: "#F97316", icon: "专" },
-      { id: "full-combined", label: "全真模拟卷", desc: "数学 + 英语 + 专业 · 180 分钟", color: "#7c3aed", icon: "全" },
+      { id: "full-combined", label: "全真模拟卷", desc: "数学 + 英语 + 专业 · 240 分钟", color: "#7c3aed", icon: "全" },
     ];
     return `
       <div class="section-title">选择试卷</div>
@@ -3770,7 +3770,7 @@ function formulaFilter() {
           });
           plan = {
             id: "full-combined", title: "全真模拟卷", bySubject: true,
-            minutes: 180, totalScore: 600,
+            minutes: 240, totalScore: 600,
             sections: [
               { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
               { key: "english", label: "英语", subject: "英语", mix: E.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
