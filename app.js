@@ -1248,6 +1248,18 @@
             </span>
             <span class="exam-go">开始</span>
           </button>
+          ${(state.history && state.history.length) ? state.history.slice(0, 10).map((h) => {
+            const d = new Date(h.at);
+            const md = (d.getMonth()+1) + "/" + d.getDate();
+            return `<button class="exam-card" data-act="view-history" data-id="${attr(h.id)}" type="button">
+              <span class="exam-ico maj">历</span>
+              <span class="exam-main">
+                <span class="exam-t">${esc(h.title)}</span>
+                <span class="exam-s">${md} · ${h.ok}/${h.total} 题 · 正确率 ${h.acc}%</span>
+              </span>
+              <span class="exam-go" style="font-size:14px">${h.score}/${h.fullScore}分</span>
+            </button>`;
+          }).join("") : ""}
         </div>
       </section>
 
@@ -3695,13 +3707,31 @@ function formulaFilter() {
       scheduleSync();
       t.textContent = "已保存";
     } else if (act === "open-q") startSession({ ids: [t.getAttribute("data-id")], title: "题目精练", limit: 1 });
-    else if (act === "exam") {
+    else if (act === "view-history") {
+      const hid = t.getAttribute("data-id");
+      const h = (state.history || []).find((x) => x.id === hid);
+      if (!h) return;
+      state.session = {
+        title: h.title + "（历史回看）",
+        q: h.ids.map(qById).filter(Boolean),
+        i: 0, sel: null, submitted: true,
+        results: h.results || {}, scores: h.scores || {},
+        flags: {}, showExp: false,
+        start: h.at, end: null,
+        exam: h.exam || null, examSubmitted: true,
+        lastSeenAt: Date.now(), ordered: true, daily: false, reviewMode: true,
+      };
+      go("practice"); render();
+    } else if (act === "exam") {
       const planId = t.getAttribute("data-plan");
       const plan = (D.EXAM_PLANS || {})[planId];
       if (!plan) return;
       // 组卷 - 按大纲章节比例抽题
       const items = [];
       const used = new Set();
+      // 排除上次同套卷考过的题，保证每次题目不同（题不够时自动回退）
+      const lastExam = (state.history || []).find((h) => h.exam && h.exam.planId === planId);
+      if (lastExam && lastExam.ids) lastExam.ids.forEach((id) => used.add(id));
       const pool = Q.filter((q) => !q.examExclude);
 
       // 按章节均匀分配：每类题型的题目从各章节均匀抽
@@ -3730,6 +3760,26 @@ function formulaFilter() {
             chapters.splice(chapters.indexOf(ch), 1);
           }
           idx++;
+        }
+        // 题量不够：回退，不再排除上次考题
+        if (picked.length < n && lastExam && lastExam.ids) {
+          lastExam.ids.forEach((id) => used.delete(id));
+          Object.values(byCh).forEach((arr) => shuffle(arr));
+          const ch2 = Object.keys(byCh);
+          let i2 = 0;
+          while (picked.length < n && ch2.length) {
+            const ch = ch2[i2 % ch2.length];
+            const arr = byCh[ch];
+            while (arr.length && used.has(arr[0].id)) arr.shift();
+            if (arr.length) {
+              const q = arr.shift();
+              picked.push(q);
+              used.add(q.id);
+            } else {
+              ch2.splice(ch2.indexOf(ch), 1);
+            }
+            i2++;
+          }
         }
         return picked;
       };
