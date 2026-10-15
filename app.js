@@ -1638,9 +1638,14 @@
     let unfilled = 0;
     s.q.forEach((q) => {
       if (!(q.id in s.results)) {
-        s.results[q.id] = false;
-        unfilled++;
-        record(q, false);
+        // 范文学习类（翻译/写作）：未看也算过，不扣分
+        if (q.type === "translate" || q.type === "write") {
+          s.results[q.id] = true;
+        } else {
+          s.results[q.id] = false;
+          unfilled++;
+          record(q, false);
+        }
       }
     });
     s.examSubmitted = true;
