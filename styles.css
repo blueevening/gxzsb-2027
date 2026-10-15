@@ -802,6 +802,8 @@ html.qa-modal-open { overflow: hidden; }
 .exam-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
 .exam-t { font-size:17px; font-weight:750; }
 .exam-s { font-size:13px; color:var(--text-sub); }
+.exam-prog { display:flex; justify-content:space-between; font-size:11px; margin-top:4px; }
+.exam-main .bar { margin-top:2px; height:4px; }
 .exam-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
 .exam-meta .pill {
   font-size:11px; font-weight:650; padding:2px 8px;

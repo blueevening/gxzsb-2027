@@ -1101,11 +1101,6 @@
             </div>
             <div class="bar ${opt.barCls || ""}"><i style="width:${(opt.pct || 0)}%"></i></div>
           </div>
-          <div class="oc-acts">
-            <button class="btn btn-primary btn-sm" data-act="exam" data-plan="${attr(opt.plan)}" type="button">按大纲组卷</button>
-            <button class="btn btn-ghost btn-sm" data-nav="${attr(opt.subjectNav || "bank")}" ${opt.subjectName ? `data-act="subject" data-name="${attr(opt.subjectName)}"` : ""} type="button">去练该科</button>
-            <a class="btn btn-ghost btn-sm" href="${attr(opt.pdf)}" download="${attr(opt.pdfName)}" target="_blank" rel="noopener">大纲 PDF</a>
-          </div>
         </article>
       `;
     }
@@ -1244,6 +1239,8 @@
             <span class="exam-main">
               <span class="exam-t">高数考纲卷 · 150 分</span>
               <span class="exam-s">单选10×5 · 填空4×5 · 解答7×8 · 应用2×12</span>
+              <span class="exam-prog"><span class="muted">已练 ${mathP.done}/${mathP.total}</span> <span>${mathP.acc == null ? "正确率 —" : mathP.acc + "%"}</span></span>
+              <span class="bar sub-math"><i style="width:${mathP.pct}%"></i></span>
             </span>
             <span class="exam-go">开始</span>
           </button>
@@ -1252,6 +1249,8 @@
             <span class="exam-main">
               <span class="exam-t">英语考纲卷 · 150 分</span>
               <span class="exam-s">词汇语法40 · 阅读60 · 翻译32 · 写作18</span>
+              <span class="exam-prog"><span class="muted">已练 ${enP.done}/${enP.total}</span> <span>${enP.acc == null ? "正确率 —" : enP.acc + "%"}</span></span>
+              <span class="bar sub-en"><i style="width:${enP.pct}%"></i></span>
             </span>
             <span class="exam-go">开始</span>
           </button>
@@ -1260,6 +1259,8 @@
             <span class="exam-main">
               <span class="exam-t">专业合卷 · 300 分</span>
               <span class="exam-s">单选30×4 + 判断15×3 + 填空30×2 + 应用6×12.5</span>
+              <span class="exam-prog"><span class="muted">三科合计（按 100 分权重）</span> <span>${majP.acc == null ? "正确率 —" : majP.acc + "%"}</span></span>
+              <span class="bar sub-maj"><i style="width:${majP.pct}%"></i></span>
             </span>
             <span class="exam-go">开始</span>
           </button>
