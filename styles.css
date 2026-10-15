@@ -803,6 +803,7 @@ html.qa-modal-open { overflow: hidden; }
 .exam-ico.en { background:var(--english); }
 .exam-ico.maj { background:var(--ee); }
 .exam-ico.full { background:#7c3aed; }
+.exam-ico.pub { background:#6366f1; }
 .exam-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
 .exam-t { font-size:17px; font-weight:750; }
 .exam-s { font-size:13px; color:var(--text-sub); }

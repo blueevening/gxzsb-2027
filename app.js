@@ -1229,6 +1229,7 @@
           ${[
             { planId: "math-full", ico: "数", icoCls: "",    title: "高数考纲卷" },
             { planId: "english-full", ico: "英", icoCls: " en", title: "英语考纲卷" },
+            { planId: "public-combined", ico: "文", icoCls: " pub", title: "文化综合合卷" },
             { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" },
             { planId: "full-combined", ico: "全", icoCls: " full", title: "全真模拟卷" }
           ].map((p) => {
