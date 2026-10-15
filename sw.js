@@ -1,5 +1,5 @@
-/* gxzsb sw v42 — 网络优先，进入即最新 */
-const CACHE = "gxzsb-net-first-v42";
+/* gxzsb sw v43 — 缓存优先，版本号资源秒开，网络更新 */
+const CACHE = "gxzsb-cache-first-v43";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {
@@ -12,27 +12,34 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  // 代码资源：永远先走网络
-  if (/\.(js|css|html)(\?|$)/i.test(url.pathname) || url.search.indexOf("v=") >= 0 || url.pathname.endsWith("/")) {
+
+  // 带版本号的静态资源：缓存优先（二次访问秒开），后台静默更新
+  if (url.search.indexOf("v=") >= 0 && /\.(js|css)(\?|$)/i.test(url.pathname)) {
     e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+      caches.match(req).then((cached) => {
+        const fetchPromise = fetch(req).then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          }
           return res;
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match("./index.html")))
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
     );
     return;
   }
-  // 静态资源：网络优先，失败回退缓存
+
+  // HTML 和其他资源：网络优先，失败回退缓存
   e.respondWith(
     fetch(req)
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
         return res;
       })
-      .catch(() => caches.match(req))
+      .catch(() => caches.match(req).then((r) => r || caches.match("./index.html")))
   );
 });
