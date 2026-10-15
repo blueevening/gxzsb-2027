@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "441";          // 与 index.html 的版本号保持一致
+  var V = "442";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -223,18 +223,26 @@
     document.body.classList.remove("boot-loading");
     injectAppJs();
 
-    /* PHASE2：所有数据脚本并行加载，大文件早点开始下载，弱网下总时间更短 */
+    /* PHASE2：小文件先并行快速完成，再集中带宽下大文件，弱网下总时间更短 */
     var doneCount = 0;
     var total = DATA_SCRIPTS.length;
     var failed = [];
-    var allPromises = DATA_SCRIPTS.map(function(script) {
+    var big = DATA_SCRIPTS.filter(function(s){ return s.src === "all-bank.js"; });
+    var small = DATA_SCRIPTS.filter(function(s){ return s.src !== "all-bank.js"; });
+    var smallPromises = small.map(function(script) {
       return loadWithRetry(script, 0, total).then(function(f) {
         doneCount++;
         setProgress(doneCount, total);
         if (f && script.required) failed.push(f);
       });
     });
-    await Promise.all(allPromises);
+    await Promise.all(smallPromises);
+    for (var bi = 0; bi < big.length; bi++) {
+      var bf = await loadWithRetry(big[bi], 0, total);
+      doneCount++;
+      setProgress(doneCount, total);
+      if (bf && big[bi].required) failed.push(bf);
+    }
     if (failed.length) { toastFail(failed); return; }
     /* 就绪：通知 app.js 重建题库快照并重渲染（监听在 window 上，须在 window 派发） */
     window.GXZSB_DATA_READY = true;
