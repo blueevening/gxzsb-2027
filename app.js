@@ -1665,6 +1665,8 @@
       return `<div class="empty">没有可练习的题目<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div></div>`;
     }
     const q = s.q[s.i];
+    // 渲染前同步：当前题已答过则强制 submitted，避免恢复 session 后按钮状态错乱
+    s.submitted = q.id in s.results;
     setTitle(s.q.length ? `${s.title}` : "练习", true);
     const keys = ["A", "B", "C", "D"];
     const done = q.id in s.results;
