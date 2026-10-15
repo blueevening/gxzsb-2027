@@ -1229,7 +1229,8 @@
           ${[
             { planId: "math-full", ico: "数", icoCls: "",    title: "高数考纲卷" },
             { planId: "english-full", ico: "英", icoCls: " en", title: "英语考纲卷" },
-            { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" }
+            { planId: "major-combined", ico: "专", icoCls: " maj", title: "专业合卷" },
+            { planId: "full-combined", ico: "全", icoCls: " full", title: "全科终极卷" }
           ].map((p) => {
             const his = (state.history || []).filter((h) => h.exam && h.exam.planId === p.planId);
             const last = his[0];
@@ -2006,7 +2007,7 @@
     setTitle("答题历史", true);
     const planId = state.examHistoryPlan;
     const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
-    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","major-combined":"专业合卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
+    const PLAN_TITLES = {"math-full":"高数考纲卷","english-full":"英语考纲卷","major-combined":"专业合卷","full-combined":"全科终极卷","ee-special":"电工专项","c-special":"C语言专项","net-special":"计网专项"};
     const plan = (D.EXAM_PLANS || {})[planId] || {};
     const planTitle = plan.title || PLAN_TITLES[planId] || planId;
     if (!list.length) {
@@ -3751,7 +3752,24 @@ function formulaFilter() {
       go("practice"); render();
     } else if (act === "exam") {
       const planId = t.getAttribute("data-plan");
-      const plan = (D.EXAM_PLANS || {})[planId];
+      let plan = (D.EXAM_PLANS || {})[planId];
+      // 全科终极卷：动态合并数学+英语+专业合卷
+      if (!plan && planId === "full-combined") {
+        const M = (D.EXAM_PLANS || {})["math-full"];
+        const E = (D.EXAM_PLANS || {})["english-full"];
+        const MJ = (D.EXAM_PLANS || {})["major-combined"];
+        if (M && E && MJ) {
+          plan = {
+            id: "full-combined", title: "全科终极卷", bySubject: true,
+            minutes: 180, totalScore: 600,
+            sections: [
+              { key: "math", label: "高等数学", subject: "高等数学", mix: M.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
+              { key: "english", label: "英语", subject: "英语", mix: E.sections.map(s => ({ type: s.type, n: s.n, each: s.each })) },
+              ...MJ.sections.map(sec => ({ key: sec.key, label: sec.label, subject: sec.subject, mix: sec.mix }))
+            ]
+          };
+        }
+      }
       if (!plan) { toast("试卷配置加载中，请稍后再试"); return; }
       // 组卷 - 按大纲章节比例抽题
       const items = [];
