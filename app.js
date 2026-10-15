@@ -1626,14 +1626,13 @@
     const s = state.session;
     if (!s || !s.exam) return false;
     if (s.examSubmitted) return true;
-    // 先算未答题数，用于二次确认弹窗
+    // 先算真正未答题数（范文学习类不算）
     let unfilled0 = 0;
-    s.q.forEach((q) => { if (!(q.id in s.results)) unfilled0++; });
-    if (!auto) {
-      const msg = unfilled0 > 0
-        ? "还有 " + unfilled0 + " 题未作答，确认交卷？未答题将按错误计分。"
-        : "已答完全部 " + s.q.length + " 题，确认交卷？";
-      if (!confirm(msg)) return false;
+    s.q.forEach((q) => {
+      if (!(q.id in s.results) && q.type !== "translate" && q.type !== "write") unfilled0++;
+    });
+    if (!auto && unfilled0 > 0) {
+      if (!confirm("还有 " + unfilled0 + " 题未作答，确认交卷？未答题将按错误计分。")) return false;
     }
     let unfilled = 0;
     s.q.forEach((q) => {
