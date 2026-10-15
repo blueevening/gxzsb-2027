@@ -2127,16 +2127,17 @@
     const cards = [
       { id: "math-full", label: "高数考纲卷", desc: "单选/填空/计算/应用 · 120 分钟", color: "#3B82F6", icon: "数" },
       { id: "english-full", label: "英语考纲卷", desc: "词汇语法/阅读/翻译/写作 · 120 分钟", color: "#8B5CF6", icon: "英" },
-      { id: "major-combined", label: "专业综合合卷", desc: "电工 + C + 计网 · 150 分钟", color: "#F97316", icon: "专" },
       { id: "ee-special", label: "电工专项", desc: "50 道高频易错 · 60 分钟", color: "#F97316", icon: "电" },
       { id: "c-special", label: "C 语言专项", desc: "50 道高频易错 · 60 分钟", color: "#10B981", icon: "C" },
       { id: "net-special", label: "计网专项", desc: "50 道高频易错 · 60 分钟", color: "#06B6D4", icon: "网" },
+      { id: "major-combined", label: "专业综合合卷", desc: "电工 + C + 计网 · 150 分钟", color: "#F97316", icon: "专" },
+      { id: "full-combined", label: "全真模拟卷", desc: "数学 + 英语 + 专业 · 180 分钟", color: "#7c3aed", icon: "全" },
     ];
     return `
       <div class="section-title">选择试卷</div>
       <div class="exam-stack">
         ${cards.map((c) => `
-          <button class="exam-card" data-act="exam" data-plan="${attr(c.id)}" type="button" ${plans[c.id] ? "" : "disabled"}>
+          <button class="exam-card" data-act="exam" data-plan="${attr(c.id)}" type="button" ${(c.id === "full-combined" || plans[c.id]) ? "" : "disabled"}>
             <span class="exam-ico" style="background:${c.color}">${c.icon}</span>
             <span class="exam-main">
               <span class="exam-t">${esc(c.label)}</span>
