@@ -1245,7 +1245,7 @@
                 </span>
                 <div class="exam-btns">
                   <button class="btn btn-primary btn-sm" data-act="exam" data-plan="${attr(p.planId)}" type="button">开始</button>
-                  ${last ? `<button class="btn btn-primary btn-sm exam-his-btn" data-act="view-history" data-id="${attr(last.id)}" type="button">${md} ${last.score}/${last.fullScore}分</button>` : ""}
+                  <button class="btn btn-ghost btn-sm" data-act="exam-history" data-plan="${attr(p.planId)}" type="button">历史答题</button>
                 </div>
               </div>
             </div>`;
@@ -2003,6 +2003,39 @@
     s.showExp = false;
     render();
     window.scrollTo({ top: 0 });
+  }
+
+  /* ========== 考纲套卷历史记录 ========== */
+  function viewExamHistory() {
+    setTitle("历史答题", true);
+    const planId = state.examHistoryPlan;
+    const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
+    const plan = (D.EXAM_PLANS || {})[planId] || {};
+    if (!list.length) {
+      return `<div class="empty">还没有考过「${esc(plan.title || planId)}」<div><button class="btn btn-primary" data-act="exam" data-plan="${attr(planId)}" type="button">去考一次</button></div></div>`;
+    }
+    return `
+      <div class="card" style="margin-bottom:12px">
+        <strong>${esc(plan.title || planId)}</strong>
+        <span class="muted" style="font-size:12px;margin-left:8px">共 ${list.length} 次记录</span>
+      </div>
+      <div class="exam-stack">
+        ${list.map((h) => {
+          const d = new Date(h.at);
+          const md = (d.getMonth()+1) + "/" + d.getDate();
+          const hm = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+          const wrongN = h.total - h.ok;
+          return `<button class="exam-card" data-act="view-history" data-id="${attr(h.id)}" type="button">
+            <span class="exam-ico maj">历</span>
+            <span class="exam-main">
+              <span class="exam-t">${md} ${hm}</span>
+              <span class="exam-s">${h.ok}/${h.total} 题 · 正确率 ${h.acc}% · 错题 ${wrongN} 道</span>
+            </span>
+            <span class="exam-go" style="font-size:14px">${h.score}/${h.fullScore}分</span>
+          </button>`;
+        }).join("")}
+      </div>
+    `;
   }
 
   /* ========== 报告 ========== */
@@ -3404,6 +3437,7 @@ function formulaFilter() {
     else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
     else if (route === "practice") app.innerHTML = viewPractice();
     else if (route === "report") app.innerHTML = viewReport();
+    else if (route === "exam-history") app.innerHTML = viewExamHistory();
     else if (route === "mock") app.innerHTML = viewMock();
     else if (route === "stats") app.innerHTML = viewStats();
     else if (route === "wrong") app.innerHTML = viewWrong();
@@ -3697,6 +3731,11 @@ function formulaFilter() {
       scheduleSync();
       t.textContent = "已保存";
     } else if (act === "open-q") startSession({ ids: [t.getAttribute("data-id")], title: "题目精练", limit: 1 });
+    else if (act === "exam-history") {
+      state.examHistoryPlan = t.getAttribute("data-plan");
+      go("exam-history");
+      render();
+    }
     else if (act === "view-history") {
       const hid = t.getAttribute("data-id");
       const h = (state.history || []).find((x) => x.id === hid);
