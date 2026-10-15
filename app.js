@@ -3751,8 +3751,7 @@ function formulaFilter() {
     } else if (act === "open-q") startSession({ ids: [t.getAttribute("data-id")], title: "题目精练", limit: 1 });
     else if (act === "exam-history") {
       state.examHistoryPlan = t.getAttribute("data-plan");
-      go("exam-history");
-      render();
+      location.hash = "#/exam-history";
     }
     else if (act === "view-history") {
       const hid = t.getAttribute("data-id");
