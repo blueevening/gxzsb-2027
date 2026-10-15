@@ -2007,32 +2007,48 @@
 
   /* ========== 考纲套卷历史记录 ========== */
   function viewExamHistory() {
-    setTitle("历史答题", true);
+    setTitle("答题历史", true);
     const planId = state.examHistoryPlan;
     const list = (state.history || []).filter((h) => h.exam && h.exam.planId === planId);
     const plan = (D.EXAM_PLANS || {})[planId] || {};
     if (!list.length) {
       return `<div class="empty">还没有考过「${esc(plan.title || planId)}」<div><button class="btn btn-primary" data-act="exam" data-plan="${attr(planId)}" type="button">去考一次</button></div></div>`;
     }
+    const scoreColor = (score, full) => {
+      const pct = full ? score / full : 0;
+      if (pct >= 0.8) return "#16a34a";
+      if (pct >= 0.6) return "#ea580c";
+      return "#dc2626";
+    };
     return `
       <div class="card" style="margin-bottom:12px">
         <strong>${esc(plan.title || planId)}</strong>
         <span class="muted" style="font-size:12px;margin-left:8px">共 ${list.length} 次记录</span>
       </div>
       <div class="exam-stack">
-        ${list.map((h) => {
+        ${list.map((h, idx) => {
           const d = new Date(h.at);
           const md = (d.getMonth()+1) + "/" + d.getDate();
           const hm = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
           const wrongN = h.total - h.ok;
-          return `<button class="exam-card" data-act="view-history" data-id="${attr(h.id)}" type="button">
-            <span class="exam-ico maj">历</span>
-            <span class="exam-main">
-              <span class="exam-t">${md} ${hm}</span>
-              <span class="exam-s">${h.ok}/${h.total} 题 · 正确率 ${h.acc}% · 错题 ${wrongN} 道</span>
-            </span>
-            <span class="exam-go" style="font-size:14px">${h.score}/${h.fullScore}分</span>
-          </button>`;
+          const scColor = scoreColor(h.score, h.fullScore);
+          const badge = h.acc >= 80 ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#16a34a;font-weight:600">优秀</span>'
+                      : h.acc >= 60 ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#ffedd5;color:#ea580c;font-weight:600">及格</span>'
+                      : '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#dc2626;font-weight:600">待订正</span>';
+          return `<div class="hist-card">
+            <div class="hist-top">
+              <div class="hist-title">
+                <span class="hist-date">${md} ${hm}${idx === 0 ? ' · 最新' : ''}</span>
+                ${badge}
+              </div>
+              <div class="hist-score" style="color:${scColor}">${h.score}<span style="font-size:13px;opacity:0.6">/${h.fullScore}分</span></div>
+            </div>
+            <div class="hist-meta">${h.ok}/${h.total} 题 · 正确率 ${h.acc}% · 错题 ${wrongN} 道</div>
+            <div class="hist-acts">
+              <button class="btn btn-ghost btn-sm" data-act="view-history" data-id="${attr(h.id)}" type="button">查看解析</button>
+              <button class="btn btn-ghost btn-sm" data-act="exam" data-plan="${attr(planId)}" type="button">重新测试</button>
+            </div>
+          </div>`;
         }).join("")}
       </div>
     `;
