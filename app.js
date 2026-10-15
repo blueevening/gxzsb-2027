@@ -3559,6 +3559,7 @@ function formulaFilter() {
         pre[a.questionId] = !!a.correct;
       });
       startSession({ ids: dailyIds, title: "每日 30 题", ordered: true, daily: true, results: pre });
+    }
     else if (act === "review-exam") {
       // 当前模拟考已交卷，直接进入逐题回看（解析已在会话中）
       const s = state.session;
