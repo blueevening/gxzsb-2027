@@ -4457,6 +4457,7 @@ function formulaFilter() {
     D = window.STUDY_DATA || {};
     Q = buildQ(D);
     Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
+    _subjTotalCache = null;  // 题库加载完，清空科目总数缓存
     restoreSession();
     render();
     window.scrollTo(0, 0);
