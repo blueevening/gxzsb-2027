@@ -1689,7 +1689,7 @@
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
         <span style="display:inline-flex;gap:4px;align-items:center">
           ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习" : "📝 测试") + "</button>"}
-          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}</span>
+          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:#8b5cf6;font-weight:600">范文学习</span>' : ""}</span>
         </span>
       </div>
 
