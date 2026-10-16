@@ -1770,7 +1770,7 @@
                     const stepTxt = (q.steps && q.steps.length)
                       ? " 参考思路：" + q.steps.slice(0, 4).join(" ")
                       : "";
-                    refBody = (ansTxt ? "答案：" + ansTxt : "见上方「保姆级拆解」") + stepTxt;
+                    refBody = (ansTxt ? "答案：" + ansTxt : "见上方「详细解析」") + stepTxt;
                   }
                   extra =
                     `<div class="smart-grade">智能评分 <b>${pct}%</b></div>` +
@@ -1812,7 +1812,7 @@
               <div class="content" style="font-size:15px">本题考 <strong style="color:#16a34a">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:#16a34a;font-size:18px">${mathHtml(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
             </div>
             <details class="explain-block" style="border-left:3px solid #3b82f6" open>
-              <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 保姆级拆解（点击展开）</summary>
+              <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 详细解析（点击展开）</summary>
               <div class="content">
             ${
               (q.steps || []).length
