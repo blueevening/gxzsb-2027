@@ -390,21 +390,22 @@ window.STUDY_DATA.LEARN_BOOK = {
         },
         {
           id: "LB-M-21",
-          name: "定积分应用：面积与体积",
-          outline: "定积分简单应用（面积、体积）",
-          plain: "面积=「上减下」积分；绕 x 轴旋转体体积=π∫y²dx。先画图定上下限。",
+          name: "定积分应用：面积、体积与弧长",
+          outline: "定积分简单应用（面积、体积、弧长）",
+          plain: "面积=「上减下」积分；绕 x 轴旋转体体积=π∫y²dx；弧长=∫√(1+(y′)²)dx。先画图定上下限。",
           steps: [
             "画草图，求交点定积分限。",
             "面积：A=∫ₐᵇ [上曲线−下曲线] dx。",
-            "旋转体：V=π∫ₐᵇ [f(x)]²dx（绕 x 轴）。"
+            "旋转体：V=π∫ₐᵇ [f(x)]²dx（绕 x 轴）。",
+            "弧长：y=f(x) 时 s=∫ₐᵇ √(1+[f′(x)]²)dx；参数方程 s=∫√(φ′²+ψ′²)dt。"
           ],
           example: "求 y=x² 与 y=0、x=1 围成面积。",
           answer: "A=∫₀¹ x²dx=frac{1}{3}。",
-          warn: "上下线搞反导致负面积；忘了平方配 π；限是交点不是随便取 0、1。",
-          examTip: "口诀：面积上减下，体积 πy²。两曲线围成时先解交点。",
-          relatedFormula: "定积分求面积",
+          warn: "上下线搞反导致负面积；忘了平方配 π；限是交点不是随便取 0、1；弧长根号里别漏 1。",
+          examTip: "口诀：面积上减下，体积 πy²，弧长根号下 1 加 y′²。两曲线围成时先解交点。",
+          relatedFormula: "定积分求面积与弧长",
           level: "冲刺",
-          minutes: 10
+          minutes: 12
         }
       ]
     },
@@ -862,6 +863,46 @@ window.STUDY_DATA.LEARN_BOOK = {
           examTip: "口诀：宁写简单正确句，不写复杂错误句。检查五项：时、主、拼、数、式。",
           relatedFormula: "写作模板句（图表/观点/书信）",
           level: "冲刺",
+          minutes: 8
+        },
+        {
+          id: "LB-E-21",
+          name: "强调句和倒装句",
+          outline: "It is/was…that 强调结构；否定词前置引起的部分倒装",
+          plain: "强调句：把要强调的部分放进 It is/was…that 中间。倒装：否定词开头时，把助动词提到主语前。",
+          steps: [
+            "强调句：It is/was + 被强调部分 + that/who + 其余；强调人可用 who，其余一律 that。",
+            "判别：去掉 It is/was 和 that 后句子仍完整，才是强调句。",
+            "部分倒装：not only…but also 前倒后不倒（前半句倒装）。",
+            "部分倒装：not until、hardly…when、no sooner…than 主倒从不倒（主句倒装）。",
+            "as/though 让步倒装：把表语/状语提到句首（Young as he is）。"
+          ],
+          example: "It was in this small village ______ I spent my childhood.（that / which / where / when）",
+          answer: "that。强调地点状语，强调句固定用 that，不能用 where。",
+          warn: "地点状语也用 that（不用 where）；not only 后忘记倒装；hardly 与 when 搭配、no sooner 与 than 搭配不要混。",
+          examTip: "口诀：强调 that 通吃；前倒后不倒，主倒从不倒。",
+          relatedFormula: "强调句 It is…that",
+          level: "冲刺",
+          minutes: 10
+        },
+        {
+          id: "LB-E-22",
+          name: "感叹句、祈使句、反意疑问句",
+          outline: "How/What 感叹；祈使句及反意疑问；特殊主语的反意疑问",
+          plain: "How 修饰形/副，What 修饰名词；祈使句反意用 will you；反意疑问看前面主语。",
+          steps: [
+            "感叹：How + 形容词/副词 + 主谓；What (a/an) + 形容词 + 名词 + 主谓。",
+            "复数名词、不可数名词前用 What（What great changes / What good advice）。",
+            "祈使句：肯定用 will you/won't you；否定 Don't… 一律 will you；Let's…shall we。",
+            "反意：everyone/nobody 等用 they；this/something 用 it；动名词、不定式用 it。",
+            "I wish… 用 may I；并列句与最近的分句主谓一致。"
+          ],
+          example: "Don't forget to turn off the lights, ______?（will you / won't you / do you）",
+          answer: "will you。否定祈使句 Don't… 的反意疑问句一律用 will you。",
+          warn: "Don't 后误用 won't you；不可数名词前误用 How；Let's 与 Let us 混淆（前者 shall we，后者 will you）。",
+          examTip: "口诀：How 形副 What 名；否定祈使 will you；Let's shall we。",
+          relatedFormula: "感叹句与反意疑问句",
+          level: "强化",
           minutes: 8
         }
       ]

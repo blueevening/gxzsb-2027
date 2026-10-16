@@ -1296,7 +1296,9 @@
   function mockSectionHtml() {
     const cats = [
       { tag: "数学专项", short: "数学专项", icon: "数", color: "#3B82F6", fallback: 99 },
-      { tag: "英语专项", short: "英语专项", icon: "英", color: "#8B5CF6", fallback: 400 }
+      { tag: "英语专项", short: "英语专项", icon: "英", color: "#8B5CF6", fallback: 400 },
+      { tag: "英语语法精编", short: "英语语法精编", icon: "语", color: "#EC4899", fallback: 41 },
+      { tag: "C语言精编", short: "C语言精编", icon: "C", color: "#10B981", fallback: 6 }
     ];
     let counts = {};
     try {
@@ -3874,10 +3876,17 @@ function formulaFilter() {
   /* 事件由 document 级委托统一绑定；此函数供登录页等调用以保持接口兼容 */
   function bindEvents() {}
 
+  var _lastRouteKey = null;
   function render() {
     const { route, params } = parseHash();
     state.route = route;
-    window.scrollTo(0, 0);
+    // 仅在「路由切换」时回到顶部；同一页面的数据加载/状态刷新保持滚动位置，
+    // 避免用户正在浏览时异步加载完成被强制拉回顶部
+    var routeKey = route + "|" + params.join("/");
+    if (routeKey !== _lastRouteKey) {
+      window.scrollTo(0, 0);
+      _lastRouteKey = routeKey;
+    }
     const app = $("#app");
     // 数据未就绪也直接渲染首页（空数据），后台加载完自动刷新
     // 不再卡住转圈
@@ -5058,7 +5067,6 @@ function formulaFilter() {
     _subjTotalCache = null;  // 题库加载完，清空科目总数缓存
     restoreSession();
     render();
-    window.scrollTo(0, 0);
     ensureExamTimer();
   });
   document.documentElement.setAttribute("data-theme", state.theme);
