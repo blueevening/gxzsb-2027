@@ -17,8 +17,9 @@
       });
     } catch(e) {}
   }
-  // 标记本次打开是否为“密码重置链接”回调（URL 中带 token/code）
-  var RECOVERY_URL = /(access_token|type=recovery|refresh_token|[?&]code=)/.test(location.hash + location.search);
+  // 标记本次打开是否为“密码重置链接”回调（URL 中带 token/code，或带 error 说明链接已失效）
+  var RECOVERY_URL = /(access_token|type=recovery|refresh_token|[?&]code=|error=|error_code=)/.test(location.hash + location.search);
+  var RECOVERY_ERROR = /(^|[?&#])(error|error_code)=/.test(location.hash + location.search);
 
   /* 题库快照：app.js 先于数据就绪注入（登录页不依赖数据），
      数据后台静默加载完成后由 gxzsb:data-ready 重建 */
@@ -3941,10 +3942,16 @@ function formulaFilter() {
       _lastRouteKey = routeKey;
     }
     const app = $("#app");
-    // 重置链接回调（URL 带 token）：正在由 Supabase 校验，先显示“验证中”，避免闪登录页或路由错乱
-    if (RECOVERY_URL && !state.recovery && sb && !state.user) {
-      app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">正在验证重置链接…</div><div class="sub">链接有效即可设置新密码</div></div></div>';
+    // 重置链接回调（URL 带 token/error）：无论是否已登录/游客，一律先进入“验证中/链接失效”页，
+    // 不能把 #access_token=... 当路由解析成首页/登录页
+    if (RECOVERY_URL && !state.recovery && sb) {
+      if (RECOVERY_ERROR) {
+        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">重置链接无效或已过期</div><div class="sub">请返回登录页重新点「忘记密码」获取新链接</div></div><div class="card" style="padding:24px"><button type="button" class="login-submit" data-nav="login">返回登录</button></div></div>';
+      } else {
+        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">正在验证重置链接…</div><div class="sub">链接有效即可设置新密码</div></div></div>';
+      }
       hideNav();
+      bindEvents();
       return;
     }
     // login / reset 为公开页，未登录也可访问
@@ -5207,6 +5214,8 @@ function formulaFilter() {
         if (event === "PASSWORD_RECOVERY" && session) {
           state.recovery = true;
           state.user = session.user;
+          // 进入重置流程时清除游客标记，避免后续刷新又恢复游客态干扰
+          try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
           // 清掉 URL 中的 token / query，落到干净的 #/reset
           try { history.replaceState(null, "", location.pathname + "#/reset"); } catch (e) { location.hash = "#/reset"; }
           parseHash();
@@ -5214,8 +5223,9 @@ function formulaFilter() {
         }
       });
     } catch (e) {}
-    // 兜底：若 8 秒内未进入重置页（token 过期 / 链接被 Supabase 拦截 / 未配置重定向），明确提示
-    if (RECOVERY_URL) {
+    // 兜底：若 8 秒内未进入重置页（token 过期 / 链接被 Supabase 拦截 / 未配置重定向），明确提示。
+    // error 形式（链接已失效）页面已直接显示提示，不需要再弹 alert
+    if (RECOVERY_URL && !RECOVERY_ERROR) {
       setTimeout(function () {
         if (!state.recovery) {
           alert("重置链接无效或已过期，无法打开重置页面。\n请重新点「忘记密码」获取新链接；若仍失败，可能需要管理员在 Supabase 配置站点地址。");
