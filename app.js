@@ -2803,12 +2803,18 @@ function ensureExplain(q) {
           </div>
           <div class="login-field">
             <label for="loginPwd">密码</label>
-            <input id="loginPwd" type="password" placeholder="至少6位" autocomplete="${mode==='register'?'new-password':'current-password'}" />
+            <div class="pwd-wrap">
+              <input id="loginPwd" type="password" placeholder="至少6位" autocomplete="${mode==='register'?'new-password':'current-password'}" />
+              <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="loginPwd" aria-label="显示密码">显示</button>
+            </div>
           </div>
           ${mode==='register'?`
           <div class="login-field">
             <label for="loginPwd2">确认密码</label>
-            <input id="loginPwd2" type="password" placeholder="再输入一次密码" autocomplete="new-password" />
+            <div class="pwd-wrap">
+              <input id="loginPwd2" type="password" placeholder="再输入一次密码" autocomplete="new-password" />
+              <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="loginPwd2" aria-label="显示密码">显示</button>
+            </div>
           </div>`:''}
           <button type="button" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" class="login-msg"></div>
@@ -4602,6 +4608,14 @@ function formulaFilter() {
     } else if (act === "export-print") {
       // P2-1：调浏览器打印，可另存为 PDF
       window.print();
+    } else if (act === "toggle-pwd") {
+      var tp = document.getElementById(t.getAttribute("data-target"));
+      if (tp) {
+        var show = tp.type === "password";
+        tp.type = show ? "text" : "password";
+        t.textContent = show ? "隐藏" : "显示";
+        t.setAttribute("aria-label", show ? "隐藏密码" : "显示密码");
+      }
     } else if (act === "switch-login") {
       state.loginMode = t.getAttribute("data-mode");
       render();
@@ -4623,6 +4637,7 @@ function formulaFilter() {
         }
         clearLoginFails();
         state.user = r.data.user;
+        try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
         stopRealtime();
         go("home"); render();
         pullAndMerge().then(subscribeRealtime);
@@ -4662,6 +4677,7 @@ function formulaFilter() {
             return;
           }
           state.user = r2.data.user;
+          try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
           stopRealtime();
           msg2.textContent = "注册成功，正在进入...";
           go("home"); render();
@@ -4703,6 +4719,7 @@ function formulaFilter() {
       }
     } else if (act === "guest") {
       state.user = { isGuest: true };
+      try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
       go("home"); render();
     } else if (act === "set-nick") {
       const cur = load("gxzsb.nick", "专升本备考人");
@@ -4755,6 +4772,7 @@ function formulaFilter() {
       stopRealtime();
       if (sb) sb.auth.signOut();
       state.user = null;
+      try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
       // 退出登录 ≠ 清数据：保留本机学习记录，仅回登录页并隐藏侧栏/底栏
       hideNav();
       go("login"); render();
@@ -5078,6 +5096,19 @@ function formulaFilter() {
     document.addEventListener(ev, resetIdleTimer, { passive: true });
   });
   resetIdleTimer();
+  // 登录/注册表单：在邮箱或密码框按回车，等价于点击提交按钮
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var el = e.target;
+    if (el && el.id && /^login(Email|Pwd|Pwd2)$/.test(el.id)) {
+      var btn = document.querySelector(".login-submit");
+      if (btn) { e.preventDefault(); btn.click(); }
+    }
+  });
+  // 恢复游客模式：曾选择“先逛逛”的用户，刷新后仍保持游客，不再被弹回登录页
+  var _guestFlag = false;
+  try { _guestFlag = localStorage.getItem("gxzsb.guest") === "1"; } catch (e) {}
+  if (_guestFlag) state.user = { isGuest: true };
   // 恢复Supabase session
   if (sb) {
     sb.auth.getSession().then(function(res) {
@@ -5085,6 +5116,8 @@ function formulaFilter() {
       if (res.data.session) {
         state.user = res.data.session.user;
         pullAndMerge().then(subscribeRealtime);
+      } else if (!_guestFlag) {
+        state.user = null;
       }
       render();
       resetIdleTimer();

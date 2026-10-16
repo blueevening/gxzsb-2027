@@ -1,5 +1,5 @@
-/* gxzsb sw v49 — 网络优先，每次打开都是最新版，失败回退缓存 */
-const CACHE = "gxzsb-network-first-v49";
+/* gxzsb sw v50 — 网络优先，每次打开都是最新版，失败回退缓存 */
+const CACHE = "gxzsb-network-first-v50";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {

@@ -1687,6 +1687,14 @@ sup.math-sup .frac .den { padding-top: 1px; }
   border-color: #2D5BFF;
   box-shadow: 0 0 0 3px rgba(45,91,255,.18);
 }
+.pwd-wrap { position: relative; }
+.pwd-wrap input { width: 100%; padding-right: 58px; }
+.pwd-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: none; background: transparent; color: #2D5BFF;
+  font-size: 13px; padding: 8px 10px; min-height: 36px; cursor: pointer; line-height: 1;
+}
+.pwd-toggle:active { opacity: .6; }
 .login-submit {
   width: 100%;
   padding: 14px;
