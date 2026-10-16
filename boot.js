@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "457";          // 与 index.html 的版本号保持一致
+  var V = "458";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -199,8 +199,11 @@
   function shell() {
     document.body.classList.add("boot-loading");
     var app = $("app");
+    var isRecovery = /(access_token|type=recovery|refresh_token|[?&]code=)/.test(location.hash + location.search);
     if (app) {
-      if (isLoggedIn()) {
+      if (isRecovery) {
+        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">正在验证重置链接…</div><div class="sub">链接有效即可设置新密码</div></div></div>';
+      } else if (isLoggedIn()) {
         app.innerHTML = '<div class="boot" style="padding-top:40vh;text-align:center;opacity:.5">⟳</div>';
       } else {
         app.innerHTML = loginShellHtml();
