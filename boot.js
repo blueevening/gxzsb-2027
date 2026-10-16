@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "452";          // 与 index.html 的版本号保持一致
+  var V = "453";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -59,6 +59,23 @@
   window.isSubjectBankLoaded = function(subject) {
     return !!_loadedSubjectBanks[subject];
   };
+
+  /* 模拟题试卷题库（mock-bank.js）按需加载：点专项/模拟卷时才下载 */
+  var _mockLoaded = false;
+  window.loadMockBank = function() {
+    return new Promise(function (resolve, reject) {
+      if (_mockLoaded) { resolve(); return; }
+      var s = document.createElement("script");
+      s.src = "mock-bank.js?v=" + V;
+      s.onload = function () {
+        if (window.MOCK_BANK) { _mockLoaded = true; resolve(); }
+        else { reject(new Error("模拟题库校验失败")); }
+      };
+      s.onerror = function () { reject(new Error("模拟题库加载失败")); };
+      document.head.appendChild(s);
+    });
+  };
+  window.isMockBankLoaded = function () { return _mockLoaded; };
 
   function $(id) { return document.getElementById(id); }
 

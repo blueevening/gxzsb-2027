@@ -1291,6 +1291,34 @@
   function objSubLabel(q) {
     return isSubjective(q) ? "主观题" : "客观题";
   }
+  function mockSectionHtml() {
+    const cats = [
+      { tag: "数学专项", short: "数学专项", icon: "数", color: "#3B82F6", fallback: 99 },
+      { tag: "英语专项", short: "英语专项", icon: "英", color: "#8B5CF6", fallback: 400 }
+    ];
+    let counts = {};
+    try {
+      const mb = window.MOCK_BANK;
+      if (mb && mb.meta && mb.meta.categories) counts = mb.meta.categories["专项练习"] || {};
+    } catch (e) {}
+    return (
+      '<div class="section-title">模拟题 · 专项练习（独立题库）</div>' +
+      cats.map(function (c) {
+        const n = counts[c.tag] != null ? counts[c.tag] : c.fallback;
+        return (
+          '<button class="bank-subject" data-act="mock-practice" data-name="' + attr(c.tag) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%">' +
+          '<div style="width:40px;height:40px;border-radius:10px;background:' + c.color + '20;color:' + c.color + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">' + c.icon + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:15px;font-weight:600">' + c.short + '</div>' +
+          '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + n + ' 题 · 点击开始顺序练习</div>' +
+          '</div>' +
+          '<div style="font-size:18px;color:var(--text-sub)">›</div>' +
+          '</button>'
+        );
+      }).join("")
+    );
+  }
+
   function viewBank() {
     setTitle("题库", true);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
@@ -1329,7 +1357,7 @@
             );
           }).join("")
         );
-      }).join("")
+      }).join("") + mockSectionHtml()
     );
   }
 
@@ -1421,7 +1449,8 @@
 
   /* ========== 答题 ========== */
   function startSession(opts) {
-    let pool = Q.slice();
+    let pool = opts.pool ? opts.pool.slice() : Q.slice();
+    if (!opts.pool) {
     if (opts.subject) pool = pool.filter((q) => q.subject === opts.subject);
     if (opts.chapter) pool = pool.filter((q) => q.chapter === opts.chapter);
     if (opts.point) pool = pool.filter((q) => q.knowledgePoint === opts.point);
@@ -1440,6 +1469,7 @@
         return !w.mastered && (w.due || 0) <= Date.now();
       });
       pool = pool.filter((q) => dueIds.includes(q.id));
+    }
     }
     // ordered：顺序练习按题库录入顺序稳定取前 N；显式 ids 时保持给定顺序，不再打乱
     if (opts.ids) {
@@ -1482,6 +1512,42 @@
     saveSession();
     go("practice");
     render();
+  }
+
+  /* ========== 模拟题试卷题库（mock-bank）========== */
+  function buildMockQuestions(tag) {
+    const mb = window.MOCK_BANK;
+    if (!mb || !mb.questions) return [];
+    const list = tag ? mb.questions.filter((q) => q.tag === tag) : mb.questions;
+    return list.map((q, qi) => {
+      const letter = q.answer || "";
+      const ai = letter.charCodeAt(0) - 65;
+      const ansText = ai >= 0 && ai < (q.options || []).length ? q.options[ai] : letter;
+      return {
+        ...q,
+        _ord: qi,
+        module: "mock",
+        subject: q.tag || "模拟题",
+        chapter: q.tag || "模拟题",
+        knowledgePoint: q.section || q.tag || "模拟题",
+        answer: ansText,
+        answerLetter: letter,
+        difficulty: q.difficulty || 1,
+        difficultyLabel: q.difficultyLabel || "基础",
+        typeLabel: q.typeLabel || (q.type === "single" ? "单选" : "填空"),
+        steps: q.steps || [],
+        _mock: true,
+      };
+    });
+  }
+  function startMockPractice(tag) {
+    window.loadMockBank().then(function () {
+      const pool = buildMockQuestions(tag);
+      if (!pool.length) { alert("该专项暂无题目"); return; }
+      startSession({ pool: pool, ordered: true, title: tag, results: {} });
+    }).catch(function () {
+      alert("模拟题库加载失败，请检查网络后重试");
+    });
   }
 
   function saveSession() {
@@ -3678,6 +3744,7 @@ function formulaFilter() {
       startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
     }
     else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
+    else if (act === "mock-practice") startMockPractice(t.getAttribute("data-name"));
     else if (act === "chapter") startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习" });
     else if (act === "seq-practice") {
       var subjName = t.getAttribute("data-name");
