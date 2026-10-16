@@ -520,7 +520,7 @@
     return true;
   }
 
-  function toastLite(msg) {
+  function toastLite(msg, ms) {
     try {
       var el = document.getElementById("qaToast");
       if (!el) {
@@ -533,9 +533,11 @@
       el.textContent = String(msg || "");
       el.classList.add("is-on");
       clearTimeout(el._t);
-      el._t = setTimeout(function () { el.classList.remove("is-on"); }, 2800);
+      el._t = setTimeout(function () { el.classList.remove("is-on"); }, ms || 2800);
     } catch (e) {}
   }
+  /* toast 别名：兼容带时长参数的调用（部分历史代码调用 toast 而非 toastLite） */
+  function toast(msg, ms) { toastLite(msg, ms); }
   function fallbackCopy(txt) {
     try {
       const ta = document.createElement("textarea");
@@ -2677,6 +2679,13 @@ function ensureExplain(q) {
     const sc = subjOf(cur);
     const isEnLang = cur === "英语";
     const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
+    // 公式正文：多个公式（；/;分隔）各自独占一行，单个公式居中
+    const bodyHtml = function (f) {
+      const raw = String(f == null ? "" : f);
+      const parts = raw.split(/[；;]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (parts.length <= 1) return '<div class="f-single">' + ft(raw) + "</div>";
+      return parts.map(function (l) { return '<div class="f-line">' + ft(l) + "</div>"; }).join("");
+    };
     return `
       <div class="formula-page">
       <div class="seg-top">
@@ -2721,12 +2730,19 @@ function ensureExplain(q) {
                       ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
                       <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
                     </div>
-                    <div class="f-body">${ft(it.formula)}</div>
+                    <div class="f-body">${bodyHtml(it.formula)}</div>
                     ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><div class="f-txt">${ft(it.plain)}</div></div>` : ""}
                     <div class="f-row"><span class="f-tag">怎么用</span><div class="f-txt">${ft(it.use)}</div></div>
-                    <div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>
-                    ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
-                    ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}
+                    ${it.work && it.work.length ? `
+                      <div class="f-example">
+                        <div class="f-example-h"><span class="f-example-badge">例题详解</span></div>
+                        <div class="f-example-q">${ft(it.example)}</div>
+                        <ol class="f-example-work">${it.work.map((w) => `<li>${ft(w)}</li>`).join("")}</ol>
+                        ${it.answer ? `<div class="f-example-a"><span>答案</span><b>${ft(it.answer)}</b></div>` : ""}
+                      </div>` : `
+                      ${it.example ? `<div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>` : ""}
+                      ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
+                      ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}`}
                     ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><div class="f-txt">${ft(it.tip)}</div></div>` : ""}
                     <div class="f-row"><span class="f-tag bad">易错</span><div class="f-txt">${ft(it.wrong)}</div></div>
                     <div class="f-actions">
@@ -3007,7 +3023,16 @@ function formulaFilter() {
       return "@@KF" + (keep.length - 1) + "@@";
     });
     function isTok(ch) {
-      return /[A-Za-z0-9^.|]/.test(ch) || (ch && ch.charCodeAt(0) > 127);
+      if (/[A-Za-z0-9^.|]/.test(ch)) return true;
+      if (ch) {
+        const code = ch.charCodeAt(0);
+        if (code > 127) {
+          // 全角/CJK标点（逗号、分号、冒号等）作为分隔符，不算公式 token
+          if ((code >= 0xff00 && code <= 0xffef) || (code >= 0x3000 && code <= 0x303f)) return false;
+          return true;
+        }
+      }
+      return false;
     }
     function rightEnd(s, i) {
       while (i < s.length && /\s/.test(s[i])) i++;
@@ -3069,11 +3094,13 @@ function formulaFilter() {
             // 含中文或 □△○● 等占位符时不自动转上下分式（占位符排版会很怪）
             const hasCJK = /[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef\u25a0-\u25ff\u2600-\u27bf]/.test(A + B);
             const pureWords = /^[A-Za-z]+$/.test(A) && /^[A-Za-z]+$/.test(B);
+            // 倒数关系：1/csc、1/sec、1/cot 等（数字/纯字母函数名）保持横排更清晰
+            const reciprocal = /^[0-9]+$/.test(A) && /^[A-Za-z]+$/.test(B);
             if (hasCJK) { i++; continue; }
             if (/y'/.test(s0.slice(Math.max(0, L - 2), R + 2)) && /y'\(/.test(s0.slice(L, R))) {
               /* fallthrough */
             }
-            if (A && B && !pureWords && A.indexOf("@@") < 0 && B.indexOf("@@") < 0) {
+            if (A && B && !pureWords && !reciprocal && A.indexOf("@@") < 0 && B.indexOf("@@") < 0) {
               let pre = "";
               const pm = A.match(/^(lim|LIM)\s+/);
               if (pm) { pre = pm[0]; A = A.slice(pm[0].length).trim(); }
@@ -3166,6 +3193,15 @@ function formulaFilter() {
           <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button">
             复习单词 · ${dueReview.length} 个到期
           </button>
+          <button class="btn btn-ghost btn-block" data-nav="word-list" type="button">
+            浏览全部词汇 A-Z
+          </button>
+        </div>
+        <div class="wb-goal-setting">
+          <span>每日新词目标：</span>
+          ${[10,20,30,50].map(function(n){
+            return `<button class="chip ${n===goal?'is-active':''}" data-act="wb-set-goal" data-v="${n}" type="button">${n}</button>`;
+          }).join("")}
         </div>
       </div>
 
@@ -3194,19 +3230,6 @@ function formulaFilter() {
       </div>
 
       ${wbExtraGridHtml()}
-
-      <div class="section-title">其他</div>
-      <div class="wb-actions">
-        <button class="btn btn-ghost btn-block" data-nav="word-list" type="button">
-          浏览全部词汇 A-Z
-        </button>
-      </div>
-      <div class="wb-goal-setting">
-        <span>每日新词目标：</span>
-        ${[10,20,30,50].map(function(n){
-          return `<button class="chip ${n===goal?'is-active':''}" data-act="wb-set-goal" data-v="${n}" type="button">${n}</button>`;
-        }).join("")}
-      </div>
     `;
   }
 

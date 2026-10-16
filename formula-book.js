@@ -18,6 +18,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "套用公式展开或分解。"
               ],
               "example": "分解 x³-8",
+              "work": [
+                  "把常数写成幂：8=2³，原式化为 x³−2³。",
+                  "识别为立方差 a³−b³，其中 a=x、b=2。",
+                  "代入公式 a³−b³=(a−b)(a²+ab+b²)，得 (x−2)(x²+2x+4)。"
+              ],
               "answer": "x³-2³=(x-2)(x²+2x+4)",
               "wrong": "立方和与立方差公式里的二次因式符号容易记反：立方和对应 a²-ab+b²，立方差对应 a²+ab+b²。",
               "tip": "口诀：立方和，中间减；立方差，中间加。"
@@ -33,13 +38,18 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "化简到最简形式。"
               ],
               "example": "化简 tan x · cos x",
+              "work": [
+                  "用商的关系把 tan x 化成 sin x/cos x。",
+                  "代入：(sin x/cos x)·cos x，cos x 约掉。",
+                  "得 sin x。"
+              ],
               "answer": "(sin x/cos x)·cos x = sin x",
               "wrong": "1+tan²=sec² 不是 1+tan²=sec（容易漏掉平方）。",
               "tip": "口诀：弦平方和为1，切方加1割方。"
           },
           {
               "name": "两角和差与二倍角公式",
-              "formula": "sin(α±β)=sinαcosβ±cosαsinβ；cos(α±β)=cosαcosβ∓sinαsinβ；tan(α±β)=(tanα±tanβ)/(1∓tanαtanβ)；二倍角：sin2α=2sinαcosα，cos2α=cos²α-sin²α=2cos²α-1=1-2sin²α，tan2α=2tanα/(1-tan²α)",
+              "formula": "sin(α±β)=sinαcosβ±cosαsinβ；cos(α±β)=cosαcosβ∓sinαsinβ；tan(α±β)=(tanα±tanβ)/(1∓tanαtanβ)；二倍角 sin2α=2sinαcosα；cos2α=cos²α-sin²α；cos2α=2cos²α-1；cos2α=1-2sin²α；tan2α=2tanα/(1-tan²α)",
               "plain": "把两个角的和差展开成单角，或者反过来。二倍角是和角公式的特例。",
               "use": "三角化简、积分中 sin²x 和 cos²x 的降幂、求极限。",
               "steps": [
@@ -48,6 +58,10 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "注意符号：cos 和角减、差角加。"
               ],
               "example": "用二倍角公式化简 sin x cos x",
+              "work": [
+                  "二倍角公式 sin2x=2 sin x cos x，两边除以 2。",
+                  "得 sin x cos x = (1/2) sin 2x。"
+              ],
               "answer": "sin x cos x = (1/2) sin 2x",
               "wrong": "cos(α+β) 中间是减号，cos(α-β) 中间是加号，容易和 sin 记混。",
               "tip": "口诀：正弦和差异号同，余弦和差异同号。"
@@ -63,6 +77,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "再逐项积分。"
               ],
               "example": "求 ∫cos²x dx",
+              "work": [
+                  "用降幂公式 cos²x=(1+cos2x)/2。",
+                  "原式 = (1/2)∫1 dx + (1/2)∫cos2x dx。",
+                  "∫cos2x dx = (1/2) sin2x，合并得 x/2 + sin2x/4 + C。"
+              ],
               "answer": "∫(1+cos2x)/2 dx = x/2 + sin2x/4 + C",
               "wrong": "降幂后积分时 cos2x 的系数 1/4 容易漏成 1/2。",
               "tip": "正弦平方降幂用减，余弦平方降幂用加。"
@@ -78,6 +97,10 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "注意 tan 在 90° 无定义。"
               ],
               "example": "sin(π/3) = ?",
+              "work": [
+                  "π/3 即 60°。",
+                  "查特殊角表：sin60°=√3/2。"
+              ],
               "answer": "√3/2",
               "wrong": "30° 和 60° 的 sin、cos 正好互换，别记反。",
               "tip": "口诀：一二三，三二一，三九二十七。"
@@ -93,6 +116,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "把 α 当锐角，看原角在第几象限，定正负。"
               ],
               "example": "sin(π+α) = ?",
+              "work": [
+                  "把 π+α 写成 k·π/2+α，k=2 为偶数，函数名不变。",
+                  "π+α 落在第三象限，正弦为负。",
+                  "得 sin(π+α)=−sin α。"
+              ],
               "answer": "-sin α（k=2偶数不变名，第三象限正弦为负）",
               "wrong": "变名之后又忘了定符号，或者符号定了但没看清象限。",
               "tip": "奇变偶不变，符号看象限。"
@@ -108,6 +136,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "写成单一正弦。"
               ],
               "example": "化简 sin x + cos x",
+              "work": [
+                  "对照 a sin x+b cos x，这里 a=1、b=1，提取 √(1²+1²)=√2。",
+                  "φ=arctan(b/a)=arctan1=π/4。",
+                  "写成 √2 sin(x+π/4)。"
+              ],
               "answer": "√2 sin(x+π/4)",
               "wrong": "φ 的定义可能是 tan φ=b/a 或 a/b，要看具体公式形式。",
               "tip": "系数平方和开根号，正切等于余比正。"
@@ -123,6 +156,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "注意系数 1/2 和 2。"
               ],
               "example": "sin3x cos x 化成和差",
+              "work": [
+                  "选积化和差公式 sinα cosβ=[sin(α+β)+sin(α−β)]/2，令 α=3x、β=x。",
+                  "代入：[sin(3x+x)+sin(3x−x)]/2。",
+                  "得 [sin4x+sin2x]/2。"
+              ],
               "answer": "[sin4x + sin2x]/2",
               "wrong": "积化和差的系数 1/2 容易漏。",
               "tip": "积化和差半系数，和差化积倍系数。"
@@ -138,6 +176,10 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "根式化成分数指数更方便。"
               ],
               "example": "化简 (a²)³ · a⁴",
+              "work": [
+                  "幂的幂：(a²)³=a^(2×3)=a⁶。",
+                  "同底相乘：a⁶·a⁴=a^(6+4)=a¹⁰。"
+              ],
               "answer": "a⁶ · a⁴ = a¹⁰",
               "wrong": "偶次根式开方结果要加绝对值，ⁿ√aⁿ=|a|（n偶）。",
               "tip": "同底乘加除减，幂幂相乘。"
@@ -153,6 +195,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "最后求值。"
               ],
               "example": "计算 log₂ 8 + log₂ 4",
+              "work": [
+                  "log₂8=3（因为 2³=8）。",
+                  "log₂4=2（因为 2²=4）。",
+                  "相加得 3+2=5。"
+              ],
               "answer": "3 + 2 = 5",
               "wrong": "log_a(MN) 不是 log_a M · log_a N，是相加。",
               "tip": "乘变加，除变减，幂变乘，换底倒。"
@@ -168,6 +215,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "代入 n。"
               ],
               "example": "1+2+...+100 = ?",
+              "work": [
+                  "这是等差数列，求和公式 S=n(n+1)/2。",
+                  "代入 n=100：100×101/2。",
+                  "得 5050。"
+              ],
               "answer": "100·101/2 = 5050",
               "wrong": "平方和公式分母是 6，不是 2。",
               "tip": "自然和二分之，平方和六分之，立方和平方。"
@@ -183,6 +235,11 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "大于取两边，小于取中间。"
               ],
               "example": "解 x²-5x+6>0",
+              "work": [
+                  "因式分解：x²−5x+6=(x−2)(x−3)。",
+                  "两根为 x=2、x=3。",
+                  "二次项系数为正，「>0 取两边」，得 x<2 或 x>3。"
+              ],
               "answer": "(x-2)(x-3)>0，x<2 或 x>3",
               "wrong": "a<0 时要先变号，否则解集方向反了。",
               "tip": "大于取两边，小于取中间。"
@@ -198,6 +255,10 @@ window.STUDY_DATA.FORMULA_BOOK = {
                   "代入数据计算。"
               ],
               "example": "半径为 r 的球体积",
+              "work": [
+                  "球的体积公式 V=(4/3)πr³。",
+                  "即 V=4πr³/3。"
+              ],
               "answer": "4πr³/3",
               "wrong": "球体积系数是 4/3，球表面积系数是 4，别搞混。",
               "tip": "球三锥四，圆柱是底乘高。"
