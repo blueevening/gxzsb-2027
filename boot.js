@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "453";          // 与 index.html 的版本号保持一致
+  var V = "454";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -76,6 +76,23 @@
     });
   };
   window.isMockBankLoaded = function () { return _mockLoaded; };
+
+  /* 英语拓展学习（english-extra.js）按需加载：短文/阅读/短语/写作/语法 */
+  var _extraLoaded = false;
+  window.loadEnglishExtra = function () {
+    return new Promise(function (resolve, reject) {
+      if (_extraLoaded) { resolve(); return; }
+      var s = document.createElement("script");
+      s.src = "english-extra.js?v=" + V;
+      s.onload = function () {
+        if (window.EN_EXTRA) { _extraLoaded = true; resolve(); }
+        else { reject(new Error("拓展数据校验失败")); }
+      };
+      s.onerror = function () { reject(new Error("拓展数据加载失败")); };
+      document.head.appendChild(s);
+    });
+  };
+  window.isEnglishExtraLoaded = function () { return _extraLoaded; };
 
   function $(id) { return document.getElementById(id); }
 

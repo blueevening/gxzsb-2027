@@ -1454,6 +1454,73 @@ sup.math-sup .frac .den { padding-top: 1px; }
   .wb-quiz-meaning { font-size: 18px; }
 }
 
+/* ========== 英语拓展学习（短文/阅读/写作/语法） ========== */
+.extra-hero { margin-bottom: 16px; }
+.extra-hero-title { font-size: 21px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.extra-hero-sub { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+
+.extra-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px; text-align: left; background: transparent;
+  border: none; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.extra-row:last-child { border-bottom: none; }
+.extra-row:active { background: var(--bg); }
+.extra-row-badge {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
+  background: var(--bg); color: var(--text-sub);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.extra-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.extra-row-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.extra-row-sub { font-size: 12px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.extra-row-arrow { color: var(--text-sub); font-size: 18px; flex-shrink: 0; }
+
+.essay-head { margin-bottom: 14px; }
+.essay-en-title { font-size: 20px; font-weight: 800; color: var(--text); }
+.essay-cn-title { font-size: 14px; color: var(--text-sub); margin: 4px 0 12px; }
+.essay-mode-switch { display: flex; gap: 8px; }
+
+.reading-passage-head {
+  width: 100%; padding: 12px 14px; text-align: left;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+
+.rs-block { margin-bottom: 10px; }
+.rs-label { font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; }
+.rs-item { font-size: 13.5px; line-height: 1.7; color: var(--text); padding-left: 12px; position: relative; margin-bottom: 3px; }
+.rs-item:before { content: "·"; position: absolute; left: 3px; }
+
+.rs-obj { background: var(--bg); border-radius: 9px; padding: 10px 12px; margin-bottom: 8px; }
+.rs-obj-t { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.rs-obj-d { font-size: 12.5px; line-height: 1.7; color: var(--text-sub); margin-bottom: 6px; }
+.rs-obj-form { font-size: 12.5px; font-family: var(--mono); color: var(--text); line-height: 1.6; padding-left: 10px; position: relative; }
+.rs-obj-form:before { content: "›"; position: absolute; left: 0; color: var(--text-sub); }
+.rs-obj-sig { font-size: 12px; color: var(--text-sub); margin-top: 6px; line-height: 1.6; }
+
+.phrase-item { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+.phrase-item:last-child { border-bottom: none; }
+.phrase-en { font-size: 14px; font-weight: 600; color: var(--text); }
+.phrase-cn { font-size: 13px; color: var(--text-sub); text-align: right; flex-shrink: 0; }
+
+.ws-group-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.ws-item { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: var(--bg); }
+.ws-en { font-size: 14px; line-height: 1.7; font-family: var(--mono); color: var(--text); white-space: pre-wrap; }
+.ws-cn { font-size: 12.5px; color: var(--text-sub); margin-top: 5px; line-height: 1.6; }
+
+.irr-group-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.irr-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); }
+.irr-row:last-child { border-bottom: none; }
+.irr-base { font-size: 14px; font-weight: 700; color: var(--text); }
+.irr-cn { font-size: 11.5px; color: var(--text-sub); font-weight: 400; margin-top: 2px; }
+.irr-forms { display: flex; gap: 6px; flex-shrink: 0; }
+.irr-forms span { font-size: 12.5px; padding: 3px 7px; border-radius: 6px; background: var(--bg); color: var(--text-sub); }
+
+.gr-item { font-size: 13.5px; line-height: 1.7; color: var(--text); padding-left: 12px; position: relative; margin-bottom: 5px; }
+.gr-item:before { content: "•"; position: absolute; left: 2px; color: var(--text-sub); }
+
 /* ========== 考点精讲 ========== */
 .kp-detail {
   padding: 16px;

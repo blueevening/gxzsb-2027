@@ -3109,6 +3109,31 @@ function formulaFilter() {
   }
 
   /* ========== 页面：背单词 ========== */
+  function wbExtraGridHtml() {
+    const entries = [
+      { key: "essays", ico: "📚", name: "40篇短文记单词", desc: "中英对照·语境记词" },
+      { key: "readings", ico: "📖", name: "阅读理解精练", desc: "5篇25题·带解析" },
+      { key: "reading-skills", ico: "🎯", name: "阅读解题技巧", desc: "主旨/细节/推理/词义" },
+      { key: "phrases", ico: "💬", name: "高频短语300", desc: "日常考纲必备" },
+      { key: "writing-sentences", ico: "📝", name: "写作高分句式", desc: "开头·中间·结尾" },
+      { key: "writing-transitions", ico: "🔗", name: "万能过渡句", desc: "30组中英对照" },
+      { key: "irregular", ico: "⚡", name: "不规则动词", desc: "过去式·过去分词" },
+      { key: "grammar", ico: "🧠", name: "语法思维导图", desc: "15大专题速览" },
+    ];
+    return (
+      '<div class="section-title">阅读 · 拓展学习</div>' +
+      '<div class="wb-mode-grid">' +
+      entries.map((e) =>
+        '<button class="wb-mode-card" data-act="extra-go" data-name="' + e.key + '" type="button">' +
+        '<div class="wb-mode-ico">' + e.ico + '</div>' +
+        '<div class="wb-mode-name">' + e.name + '</div>' +
+        '<div class="wb-mode-desc">' + e.desc + '</div>' +
+        '</button>'
+      ).join("") +
+      '</div>'
+    );
+  }
+
   function viewWords() {
     setTitle("英语核心词汇", false);
     var S = window.WORDS.getStats();
@@ -3168,13 +3193,14 @@ function formulaFilter() {
         </button>
       </div>
 
+      ${wbExtraGridHtml()}
+
       <div class="section-title">其他</div>
       <div class="wb-actions">
         <button class="btn btn-ghost btn-block" data-nav="word-list" type="button">
           浏览全部词汇 A-Z
         </button>
       </div>
-
       <div class="wb-goal-setting">
         <span>每日新词目标：</span>
         ${[10,20,30,50].map(function(n){
@@ -3433,6 +3459,321 @@ function formulaFilter() {
     `;
   }
 
+  /* ========== 英语拓展学习（english-extra）========== */
+  function loadingCard(name) {
+    return '<div class="card" style="padding:40px;text-align:center;color:var(--text-sub)">正在加载' + esc(name || "数据") + '…</div>';
+  }
+  function wrapExtra(title, sub, inner) {
+    return (
+      '<div class="extra-hero"><div class="extra-hero-title">' + esc(title) + '</div>' +
+      (sub ? '<div class="extra-hero-sub">' + esc(sub) + '</div>' : "") + '</div>' + inner
+    );
+  }
+  function viewExtraHome() {
+    setTimeout(function () { location.hash = "#words"; }, 0);
+    return "";
+  }
+  function openExtra(key) {
+    if (!window.loadEnglishExtra) { toast("加载器未就绪"); return; }
+    if (!window.isEnglishExtraLoaded()) toast("正在加载拓展资料…", 2500);
+    window.loadEnglishExtra().then(function () {
+      location.hash = "#extra/" + key;
+    }).catch(function () { toast("拓展资料加载失败，请刷新重试"); });
+  }
+  function viewExtra(key, sub) {
+    const E = window.EN_EXTRA;
+    if (!E) {
+      // 深链接直接进入时自动加载，加载完重渲染
+      if (window.loadEnglishExtra) {
+        window.loadEnglishExtra().then(function () { render(); })
+          .catch(function () { toast("拓展资料加载失败，请刷新重试"); });
+      }
+      return loadingCard("拓展资料");
+    }
+    if (key === "essays") return !sub ? viewEssayList() : viewEssay(parseInt(sub, 10));
+    if (key === "readings") return !sub ? viewReadingList() : viewReadingDo(sub);
+    if (key === "reading-skills") return viewReadingSkills();
+    if (key === "phrases") return viewPhrases();
+    if (key === "writing-sentences") return viewWritingSentences();
+    if (key === "writing-transitions") return viewWritingTransitions();
+    if (key === "irregular") return viewIrregular();
+    if (key === "grammar") return viewGrammar(sub ? parseInt(sub, 10) : -1);
+    return viewExtraHome();
+  }
+
+  /* 短文列表 */
+  function viewEssayList() {
+    setTitle("40篇短文记单词", true);
+    const E = window.EN_EXTRA;
+    return wrapExtra(
+      "40篇短文记单词",
+      "40 篇地道短文 · 中英对照 · 在语境中搞定考纲词汇",
+      '<div class="card" style="padding:6px">' +
+      E.essays.map(function (e) {
+        return '<button class="extra-row" data-act="extra-go" data-name="essays/' + e.num + '" type="button">' +
+          '<span class="extra-row-badge">' + e.num + '</span>' +
+          '<span class="extra-row-main"><span class="extra-row-title">' + esc(e.enTitle) + '</span>' +
+          '<span class="extra-row-sub">' + esc(e.cnTitle) + '</span></span>' +
+          '<span class="extra-row-arrow">›</span></button>';
+      }).join("") +
+      '</div>'
+    );
+  }
+  /* 单篇短文 */
+  function viewEssay(num) {
+    setTitle("短文 " + num, true);
+    const E = window.EN_EXTRA;
+    const e = E.essays.find(function (x) { return x.num === num; });
+    if (!e) return wrapExtra("未找到", '<button class="btn btn-primary btn-block" data-act="extra-go" data-name="essays" type="button">返回列表</button>');
+    if (!state.extra) state.extra = {};
+    const mode = state.extra.essayMode || "both";
+    function paras(t) {
+      return String(t).split(/\n{1,}/).map(function (p) {
+        p = p.trim();
+        return p ? '<p style="margin:0 0 12px;line-height:1.85;font-size:15px">' + esc(p) + '</p>' : "";
+      }).join("");
+    }
+    let body = "";
+    if (mode === "en") body = paras(e.enBody);
+    else if (mode === "cn") body = paras(e.cnBody);
+    else body = paras(e.enBody) + '<div style="border-top:1px dashed var(--border);margin:18px 0"></div>' + paras(e.cnBody);
+    const prev = E.essays.find(function (x) { return x.num === num - 1; });
+    const next = E.essays.find(function (x) { return x.num === num + 1; });
+    return (
+      '<div class="essay-head">' +
+      '<div class="essay-en-title">' + esc(e.enTitle) + '</div>' +
+      '<div class="essay-cn-title">' + esc(e.cnTitle) + '</div>' +
+      '<div class="essay-mode-switch">' +
+      [["en", "英文"], ["both", "对照"], ["cn", "中文"]].map(function (m) {
+        return '<button class="chip ' + (mode === m[0] ? "is-active" : "") + '" data-act="essay-mode" data-v="' + m[0] + '" type="button">' + m[1] + '</button>';
+      }).join("") +
+      '</div></div>' +
+      '<div class="card" style="padding:16px">' + body + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px">' +
+      (prev ? '<button class="btn btn-ghost" style="flex:1" data-act="extra-go" data-name="essays/' + prev.num + '" type="button">‹ 上一篇</button>' : '<span style="flex:1"></span>') +
+      '<button class="btn btn-ghost" data-act="extra-go" data-name="essays" type="button">目录</button>' +
+      (next ? '<button class="btn btn-ghost" style="flex:1" data-act="extra-go" data-name="essays/' + next.num + '" type="button">下一篇 ›</button>' : '<span style="flex:1"></span>') +
+      '</div>'
+    );
+  }
+
+  /* 阅读理解列表 */
+  function viewReadingList() {
+    setTitle("阅读理解精练", true);
+    const E = window.EN_EXTRA;
+    return wrapExtra(
+      "阅读理解精练",
+      "5 篇 · 25 道客观题 · 先读文章再答题，逐题配解析",
+      E.readings.map(function (r) {
+        const first = r.passage.replace(/\s+/g, " ").slice(0, 90);
+        return '<button class="extra-row" data-act="extra-go" data-name="readings/' + r.id + '" type="button">' +
+          '<span class="extra-row-badge" style="background:#3b82f620;color:#3b82f6">📖</span>' +
+          '<span class="extra-row-main"><span class="extra-row-title">' + esc(r.task) + ' · ' + r.questions.length + ' 题</span>' +
+          '<span class="extra-row-sub">' + esc(first) + '…</span></span>' +
+          '<span class="extra-row-arrow">›</span></button>';
+      }).join("")
+    );
+  }
+  /* 阅读理解做题（独立状态机） */
+  function viewReadingDo(id) {
+    setTitle("阅读理解", true);
+    const E = window.EN_EXTRA;
+    const r = E.readings.find(function (x) { return x.id === id; });
+    if (!r) return wrapExtra("未找到", '<button class="btn btn-primary btn-block" data-act="extra-go" data-name="readings" type="button">返回列表</button>');
+    if (!state.reading || state.reading.id !== id) {
+      state.reading = { id: id, i: 0, sel: {}, results: {}, submitted: {}, showPassage: true };
+    }
+    const R = state.reading;
+    const q = r.questions[R.i];
+    const letter = q.answer;
+    const ai = letter.charCodeAt(0) - 65;
+    const ansText = q.options[ai];
+    const done = !!R.submitted[q.id];
+    const curSel = R.sel[q.id];
+    return (
+      '<div class="reading-passage card" style="padding:0;overflow:hidden;margin-bottom:12px">' +
+      '<button class="reading-passage-head" data-act="reading-toggle" type="button">📄 ' + esc(r.task) + ' · 文章（点击' + (R.showPassage ? "收起" : "展开") + '）</button>' +
+      (R.showPassage ? '<div style="padding:14px;max-height:260px;overflow-y:auto;line-height:1.8;font-size:14px;white-space:pre-wrap;color:var(--text)">' + esc(r.passage) + '</div>' : "") +
+      '</div>' +
+      '<div class="card" style="padding:16px">' +
+      '<div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px">第 ' + (R.i + 1) + ' / ' + r.questions.length + ' 题</div>' +
+      '<div style="font-size:15px;font-weight:600;line-height:1.6;margin-bottom:14px">' + esc(q.stem) + '</div>' +
+      q.options.map(function (opt, idx) {
+        let cls = "opt";
+        if (!done && curSel === opt) cls += " is-selected";
+        if (done) {
+          if (opt === ansText) cls += " is-correct";
+          else if (curSel === opt) cls += " is-wrong";
+        }
+        return '<button class="' + cls + '" data-act="reading-pick" data-opt="' + attr(opt) + '" type="button" ' + (done ? "disabled" : "") + '>' +
+          '<span class="key">' + "ABCD"[idx] + '</span><span>' + esc(opt) + '</span>' +
+          (done ? (opt === ansText ? '<span class="mark">✓</span>' : curSel === opt ? '<span class="mark">✕</span>' : "") : "") +
+          '</button>';
+      }).join("") +
+      (done ? '<div class="reading-result" style="margin-top:12px">' +
+        (R.results[q.id] ? '<div style="color:var(--success);font-weight:700;margin-bottom:8px">✓ 回答正确</div>' : '<div style="color:var(--danger);font-weight:700;margin-bottom:8px">✕ 回答错误</div>') +
+        '<div style="font-size:13px;color:var(--text-sub);margin-bottom:6px">正确答案：<b style="color:var(--text)">' + letter + '. ' + esc(ansText) + '</b></div>' +
+        '<details class="reading-analysis" style="margin-top:8px"><summary style="font-size:13px;font-weight:600;color:var(--text-sub)">查看解析</summary>' +
+        '<div style="margin-top:10px;line-height:1.8;font-size:14px;white-space:pre-wrap">' + esc(q.analysis) + '</div></details>' +
+        '</div>'
+        : '<button class="btn btn-primary btn-block" style="margin-top:14px" data-act="reading-submit" type="button">提交本题</button>') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px">' +
+      '<button class="btn btn-ghost" style="flex:1" data-act="reading-nav" data-v="prev" ' + (R.i === 0 ? "disabled" : "") + ' type="button">上一题</button>' +
+      '<button class="btn btn-ghost" data-act="extra-go" data-name="readings" type="button">篇目</button>' +
+      '<button class="btn btn-ghost" style="flex:1" data-act="reading-nav" data-v="next" ' + (R.i === r.questions.length - 1 ? "disabled" : "") + ' type="button">下一题</button>' +
+      '</div>'
+    );
+  }
+
+  /* 阅读技巧 */
+  function viewReadingSkills() {
+    setTitle("阅读解题技巧", true);
+    const E = window.EN_EXTRA;
+    // 兼容字符串与对象（{t,d,forms/signal}）
+    function rsList(arr) {
+      return (arr || []).map(function (o) {
+        if (typeof o === "string") return '<div class="rs-item">' + esc(o) + '</div>';
+        let h = '<div class="rs-obj"><div class="rs-obj-t">' + esc(o.t || "") + '</div>';
+        if (o.d) h += '<div class="rs-obj-d">' + esc(o.d) + '</div>';
+        if (o.forms && o.forms.length) h += o.forms.map(function (f) { return '<div class="rs-obj-form">' + esc(f) + '</div>'; }).join("");
+        if (o.signal) h += '<div class="rs-obj-sig">信号词：' + esc(o.signal) + '</div>';
+        h += '</div>';
+        return h;
+      }).join("");
+    }
+    function block(label, arr, color) {
+      if (!arr || !arr.length) return "";
+      return '<div class="rs-block"><span class="rs-label" style="color:' + color + '">' + label + '</span>' + rsList(arr) + '</div>';
+    }
+    const cards = E.readingSkills.map(function (s) {
+      return '<div class="card" style="padding:16px;margin-bottom:10px">' +
+        '<div style="font-size:16px;font-weight:700;margin-bottom:6px">' + esc(s.name) + '</div>' +
+        '<div style="font-size:13px;color:var(--text-sub);line-height:1.7;margin-bottom:10px">' + esc(s.key) + '</div>' +
+        block("常见命题形式", s.types, "#3b82f6") +
+        (s.method ? '<div class="rs-block"><span class="rs-label" style="color:#10b981">解题方法</span>' +
+          '<div style="line-height:1.85;font-size:14px;white-space:pre-wrap">' + esc(s.method) + '</div></div>' : "") +
+        block("常考位置 / 定位", s.positions, "#8b5cf6") +
+        block("易错陷阱", s.traps, "#ef4444") +
+        '</div>';
+    }).join("");
+    return wrapExtra("阅读解题技巧", "四大题型 · 识别命题特征 · 掌握方法与陷阱", cards);
+  }
+
+  /* 高频短语 */
+  function viewPhrases() {
+    setTitle("高频短语", true);
+    const E = window.EN_EXTRA;
+    return wrapExtra(
+      "高频短语 300",
+      "日常会话与考纲高频 · 输入关键词可筛选",
+      '<div class="search-box" style="margin-bottom:10px">' +
+      '<input id="phraseSearch" type="search" placeholder="搜索英文或中文…" autocomplete="off" /></div>' +
+      '<div class="card" style="padding:6px" id="phraseList">' +
+      E.phrases.map(function (p) {
+        return '<div class="phrase-item"><span class="phrase-en">' + esc(p.en) + '</span><span class="phrase-cn">' + esc(p.cn) + '</span></div>';
+      }).join("") +
+      '</div>'
+    );
+  }
+
+  /* 写作高分句式 */
+  function viewWritingSentences() {
+    setTitle("写作高分句式", true);
+    const E = window.EN_EXTRA;
+    const groups = [
+      ["opening", "开头句", "#3b82f6"],
+      ["middle", "中间展开句", "#10b981"],
+      ["ending", "结尾句", "#f59e0b"],
+      ["killers", "加分绝杀句", "#8b5cf6"]
+    ];
+    const body = groups.map(function (g) {
+      const list = E.writing.sentences[g[0]] || [];
+      return '<div style="margin-bottom:16px">' +
+        '<div class="ws-group-title" style="color:' + g[2] + '">' + g[1] + ' · ' + list.length + ' 句</div>' +
+        list.map(function (x) {
+          return '<div class="ws-item"><div class="ws-en">' + esc(x.en) + '</div><div class="ws-cn">' + esc(x.cn) + '</div></div>';
+        }).join("") + '</div>';
+    }).join("");
+    return wrapExtra("写作高分句式", "开头 · 中间 · 结尾模板，直接套用", '<div class="card" style="padding:16px">' + body + '</div>');
+  }
+
+  /* 万能过渡句 */
+  function viewWritingTransitions() {
+    setTitle("万能过渡句", true);
+    const E = window.EN_EXTRA;
+    const body = E.writing.transitions.map(function (t, i) {
+      return '<div class="card" style="padding:14px;margin-bottom:10px">' +
+        '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + (i + 1) + '. ' + esc(t.cn) + '</div>' +
+        '<div style="margin-bottom:8px">' + t.ex.map(function (x) {
+          return '<div class="ws-en" style="margin-bottom:4px">' + esc(x) + '</div>';
+        }).join("") + '</div>' +
+        (t.ce ? '<div class="ws-cn" style="margin-bottom:4px">例：' + esc(t.ce) + '</div>' : "") +
+        (t.ee ? '<div class="ws-en" style="color:var(--text-sub)">' + esc(t.ee) + '</div>' : "") +
+        '</div>';
+    }).join("");
+    return wrapExtra("万能过渡句", "30 组过渡表达 · 中英对照 · 让文章更连贯", body);
+  }
+
+  /* 不规则动词 */
+  function viewIrregular() {
+    setTitle("不规则动词", true);
+    const E = window.EN_EXTRA;
+    const types = {};
+    E.irregular.forEach(function (x) {
+      const k = x.type || "ABC";
+      (types[k] = types[k] || []).push(x);
+    });
+    const body = Object.keys(types).map(function (k) {
+      return '<div class="irr-group-title">变形类型 ' + esc(k) + ' · ' + types[k].length + ' 个</div>' +
+        '<div class="card" style="padding:6px;margin-bottom:14px">' +
+        types[k].map(function (x) {
+          return '<div class="irr-row">' +
+            '<div class="irr-base">' + esc(x.base) + '<div class="irr-cn">' + esc(x.cn) + '</div></div>' +
+            '<div class="irr-forms">' +
+            '<span>' + esc(x.past) + '</span>' +
+            '<span>' + esc(x.pp) + '</span>' +
+            (x.ing ? '<span>' + esc(x.ing) + '</span>' : "") +
+            '</div></div>';
+        }).join("") + '</div>';
+    }).join("");
+    return wrapExtra("不规则动词 114", "原形 · 过去式 · 过去分词（· 现在分词）", body);
+  }
+
+  /* 语法思维导图 */
+  function viewGrammar(idx) {
+    setTitle("语法思维导图", true);
+    const E = window.EN_EXTRA;
+    if (idx === -1 || isNaN(idx)) {
+      return wrapExtra(
+        "语法思维导图",
+        "15 大语法专题 · 点进去看知识要点",
+        '<div class="card" style="padding:6px">' +
+        E.grammar.map(function (g, i) {
+          return '<button class="extra-row" data-act="extra-go" data-name="grammar/' + i + '" type="button">' +
+            '<span class="extra-row-badge" style="background:#8b5cf620;color:#8b5cf6">🧠</span>' +
+            '<span class="extra-row-main"><span class="extra-row-title">' + esc(g.name) + '</span>' +
+            '<span class="extra-row-sub">' + g.groups.length + ' 个知识模块</span></span>' +
+            '<span class="extra-row-arrow">›</span></button>';
+        }).join("") + '</div>'
+      );
+    }
+    const g = E.grammar[idx];
+    if (!g) return wrapExtra("未找到", '<button class="btn btn-primary btn-block" data-act="extra-go" data-name="grammar" type="button">返回列表</button>');
+    const body = g.groups.map(function (gr) {
+      return '<div class="card" style="padding:14px;margin-bottom:10px">' +
+        '<div style="font-size:15px;font-weight:700;margin-bottom:10px">' + esc(gr.title) + '</div>' +
+        gr.items.map(function (it) { return '<div class="gr-item">' + esc(it) + '</div>'; }).join("") +
+        '</div>';
+    }).join("");
+    return (
+      '<div class="extra-hero"><div class="extra-hero-title">' + esc(g.name) + '</div>' +
+      '<div class="extra-hero-sub">' + g.groups.length + ' 个知识模块</div></div>' +
+      body +
+      '<button class="btn btn-ghost btn-block" data-act="extra-go" data-name="grammar" type="button">返回语法列表</button>'
+    );
+  }
+
   /* ========== 2027 官方考纲 ========== */
   function viewSyllabus(subjId) {
     const S = window.SYLLABUS;
@@ -3544,6 +3885,7 @@ function formulaFilter() {
     else if (route === "word-review") app.innerHTML = viewWordReview();
     else if (route === "word-list") app.innerHTML = viewWordList(params[0] || "");
     else if (route === "word-quiz") app.innerHTML = viewWordQuiz();
+    else if (route === "extra") app.innerHTML = viewExtra(params[0] ? decodeURIComponent(params[0]) : "", params[1] ? decodeURIComponent(params[1]) : "");
     else if (route === "kp-detail") app.innerHTML = viewKpDetail(params[0] || "");
     else {
       state.route = "home";
@@ -3599,6 +3941,17 @@ function formulaFilter() {
           }
         };
       }
+    }
+    // 短语搜索：实时筛选，不重渲染
+    var phraseInp = document.getElementById("phraseSearch");
+    if (phraseInp) {
+      phraseInp.addEventListener("input", function () {
+        var kw = phraseInp.value.trim().toLowerCase();
+        var items = document.querySelectorAll("#phraseList .phrase-item");
+        items.forEach(function (it) {
+          it.style.display = (!kw || it.textContent.toLowerCase().indexOf(kw) >= 0) ? "" : "none";
+        });
+      });
     }
   }
 
@@ -3745,6 +4098,42 @@ function formulaFilter() {
     }
     else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
     else if (act === "mock-practice") startMockPractice(t.getAttribute("data-name"));
+    else if (act === "extra-go") openExtra(t.getAttribute("data-name"));
+    else if (act === "essay-mode") {
+      state.extra = state.extra || {};
+      state.extra.essayMode = t.getAttribute("data-v");
+      render();
+    }
+    else if (act === "reading-toggle") {
+      if (state.reading) state.reading.showPassage = !state.reading.showPassage;
+      render();
+    }
+    else if (act === "reading-pick") {
+      const R = state.reading;
+      const r = window.EN_EXTRA.readings.find((x) => x.id === R.id);
+      const q = r.questions[R.i];
+      R.sel[q.id] = t.getAttribute("data-opt");
+      render();
+    }
+    else if (act === "reading-submit") {
+      const R = state.reading;
+      const r = window.EN_EXTRA.readings.find((x) => x.id === R.id);
+      const q = r.questions[R.i];
+      const ai = q.answer.charCodeAt(0) - 65;
+      const ansText = q.options[ai];
+      const ok = R.sel[q.id] === ansText;
+      R.submitted[q.id] = true;
+      R.results[q.id] = ok;
+      render();
+    }
+    else if (act === "reading-nav") {
+      const v = t.getAttribute("data-v");
+      const R = state.reading;
+      const r = window.EN_EXTRA.readings.find((x) => x.id === R.id);
+      if (v === "prev" && R.i > 0) R.i--;
+      if (v === "next" && R.i < r.questions.length - 1) R.i++;
+      render();
+    }
     else if (act === "chapter") startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习" });
     else if (act === "seq-practice") {
       var subjName = t.getAttribute("data-name");
