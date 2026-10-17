@@ -4,7 +4,8 @@
   "private": true,
   "description": "广西专升本刷题站（纯静态，GitHub Pages）",
   "scripts": {
-    "check": "node --check app.js && node --check all-bank.js && node --check all-learn.js",
+    "check": "node scripts/lint-bank.js && node scripts/smoke.js",
+    "lint": "node scripts/lint-bank.js",
     "smoke": "node scripts/smoke.js"
   }
 }

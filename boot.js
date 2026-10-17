@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "461";          // 与 index.html 的版本号保持一致
+  var V = "462";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -40,42 +40,86 @@
     "C语言程序设计": "c-bank.js",
     "计算机网络基础": "net-bank.js"
   };
-  var _loadedSubjectBanks = {};  // 已加载的科目缓存
-  window.loadSubjectBank = function(subject, _retryNo) {
-    return new Promise(function(resolve, reject) {
-      if (_loadedSubjectBanks[subject]) { resolve(); return; }
+  var _loadedSubjectBanks = {};   // 已加载完成的科目
+  var _loadingSubjectBanks = {};  // 下载中的科目 -> promise（in-flight 去重，避免同一科并发重复下载）
+  function _loadSubjectBankCore(subject, _retryNo) {
+    if (_loadedSubjectBanks[subject]) return Promise.resolve();
+    if (!_retryNo && _loadingSubjectBanks[subject]) return _loadingSubjectBanks[subject];
+    var p = new Promise(function (resolve, reject) {
       var src = SUBJECT_BANK_MAP[subject];
       if (!src) { resolve(); return; }
       var before = (window.STUDY_DATA && window.STUDY_DATA.questions) ? window.STUDY_DATA.questions.length : 0;
       var s = document.createElement("script");
       // 重试时加时间戳，绕过 Service Worker/HTTP 缓存
       s.src = src + "?v=" + V + (_retryNo ? "&t=" + Date.now() : "");
-      s.onload = function() {
+      s.onload = function () {
         // 校验：题库文件必须真实注入了该科目题目（语法错误/被 SW 兜底成 HTML 时长度不会增加）
         var qs = (window.STUDY_DATA && window.STUDY_DATA.questions) ? window.STUDY_DATA.questions : [];
-        var added = qs.length > before;
-        if (added) {
+        if (qs.length > before) {
           _loadedSubjectBanks[subject] = true;
+          delete _loadingSubjectBanks[subject];
           resolve();
         } else if (!_retryNo) {
           s.parentNode && s.parentNode.removeChild(s);
-          window.loadSubjectBank(subject, 1).then(resolve, reject);
+          delete _loadingSubjectBanks[subject];
+          _loadSubjectBankCore(subject, 1).then(resolve, reject);
         } else {
+          delete _loadingSubjectBanks[subject];
           reject(new Error("题库内容校验失败: " + subject));
         }
       };
-      s.onerror = function() {
+      s.onerror = function () {
         if (!_retryNo) {
           s.parentNode && s.parentNode.removeChild(s);
-          window.loadSubjectBank(subject, 1).then(resolve, reject);
+          delete _loadingSubjectBanks[subject];
+          _loadSubjectBankCore(subject, 1).then(resolve, reject);
         } else {
+          delete _loadingSubjectBanks[subject];
           reject(new Error("加载失败: " + subject));
         }
       };
       document.head.appendChild(s);
     });
+    if (!_retryNo) _loadingSubjectBanks[subject] = p;
+    return p;
+  }
+
+  /* 后台串行、空闲预加载：一次只下一个科目，弱网下不与前台抢占带宽；
+     用户进入某科时 loadSubjectBank 会把该科移出队列、立即插队，并暂停后台剩余下载。 */
+  var _foregroundLoading = 0;
+  var _prefetchQueue = [];
+  function _idle(cb) {
+    if (window.requestIdleCallback) window.requestIdleCallback(cb, { timeout: 1000 });
+    else setTimeout(cb, 200);
+  }
+  function _prefetchNext() {
+    if (!_prefetchQueue.length) { return; }
+    if (_foregroundLoading > 0) { _idle(_prefetchNext); return; } // 前台下载中，后台让出带宽
+    var subj = _prefetchQueue.shift();
+    if (_loadedSubjectBanks[subj] || _loadingSubjectBanks[subj]) { _idle(_prefetchNext); return; }
+    _loadSubjectBankCore(subj).then(function () {
+      try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
+    }).catch(function () {}).then(function () { _idle(_prefetchNext); });
+  }
+  function _startSubjectPrefetch() {
+    if (!_prefetchQueue.length) _prefetchQueue = Object.keys(SUBJECT_BANK_MAP);
+    _idle(_prefetchNext);
+  }
+
+  /* 前台主动加载（用户点科目）：插队 + 独占带宽；先确保 all-bank(base) 就绪，再加载该科，绝不重复下载 */
+  window.loadSubjectBank = function (subject, _retryNo) {
+    if (_retryNo) return _loadSubjectBankCore(subject, 1);
+    if (_loadedSubjectBanks[subject]) return Promise.resolve();
+    var qi = _prefetchQueue.indexOf(subject);
+    if (qi >= 0) _prefetchQueue.splice(qi, 1);
+    _foregroundLoading++;
+    var done = function () { _foregroundLoading = Math.max(0, _foregroundLoading - 1); };
+    var base = window.gxzsbEnsureBase ? window.gxzsbEnsureBase() : Promise.resolve();
+    return base.then(function () {
+      return _loadSubjectBankCore(subject);
+    }).then(function (v) { done(); return v; }, function (e) { done(); throw e; });
   };
-  window.isSubjectBankLoaded = function(subject) {
+  window.isSubjectBankLoaded = function (subject) {
     return !!_loadedSubjectBanks[subject];
   };
 
@@ -302,43 +346,54 @@
     toastDone();
     document.body.classList.remove("boot-loading");
     injectAppJs();
-
-    /* PHASE2：小文件先并行快速完成，再集中带宽下大文件，弱网下总时间更短 */
-    var doneCount = 0;
-    var total = DATA_SCRIPTS.length;
-    var failed = [];
-    var big = DATA_SCRIPTS.filter(function(s){ return s.src === "all-bank.js"; });
-    var small = DATA_SCRIPTS.filter(function(s){ return s.src !== "all-bank.js"; });
-    var smallPromises = small.map(function(script) {
-      return loadWithRetry(script, 0, total).then(function(f) {
-        doneCount++;
-        setProgress(doneCount, total);
-        if (f && script.required) failed.push(f);
-      });
-    });
-    await Promise.all(smallPromises);
-    for (var bi = 0; bi < big.length; bi++) {
-      var bf = await loadWithRetry(big[bi], 0, total);
-      doneCount++;
-      setProgress(doneCount, total);
-      if (bf && big[bi].required) failed.push(bf);
-    }
-    if (failed.length) { toastFail(failed); return; }
-    /* 就绪：通知 app.js 重建题库快照并重渲染（监听在 window 上，须在 window 派发） */
-    window.GXZSB_DATA_READY = true;
-    toastDone();
-    try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
-
-    /* 后台静默预加载所有科目题库：首页秒开，后台慢慢下载，用户点进去时大概率已加载完 */
-    setTimeout(function() {
-      Object.keys(SUBJECT_BANK_MAP).forEach(function(subj) {
-        loadSubjectBank(subj).then(function() {
-          // 每加载完一个科目，通知 app.js 重建题库快照
-          try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
-        }).catch(function() {});
-      });
-    }, 500);
   }
+
+  /* PHASE2（数据）延迟到进入主界面后再启动：未登录不下载数据，弱网下登录认证请求优先、
+     不被题库文件抢占带宽。app.js 渲染主界面时调用 gxzsbEnsureData；点科目时 loadSubjectBank 也会确保。 */
+  var _dataPromise = null;
+  var _basePromise = null;
+  function startData() {
+    if (_dataPromise) return _dataPromise;
+    var allScript = DATA_SCRIPTS.filter(function (s) { return s.src === "all-bank.js"; })[0];
+    /* 第一步：all-bank 最先（做题基础：初始化 STUDY_DATA、meta/chapters），小而关键 */
+    _basePromise = (async function () {
+      var af = await loadWithRetry(allScript, 0, 1);
+      if (af) throw new Error(af);
+    })();
+    _dataPromise = (async function () {
+      try {
+        await _basePromise;
+        window.GXZSB_BASE_READY = true;
+        try { window.dispatchEvent(new CustomEvent("gxzsb:base-ready")); } catch (e) {}
+        /* base 就绪即可做题：串行空闲预加载五科（前台点科目插队、后台让位） */
+        setTimeout(_startSubjectPrefetch, 300);
+        /* 功能脚本（单词/公式/学习手册等）并行加载，不阻塞做题；失败仅提示不阻断 */
+        var small = DATA_SCRIPTS.filter(function (s) { return s.src !== "all-bank.js"; });
+        var failed = [];
+        var doneCount = 0;
+        var total = small.length;
+        await Promise.all(small.map(function (script) {
+          return loadWithRetry(script, 0, total).then(function (f) {
+            doneCount++;
+            setProgress(doneCount, total);
+            if (f && script.required) failed.push(f);
+          });
+        }));
+        window.GXZSB_DATA_READY = true;
+        toastDone();
+        try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) {}
+        if (failed.length) toastFail(failed);
+      } catch (e) {
+        _dataPromise = null;   // all-bank 失败：允许下次（点科目/重渲染）重试
+        _basePromise = null;
+        toastFail([String((e && e.message) || e)]);
+        throw e;
+      }
+    })();
+    return _dataPromise;
+  }
+  window.gxzsbEnsureData = function () { return startData(); };
+  window.gxzsbEnsureBase = function () { return (_basePromise || startData()); };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

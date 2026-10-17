@@ -324,6 +324,7 @@
       }
     });
     if (data.nick) save("gxzsb.nick", data.nick);
+    if (data.resetAt != null) save("gxzsb.resetAt", data.resetAt || 0);
   }
 
   function mergeMap(a, b, pick) {
@@ -335,15 +336,33 @@
     return out;
   }
 
+  // 该侧最新一条学习数据的时间（答题 / 错题 / 最近一次学习）。
+  // 用于判断 resetAt 是否仍然代表「当前已清空」：若重置后又产生了更晚的学习记录，
+  // 说明那次 resetAt 已被新数据覆盖（旧版本注册时误写的 resetAt 也属此情况），不应再据此清空。
+  function latestStudyAt(s) {
+    if (!s || typeof s !== "object") return 0;
+    let t = 0;
+    (s.attempts || []).forEach((r) => { if (r && (r.at || 0) > t) t = r.at || 0; });
+    if (s.last && (s.last.at || 0) > t) t = s.last.at || 0;
+    Object.keys(s.wrong || {}).forEach((id) => {
+      const w = s.wrong[id];
+      if (w && (w.last || 0) > t) t = w.last || 0;
+    });
+    return t;
+  }
+
   function mergeProgress(local, remote) {
     if (!remote || typeof remote !== "object") return local;
     const lR = Number(local && local.resetAt) || 0;
     const rR = Number(remote && remote.resetAt) || 0;
-    // 任一侧发生了「重置/清除」：用较新的 resetAt 整包覆盖，禁止把旧学习数据合并回来
-    if (rR > lR && rR > 0) {
+    // resetAt 仅在「该侧重置之后没有再产生任何更晚的学习数据」时才有效。
+    const rEff = rR > 0 && latestStudyAt(remote) <= rR;
+    const lEff = lR > 0 && latestStudyAt(local) <= lR;
+    // 任一侧发生了真正的「重置/清除」：用较新且仍有效的 resetAt 整包覆盖，禁止把旧学习数据合并回来
+    if (rEff && rR > lR) {
       return emptyStudyPayload(rR, remote.nick || (local && local.nick) || null);
     }
-    if (lR > rR && lR > 0) {
+    if (lEff && lR > rR) {
       return emptyStudyPayload(lR, (local && local.nick) || remote.nick || null);
     }
     const out = Object.assign({}, local);
@@ -402,7 +421,8 @@
 
     out.nick = remote.nick || local.nick || null;
     out.theme = local.theme;   // 主题为设备本地偏好，不参与同步
-    out.resetAt = Math.max(lR, rR);
+    // 仅保留仍然有效的 resetAt；已被新数据覆盖的污染标记（如旧版本注册时写入）归零，避免继续随同步扩散
+    out.resetAt = Math.max(lEff ? lR : 0, rEff ? rR : 0);
     return out;
   }
 
@@ -923,7 +943,25 @@
       bak.data["gxzsb.daily30"] = load("gxzsb.daily30", null);
       save("gxzsb.bak." + Date.now(), bak);
     } catch (e) {}
-    resetLearningData();
+    // 注册新账号：仅做「本机隔离」清空，避免串上本机旧账号/游客数据。
+    // 注意：这里不能写 resetAt。resetAt 只在用户主动「重置学习数据」时用于跨设备清空；
+    // 新账号云端本就为空，若写入 resetAt 会污染云端，之后任何新设备登录都会把云端
+    // 正常数据误判为「已重置」而整包清空（换设备进度全丢）。
+    STUDY_KEYS.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem("gxzsb.session");
+    localStorage.removeItem("gxzsb.dailySession");
+    localStorage.removeItem("gxzsb.daily30");
+    localStorage.removeItem("gxzsb.resetAt");
+    state.attempts = [];
+    state.wrong = {};
+    state.fav = {};
+    state.notes = {};
+    state.marks = {};
+    state.last = null;
+    state.streak = { d: null, n: 0, today: 0 };
+    state.history = [];
+    state.reports = [];
+    state.session = null;
   }
 
   /* P1-L1 遗忘曲线三档：单位天。wrong[n]=第 n+1 次错后的间隔；right[n]=答对降级后的间隔 */
@@ -3613,14 +3651,14 @@ function formulaFilter() {
     );
   }
   function viewExtraHome() {
-    setTimeout(function () { location.hash = "#words"; }, 0);
+    setTimeout(function () { location.hash = "#/words"; }, 0);
     return "";
   }
   function openExtra(key) {
     if (!window.loadEnglishExtra) { toast("加载器未就绪"); return; }
     if (!window.isEnglishExtraLoaded()) toast("正在加载拓展资料…", 2500);
     window.loadEnglishExtra().then(function () {
-      location.hash = "#extra/" + key;
+      location.hash = "#/extra/" + key;
     }).catch(function () { toast("拓展资料加载失败，请刷新重试"); });
   }
   function viewExtra(key, sub) {
@@ -3998,6 +4036,11 @@ function formulaFilter() {
   function render() {
     const { route, params } = parseHash();
     state.route = route;
+    // 进入主界面（已登录或游客）后，才启动题库数据后台加载（幂等）：
+    // 未登录停留登录页时不下载数据，弱网下也不与登录认证请求抢占带宽
+    if (state.user && window.gxzsbEnsureData) {
+      try { window.gxzsbEnsureData(); } catch (e) {}
+    }
     // 仅在「路由切换」时回到顶部；同一页面的数据加载/状态刷新保持滚动位置，
     // 避免用户正在浏览时异步加载完成被强制拉回顶部
     var routeKey = route + "|" + params.join("/");
