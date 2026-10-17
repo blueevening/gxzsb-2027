@@ -412,11 +412,20 @@
     } catch (e2) {}
   }
 
+  // 云同步状态（仅用于"我的"页展示，不频繁 render）
+  var syncUI = { status: "idle", at: 0 };
+  function setSyncStatus(st) {
+    syncUI.status = st;
+    syncUI.at = Date.now();
+    if (state.route === "me") render();
+  }
+
   async function pushProgress(data, attempt) {
     const u = activeUser();
     if (!u) return;
     const n = attempt || 0;
     const payload = data || gatherLocal();
+    setSyncStatus("syncing");
     try {
       const { error } = await sb.from("progress").upsert(
         { user_id: u.id, data: payload, updated_at: new Date().toISOString() },
@@ -426,12 +435,16 @@
         console.warn("sync push:", error.message);
         // 服务端返回 error：一律入队 + 轻提示
         enqueueSync(payload);
+        setSyncStatus("error");
         toastLite("进度暂存本地，稍后自动同步");
         if (n < 2) setTimeout(() => pushProgress(data, n + 1), 1500 * (n + 1));
+      } else {
+        setSyncStatus("ok");
       }
     } catch (e) {
       // 离线/网络失败：入队 + 轻提示
       enqueueSync(payload);
+      setSyncStatus("error");
       toastLite("网络异常，进度已暂存");
       if (n < 2) setTimeout(() => pushProgress(data, n + 1), 2000 * (n + 1));
     }
@@ -760,6 +773,14 @@
   }
   let _subjTotalCache = null;
 
+  // 全库题数：真实题数为准；题库尚未加载完时回退到数据文件声明的预估值；都没有则返回 null（显示"—"）
+  function totalQuestions() {
+    const realQ = (D.questions || []).length;
+    if (realQ > 0) return realQ;
+    if (D.meta && D.meta.estimatedQuestions) return D.meta.estimatedQuestions;
+    return null;
+  }
+
   function dueCount() {
     return Object.keys(state.wrong).filter((id) => {
       const w = state.wrong[id];
@@ -1022,9 +1043,7 @@
 
     // 全库已练 / 正确率（去重题目）
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const realQ = (D.questions || []).length;
-    // 题库还没全部加载完时，显示预估总题数1500
-    const totalQ = realQ < 1500 ? 1500 : realQ;
+    const totalQ = totalQuestions();
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
@@ -1328,9 +1347,7 @@
   function viewBank() {
     setTitle("题库", true);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const realQ = (D.questions || []).length;
-    // 题库还没全部加载完时，显示预估总题数1500
-    const totalQ = realQ < 1500 ? 1500 : realQ;
+    const totalQ = totalQuestions();
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
@@ -1340,7 +1357,7 @@
     ];
     return (
       '<div class="card" style="display:flex;text-align:center;padding:16px;margin-bottom:16px">' +
-      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + totalQ + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
+      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
       '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">已练习</div></div>' +
       '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">正确率</div></div>' +
       '</div>' +
@@ -1367,6 +1384,28 @@
     );
   }
 
+  // 进入科目页时确保该科目题库已加载；加载中/失败通过 state 标志位驱动视图
+  function ensureSubjectBank(name) {
+    if (!window.loadSubjectBank) return;
+    const hasQs = Q.some((q) => q.subject === name);
+    if (hasQs || (window.isSubjectBankLoaded && window.isSubjectBankLoaded(name))) return;
+    state._bankLoading = state._bankLoading || {};
+    state._bankError = state._bankError || {};
+    if (state._bankLoading[name] || state._bankError[name]) return;
+    state._bankLoading[name] = true;
+    render();
+    window.loadSubjectBank(name).then(function () {
+      state._bankLoading[name] = false;
+      state._bankError[name] = false;
+      // 走统一的 data-ready 路径重建题库快照后再渲染（Q 快照/科目计数缓存才会刷新）
+      try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) { render(); }
+    }).catch(function () {
+      state._bankLoading[name] = false;
+      state._bankError[name] = true;
+      render();
+    });
+  }
+
   function viewSubject(name) {
     if (!SUBJ[name]) {
       setTitle("未找到科目", true);
@@ -1380,6 +1419,13 @@
     const chs = chapterList().filter((c) => c.subject === name);
     const f = state.filters;
     const qOf = Q.filter((q) => q.subject === name);
+    const bankLoading = state._bankLoading && state._bankLoading[name];
+    const bankError = state._bankError && state._bankError[name];
+    // 题库尚未加载完成时，主动触发加载并展示加载/失败状态
+    if (!qOf.length && !bankLoading && !bankError && window.loadSubjectBank &&
+        !(window.isSubjectBankLoaded && window.isSubjectBankLoaded(name))) {
+      ensureSubjectBank(name);
+    }
     let filtered = qOf;
     if (f.diff.length) filtered = filtered.filter((q) => f.diff.includes(q.difficultyLabel));
     if (f.type.length) filtered = filtered.filter((q) => f.type.includes(q.typeLabel));
@@ -1416,7 +1462,20 @@
       <p class="muted" style="font-size:12px;margin:8px 0 0">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → ${filtered.length} 题</p>
 
       <div class="section-title">章节</div>
-      <div class="card chapter-grid" style="padding:0">
+      ${
+        qOf.length === 0
+          ? (bankError
+              ? `<div class="card bank-load-err">
+                   <div class="bank-load-ico">⚠️</div>
+                   <div class="bank-load-txt">「${esc(name)}」题库加载失败</div>
+                   <div class="bank-load-sub">请检查网络后重试</div>
+                   <button class="btn btn-primary btn-sm" data-act="subject-retry" data-name="${attr(name)}" type="button">重新加载</button>
+                 </div>`
+              : `<div class="card bank-loading">
+                   <div class="bank-loading-bar"><i></i><i></i><i></i></div>
+                   <div class="bank-loading-txt">正在加载「${esc(name)}」题库…</div>
+                 </div>`)
+          : `<div class="card chapter-grid" style="padding:0">
         ${
           chs.length
             ? chs
@@ -1433,14 +1492,19 @@
                 .join("")
             : `<div class="empty">暂无章节数据</div>`
         }
-      </div>
+      </div>`
+      }
 
       <div style="margin-top:16px">
-        <div style="display:flex;flex-direction:column;gap:8px">
+        ${
+          qOf.length === 0
+            ? '<div class="muted" style="font-size:12px;text-align:center;padding:8px 0">题库加载完成后即可开始练习</div>'
+            : `<div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-primary btn-block" data-act="seq-practice" data-name="${attr(name)}" type="button">开始顺序练习</button>
         <button class="btn btn-ghost btn-block" data-act="seq-obj" data-name="${attr(name)}" type="button">只练客观题</button>
         <button class="btn btn-ghost btn-block" data-act="seq-subj" data-name="${attr(name)}" type="button">只练主观题</button>
-      </div>
+      </div>`
+        }
       </div>
 
       ${
@@ -1591,6 +1655,19 @@
     if (!s) return;
     const now = Date.now();
     s.lastSeenAt = Math.max(Number(s.lastSeenAt) || 0, now);
+  }
+
+  // 本地是否存在未完成的答题草稿（题库加载期间用于显示"恢复中"，避免闪空状态）
+  function hasUnfinishedSession() {
+    try {
+      var raw = localStorage.getItem("gxzsb.session") || localStorage.getItem("gxzsb.dailySession");
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.ids) || !d.ids.length) return false;
+      if (d.results && Object.keys(d.results).length >= d.ids.length) return false;
+      if (d.end && !d.examSubmitted && Date.now() > Number(d.end) + 24 * 3600 * 1000) return false;
+      return true;
+    } catch (e) { return false; }
   }
 
   function restoreSession(onlyDaily) {
@@ -1747,6 +1824,10 @@
     const s = state.session;
     if (!s || !s.q.length) {
       setTitle("练习", true);
+      // 题库尚未加载完但本地有未完成的答题草稿：显示恢复中，不闪"没有可练习的题目"
+      if (hasUnfinishedSession()) {
+        return '<div class="practice-restore"><div class="practice-restore-spin">⟳</div><div class="practice-restore-txt">正在恢复上次答题…</div></div>';
+      }
       return `<div class="empty">没有可练习的题目<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div></div>`;
     }
     const q = s.q[s.i];
@@ -2522,7 +2603,9 @@
           '<button class="btn btn-ghost btn-sm" data-act="export-txt" type="button" style="flex:1">导出 TXT</button>' +
           '<button class="btn btn-ghost btn-sm" data-act="export-print" type="button" style="flex:1">打印 / PDF</button>' +
         '</div>' : "") +
-        (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">清空错题本</button></div>' : "");
+        (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">' +
+          ((subjFilter !== "all" || nFilter) ? ("清空当前筛选的 " + filteredItems.length + " 道错题") : "清空错题本（全部 " + allItems.length + " 道）") +
+          '</button></div>' : "");
     } else if (tab === "fav") {
       body =
         '<div class="section-title">我的收藏</div>' +
@@ -2826,6 +2909,33 @@ function ensureExplain(q) {
     `;
   }
 
+  // 云同步状态卡片（登录用户可见；游客提示数据仅存本机）
+  function syncStatusHtml() {
+    const isGuest = !activeUser();
+    const hasQueue = !!load("gxzsb.syncQueue", null);
+    if (isGuest) {
+      return '<div class="card sync-card sync-guest" style="margin-bottom:12px"><span class="sync-dot">👤</span>' +
+        '<span class="sync-msg">游客模式：进度只保存在本机，登录后可云端同步</span></div>';
+    }
+    let ico, cls, msg, extra = "";
+    if (syncUI.status === "syncing") {
+      ico = '<span class="sync-dot sync-spin">⟳</span>'; cls = "sync-syncing"; msg = "正在同步到云端…";
+    } else if (syncUI.status === "ok") {
+      ico = '<span class="sync-dot">✓</span>'; cls = "sync-ok";
+      const t = new Date(syncUI.at);
+      const hh = String(t.getHours()).padStart(2, "0"), mm = String(t.getMinutes()).padStart(2, "0");
+      msg = "已同步到云端（" + hh + ":" + mm + "）";
+    } else if (syncUI.status === "error" || hasQueue) {
+      ico = '<span class="sync-dot">⚠</span>'; cls = "sync-err";
+      msg = "同步失败，进度已暂存本地";
+      extra = '<button class="btn btn-ghost btn-sm" data-act="sync-now" type="button">立即重试</button>';
+    } else {
+      ico = '<span class="sync-dot">☁️</span>'; cls = "sync-idle"; msg = "登录后学习进度自动云端同步";
+    }
+    return '<div class="card sync-card ' + cls + '" style="margin-bottom:12px">' + ico +
+      '<span class="sync-msg">' + msg + '</span>' + extra + '</div>';
+  }
+
   function viewMe() {
     setTitle("我的", false);
     const total = state.attempts.length;
@@ -2844,6 +2954,7 @@ function ensureExplain(q) {
       </div>
 
       <div class="section-title">账号与数据</div>
+      ${syncStatusHtml()}
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
@@ -4139,7 +4250,19 @@ function formulaFilter() {
       if (!state.attempts || !state.attempts.length) { alert("还没有练习记录，先做几道题再来找薄弱考点"); return; }
       startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
     }
-    else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
+    else if (act === "subject") {
+      var sn = t.getAttribute("data-name");
+      go("subject/" + encodeURIComponent(sn));
+      ensureSubjectBank(sn);
+    }
+    else if (act === "subject-retry") {
+      var rn = t.getAttribute("data-name");
+      state._bankError = state._bankError || {};
+      state._bankLoading = state._bankLoading || {};
+      state._bankError[rn] = false;
+      state._bankLoading[rn] = false;
+      ensureSubjectBank(rn);
+    }
     else if (act === "mock-practice") startMockPractice(t.getAttribute("data-name"));
     else if (act === "extra-go") openExtra(t.getAttribute("data-name"));
     else if (act === "essay-mode") {
@@ -4469,15 +4592,30 @@ function formulaFilter() {
       setWrongReason(id, r);
       render();
     } else if (act === "clear-wrong") {
-      const n = Object.keys(state.wrong).length;
-      if (!n) { toastLite("错题本是空的"); return; }
-      confirmModal("清空错题本", "确定清空全部 " + n + " 道错题？此操作不可撤销。", function () {
-        state.wrong = {};
-        save(LS.wrong, state.wrong);
-        scheduleSync();
-        toastLite("错题已清空");
-        render();
+      // 按当前筛选（科目/错误次数）清空；无筛选时清空全部
+      const subjFilter = state.wrongSubj || "all";
+      const nFilter = state.wrongNFilter || 0;
+      const ids = Object.keys(state.wrong).filter(function (id) {
+        const q = qById(id);
+        if (!q) return false;
+        if (state.wrong[id].mastered) return false; // 已掌握的不随筛选删除
+        if (subjFilter !== "all" && q.subject !== subjFilter) return false;
+        if (nFilter && (state.wrong[id].n || 1) < nFilter) return false;
+        return true;
       });
+      const scoped = subjFilter !== "all" || nFilter;
+      if (!ids.length) { toastLite(scoped ? "当前筛选下没有错题" : "错题本是空的"); return; }
+      confirmModal(
+        scoped ? "清空筛选错题" : "清空错题本",
+        (scoped ? "确定清空当前筛选的 " + ids.length + " 道错题？" : "确定清空全部 " + ids.length + " 道错题？") + "此操作不可撤销。",
+        function () {
+          ids.forEach(function (id) { delete state.wrong[id]; });
+          save(LS.wrong, state.wrong);
+          scheduleSync();
+          toastLite("已清空 " + ids.length + " 道错题");
+          render();
+        }
+      );
     } else if (act === "show-shortcuts") {
       openModal({
         title: "答题快捷键",
@@ -4699,6 +4837,12 @@ function formulaFilter() {
       state.user = { isGuest: true };
       try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
       go("home"); render();
+    } else if (act === "sync-now") {
+      if (!activeUser()) { toastLite("请先登录"); return; }
+      pullAndMerge().then(function () {
+        if (syncUI.status !== "ok") setSyncStatus("ok");
+        toastLite("已同步");
+      });
     } else if (act === "set-nick") {
       const cur = load("gxzsb.nick", "专升本备考人");
       const n = prompt("输入昵称：", cur);
@@ -4985,7 +5129,17 @@ function formulaFilter() {
     // 聚焦时主动触发一次
     document.addEventListener("focusin", function (e) {
       if (/input|textarea/i.test(e.target.tagName)) {
-        setTimeout(onViewportChange, 200); // iOS 键盘弹出时机晚于 focus
+        // 软键盘弹出后把输入框滚到可视区中央，避免被键盘遮挡
+        setTimeout(function () {
+          onViewportChange();
+          try {
+            var el = e.target;
+            var r = el.getBoundingClientRect();
+            if (r.bottom > window.innerHeight - 80 || r.top < 60) {
+              el.scrollIntoView({ block: "center", behavior: "smooth" });
+            }
+          } catch (err) {}
+        }, 300); // iOS 键盘弹出时机晚于 focus
       }
     });
   })();

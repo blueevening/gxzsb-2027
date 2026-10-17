@@ -681,6 +681,49 @@ html.qa-modal-open { overflow: hidden; }
 }
 .empty .btn { margin-top: 12px; }
 
+/* ===== 答题恢复中 ===== */
+.practice-restore {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 80px 16px; gap: 14px;
+}
+.practice-restore-spin {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: var(--primary);
+  animation: restore-spin 0.8s linear infinite;
+  display: flex; align-items: center; justify-content: center; color: transparent;
+}
+@keyframes restore-spin { to { transform: rotate(360deg); } }
+.practice-restore-txt { color: var(--text-sub); font-size: 14px; }
+
+/* ===== 科目题库加载/失败 ===== */
+.bank-loading { padding: 28px 16px; text-align: center; }
+.bank-loading-bar { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+.bank-loading-bar i {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--primary);
+  opacity: 0.35; animation: bank-blink 1s infinite ease-in-out;
+}
+.bank-loading-bar i:nth-child(2) { animation-delay: 0.18s; }
+.bank-loading-bar i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes bank-blink { 0%, 100% { opacity: 0.25; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.1); } }
+.bank-loading-txt { color: var(--text-sub); font-size: 13px; }
+.bank-load-err { padding: 28px 16px; text-align: center; }
+.bank-load-ico { font-size: 30px; margin-bottom: 8px; }
+.bank-load-txt { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.bank-load-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 14px; }
+.bank-load-err .btn { margin: 0 auto; }
+
+/* ===== 云同步状态卡片 ===== */
+.sync-card {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+}
+.sync-card .sync-msg { flex: 1; font-size: 13px; color: var(--text-sub); }
+.sync-card .sync-dot { font-size: 16px; flex-shrink: 0; }
+.sync-ok .sync-dot { color: #16a34a; }
+.sync-err .sync-dot { color: #d97706; }
+.sync-guest .sync-dot { color: var(--text-sub); }
+.sync-spin { display: inline-block; animation: restore-spin 1s linear infinite; color: var(--primary); }
+.sync-card .btn { flex-shrink: 0; }
+
 /* ===== 免责 ===== */
 .disclaimer {
   margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-card);

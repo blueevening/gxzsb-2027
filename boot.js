@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "460";          // 与 index.html 的版本号保持一致
+  var V = "461";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -41,18 +41,37 @@
     "计算机网络基础": "net-bank.js"
   };
   var _loadedSubjectBanks = {};  // 已加载的科目缓存
-  window.loadSubjectBank = function(subject) {
+  window.loadSubjectBank = function(subject, _retryNo) {
     return new Promise(function(resolve, reject) {
       if (_loadedSubjectBanks[subject]) { resolve(); return; }
       var src = SUBJECT_BANK_MAP[subject];
       if (!src) { resolve(); return; }
+      var before = (window.STUDY_DATA && window.STUDY_DATA.questions) ? window.STUDY_DATA.questions.length : 0;
       var s = document.createElement("script");
-      s.src = src + "?v=" + V;
+      // 重试时加时间戳，绕过 Service Worker/HTTP 缓存
+      s.src = src + "?v=" + V + (_retryNo ? "&t=" + Date.now() : "");
       s.onload = function() {
-        _loadedSubjectBanks[subject] = true;
-        resolve();
+        // 校验：题库文件必须真实注入了该科目题目（语法错误/被 SW 兜底成 HTML 时长度不会增加）
+        var qs = (window.STUDY_DATA && window.STUDY_DATA.questions) ? window.STUDY_DATA.questions : [];
+        var added = qs.length > before;
+        if (added) {
+          _loadedSubjectBanks[subject] = true;
+          resolve();
+        } else if (!_retryNo) {
+          s.parentNode && s.parentNode.removeChild(s);
+          window.loadSubjectBank(subject, 1).then(resolve, reject);
+        } else {
+          reject(new Error("题库内容校验失败: " + subject));
+        }
       };
-      s.onerror = function() { reject(new Error("加载失败: " + subject)); };
+      s.onerror = function() {
+        if (!_retryNo) {
+          s.parentNode && s.parentNode.removeChild(s);
+          window.loadSubjectBank(subject, 1).then(resolve, reject);
+        } else {
+          reject(new Error("加载失败: " + subject));
+        }
+      };
       document.head.appendChild(s);
     });
   };
