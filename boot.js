@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "459";          // 与 index.html 的版本号保持一致
+  var V = "460";          // 与 index.html 的版本号保持一致
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
@@ -189,7 +189,6 @@
         '<input id="bootLoginPwd" type="password" placeholder="至少6位" autocomplete="current-password" /></div>' +
         '<button type="button" class="login-submit" data-act="boot-submit">登录</button>' +
         '<div class="login-msg" id="bootLoginMsg"></div>' +
-        '<button type="button" class="login-forgot" data-act="boot-forgot">忘记密码？</button>' +
       '</div>' +
       '<button type="button" class="login-guest" data-act="boot-guest">先逛逛，稍后登录</button>' +
     '</div>';
@@ -199,15 +198,8 @@
   function shell() {
     document.body.classList.add("boot-loading");
     var app = $("app");
-    var isRecovery = /(access_token|type=recovery|refresh_token|[?&]code=|error=|error_code=)/.test(location.hash + location.search);
     if (app) {
-      if (isRecovery) {
-        // 链接失效（token 过期等）：Supabase 会带 error 参数回来，直接提示，避免被当成普通登录壳
-        var isErr = /(^|[?&#])(error|error_code)=/.test(location.hash + location.search);
-        app.innerHTML = isErr
-          ? '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">重置链接无效或已过期</div><div class="sub">请返回登录页重新点「忘记密码」获取新链接</div></div></div>'
-          : '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">正在验证重置链接…</div><div class="sub">链接有效即可设置新密码</div></div></div>';
-      } else if (isLoggedIn()) {
+      if (isLoggedIn()) {
         app.innerHTML = '<div class="boot" style="padding-top:40vh;text-align:center;opacity:.5">⟳</div>';
       } else {
         app.innerHTML = loginShellHtml();

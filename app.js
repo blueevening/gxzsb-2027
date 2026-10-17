@@ -5,21 +5,9 @@
   var sb = null;
   if (window.supabase && window.SB_CONFIG) {
     try {
-      sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key, {
-        auth: {
-          // 手机端从邮件 App 点开重置链接常跨浏览器，PKCE 的 code_verifier 会丢失导致打不开；
-          // 用隐式流，token 随链接带回，任何浏览器都能完成校验
-          detectSessionInUrl: true,
-          flowType: "implicit",
-          persistSession: true,
-          autoRefreshToken: true
-        }
-      });
+      sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key);
     } catch(e) {}
   }
-  // 标记本次打开是否为“密码重置链接”回调（URL 中带 token/code，或带 error 说明链接已失效）
-  var RECOVERY_URL = /(access_token|type=recovery|refresh_token|[?&]code=|error=|error_code=)/.test(location.hash + location.search);
-  var RECOVERY_ERROR = /(^|[?&#])(error|error_code)=/.test(location.hash + location.search);
 
   /* 题库快照：app.js 先于数据就绪注入（登录页不依赖数据），
      数据后台静默加载完成后由 gxzsb:data-ready 重建 */
@@ -274,7 +262,6 @@
     history: load(LS.history, []),
     reports: load(LS.reports, []),
     session: null, wrongTab: "wrong",
-    recovery: false,   // 是否处于“忘记密码→设置新密码”流程
     practiceMode: load("gxzsb.practiceMode", "test"),
     forgetCurve: load("gxzsb.forgetCurve", "mid"),
     fontSize: load("gxzsb.fontSize", "md"),
@@ -996,7 +983,7 @@
   const TAB_NAV = NAV.filter(function(n){ return TAB_NAV_IDS.indexOf(n.id) >= 0; });
   function renderNav() {
     // 登录页不显示导航；其余页面一律恢复底部 tab / 侧栏
-    const isLoginRoute = state.route === "login" || state.route === "reset" || (!state.user && sb && !state.authLoading);
+    const isLoginRoute = state.route === "login" || (!state.user && sb && !state.authLoading);
     if (isLoginRoute) {
       hideNav();
       return;
@@ -2833,42 +2820,8 @@ function ensureExplain(q) {
           </div>`:''}
           <button type="button" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" class="login-msg"></div>
-          ${mode==='login'?`<button type="button" class="login-forgot" data-act="forgot-pwd">忘记密码？</button>`:""}
         </div>
         <button type="button" class="login-guest" data-act="guest">先逛逛，稍后登录</button>
-      </div>
-    `;
-  }
-
-  // 忘记密码 → 邮件链接校验成功后落地：设置新密码
-  function viewReset() {
-    setTitle("重置密码", false);
-    return `
-      <div class="login-wrap">
-        <div class="login-hero">
-          <div class="logo">🔑</div>
-          <div class="name">设置新密码</div>
-          <div class="sub">已通过邮件链接验证，请输入新密码</div>
-        </div>
-        <div class="card" style="padding:24px">
-          <div class="login-field">
-            <label for="resetPwd1">新密码</label>
-            <div class="pwd-wrap">
-              <input id="resetPwd1" type="password" placeholder="至少 6 位" autocomplete="new-password" />
-              <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="resetPwd1" aria-label="显示密码">显示</button>
-            </div>
-          </div>
-          <div class="login-field">
-            <label for="resetPwd2">确认新密码</label>
-            <div class="pwd-wrap">
-              <input id="resetPwd2" type="password" placeholder="再输入一次新密码" autocomplete="new-password" />
-              <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="resetPwd2" aria-label="显示密码">显示</button>
-            </div>
-          </div>
-          <button type="button" class="login-submit" data-act="do-reset">确认重置</button>
-          <div id="loginMsg" class="login-msg"></div>
-        </div>
-        <button type="button" class="login-guest" data-nav="login">返回登录</button>
       </div>
     `;
   }
@@ -3942,21 +3895,9 @@ function formulaFilter() {
       _lastRouteKey = routeKey;
     }
     const app = $("#app");
-    // 重置链接回调（URL 带 token/error）：无论是否已登录/游客，一律先进入“验证中/链接失效”页，
-    // 不能把 #access_token=... 当路由解析成首页/登录页
-    if (RECOVERY_URL && !state.recovery && sb) {
-      if (RECOVERY_ERROR) {
-        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">重置链接无效或已过期</div><div class="sub">请返回登录页重新点「忘记密码」获取新链接</div></div><div class="card" style="padding:24px"><button type="button" class="login-submit" data-nav="login">返回登录</button></div></div>';
-      } else {
-        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">正在验证重置链接…</div><div class="sub">链接有效即可设置新密码</div></div></div>';
-      }
-      hideNav();
-      bindEvents();
-      return;
-    }
-    // login / reset 为公开页，未登录也可访问
-    if (route === "login" || route === "reset") {
-      app.innerHTML = route === "reset" ? viewReset() : viewLogin();
+    // login 为公开页，未登录也可访问
+    if (route === "login") {
+      app.innerHTML = viewLogin();
       hideNav(); bindEvents(); return;
     }
     // 数据未就绪也直接渲染首页（空数据），后台加载完自动刷新
@@ -4754,66 +4695,6 @@ function formulaFilter() {
           msg2.textContent = "注册失败：" + (err && err.message ? err.message : "网络异常") + "，可重试";
         }
       });
-    } else if (act === "forgot-pwd") {
-      var emf = "";
-      var emEl = document.getElementById("loginEmail");
-      if (emEl) emf = String(emEl.value || "").trim();
-      var msgf = document.getElementById("loginMsg");
-      if (!emf) {
-        if (msgf) msgf.textContent = "请先填写邮箱，再点「忘记密码」";
-        return;
-      }
-      if (sb && sb.auth && typeof sb.auth.resetPasswordForEmail === "function") {
-        if (msgf) msgf.textContent = "正在发送重置邮件...";
-        // 重定向回应用根地址（与 Supabase 配置的 Site URL 完全一致，最稳妥）；
-        // 邮件链接校验成功后会带回 recovery token，由应用自动进入“设置新密码”页
-        var resetUrl = location.origin + location.pathname;
-        withTimeout(sb.auth.resetPasswordForEmail(emf, { redirectTo: resetUrl }), 15000).then(function (r) {
-          if (r && r.error) {
-            if (msgf) msgf.textContent = "";
-            alert("发送失败：" + r.error.message + "\n可联系管理员重置，或先用游客模式体验。");
-          } else {
-            if (msgf) msgf.textContent = "重置邮件已发送，请查收（若未收到可联系管理员）";
-            alert("重置邮件已发送。若邮箱服务未配置可能收不到，可联系管理员重置，或使用游客模式。");
-          }
-        }).catch(function () {
-          if (msgf) msgf.textContent = "";
-          alert("发送失败（网络异常）。请联系管理员重置密码，或使用游客模式。");
-        });
-      } else {
-        if (msgf) msgf.textContent = "当前环境不支持邮件找回";
-        alert("当前未配置邮箱找回服务。请联系管理员重置密码，或使用游客模式。");
-      }
-    } else if (act === "do-reset") {
-      var rp1 = document.getElementById("resetPwd1");
-      var rp2 = document.getElementById("resetPwd2");
-      var rmsg = document.getElementById("loginMsg");
-      var rbtn = document.querySelector("#app .login-submit");
-      var v1 = rp1 ? String(rp1.value || "") : "";
-      var v2 = rp2 ? String(rp2.value || "") : "";
-      if (rmsg) rmsg.textContent = "";
-      if (v1.length < 6) { if (rmsg) rmsg.textContent = "密码至少 6 位"; return; }
-      if (v1 !== v2) { if (rmsg) rmsg.textContent = "两次输入的密码不一致"; return; }
-      if (!sb || !sb.auth || typeof sb.auth.updateUser !== "function") {
-        alert("当前环境不支持重置，请联系管理员。"); return;
-      }
-      if (rbtn) { rbtn.disabled = true; rbtn.textContent = "提交中…"; }
-      withTimeout(sb.auth.updateUser({ password: v1 }), 15000).then(function (r) {
-        if (r && r.error) {
-          if (rbtn) { rbtn.disabled = false; rbtn.textContent = "确认重置"; }
-          alert("重置失败：" + r.error.message);
-        } else {
-          state.recovery = false;
-          // 重置后退出临时会话，引导用户用新密码登录
-          try { sb.auth.signOut(); } catch (e) {}
-          state.user = null;
-          alert("密码已重置成功，请用新密码登录。");
-          go("login");
-        }
-      }).catch(function () {
-        if (rbtn) { rbtn.disabled = false; rbtn.textContent = "确认重置"; }
-        alert("重置失败（网络异常或链接已过期）。请重新申请重置邮件。");
-      });
     } else if (act === "guest") {
       state.user = { isGuest: true };
       try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
@@ -5197,7 +5078,7 @@ function formulaFilter() {
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
     var el = e.target;
-    if (el && el.id && /^(login(Email|Pwd|Pwd2)|resetPwd(1|2))$/.test(el.id)) {
+    if (el && el.id && /^login(Email|Pwd|Pwd2)$/.test(el.id)) {
       var btn = document.querySelector(".login-submit");
       if (btn) { e.preventDefault(); btn.click(); }
     }
@@ -5208,32 +5089,6 @@ function formulaFilter() {
   if (_guestFlag) state.user = { isGuest: true };
   // 恢复Supabase session
   if (sb) {
-    // 密码重置：邮件链接校验成功后，Supabase 会以 PASSWORD_RECOVERY 事件带回一个临时会话
-    try {
-      sb.auth.onAuthStateChange(function (event, session) {
-        if (event === "PASSWORD_RECOVERY" && session) {
-          state.recovery = true;
-          state.user = session.user;
-          // 进入重置流程时清除游客标记，避免后续刷新又恢复游客态干扰
-          try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
-          // 清掉 URL 中的 token / query，落到干净的 #/reset
-          try { history.replaceState(null, "", location.pathname + "#/reset"); } catch (e) { location.hash = "#/reset"; }
-          parseHash();
-          render();
-        }
-      });
-    } catch (e) {}
-    // 兜底：若 8 秒内未进入重置页（token 过期 / 链接被 Supabase 拦截 / 未配置重定向），明确提示。
-    // error 形式（链接已失效）页面已直接显示提示，不需要再弹 alert
-    if (RECOVERY_URL && !RECOVERY_ERROR) {
-      setTimeout(function () {
-        if (!state.recovery) {
-          alert("重置链接无效或已过期，无法打开重置页面。\n请重新点「忘记密码」获取新链接；若仍失败，可能需要管理员在 Supabase 配置站点地址。");
-          try { history.replaceState(null, "", location.pathname + "#/login"); } catch (e) { location.hash = "#/login"; }
-          parseHash(); render();
-        }
-      }, 8000);
-    }
     sb.auth.getSession().then(function(res) {
       state.authLoading = false;
       if (res.data.session) {

@@ -1708,18 +1708,6 @@ sup.math-sup .frac .den { padding-top: 1px; }
 }
 .login-submit:active { filter: brightness(0.95); }
 .login-msg { text-align: center; margin-top: 12px; font-size: 13px; color: var(--text-sub); min-height: 1.2em; }
-.login-forgot {
-  display: block;
-  margin: 10px auto 0;
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 13px;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 6px 8px;
-}
-.login-forgot:hover { opacity: 0.85; }
 
 .login-guest {
   display: block;
