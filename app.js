@@ -3022,7 +3022,7 @@ function ensureExplain(q) {
           <button type="button" data-act="switch-login" data-mode="login" class="${mode==='login'?'is-on':''}" role="tab" aria-selected="${mode==='login'}">登录</button>
           <button type="button" data-act="switch-login" data-mode="register" class="${mode==='register'?'is-on':''}" role="tab" aria-selected="${mode==='register'}">注册</button>
         </div>
-        <div class="card" style="padding:24px">
+        <form class="card" style="padding:24px" onsubmit="var b=this.querySelector('[data-act^=do-]');if(b)b.click();return false">
           <div class="login-field">
             <label for="loginEmail">邮箱</label>
             <input id="loginEmail" type="email" placeholder="your@email.com" autocomplete="email" />
@@ -3042,9 +3042,9 @@ function ensureExplain(q) {
               <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="loginPwd2" aria-label="显示密码">显示</button>
             </div>
           </div>`:''}
-          <button type="button" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
+          <button type="submit" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" class="login-msg"></div>
-        </div>
+        </form>
         <button type="button" class="login-guest" data-act="guest">先逛逛，稍后登录</button>
       </div>
     `;
