@@ -2746,13 +2746,47 @@ function ensureExplain(q) {
   return q.analysis;
 }
 
+  // 学习一刻列表渲染：切章节时只更新 #learnList，不重建导航条
+  function buildLearnListHTML(cur) {
+    const book = (window.STUDY_DATA && window.STUDY_DATA.LEARN_BOOK) || {};
+    const chapters = book[cur] || [];
+    const sc = subjOf(cur);
+    const selCh = (state.learnChapterSel == null || state.learnChapterSel < 0) ? -1 : state.learnChapterSel;
+    const showCh = selCh < 0 ? chapters : [chapters[selCh]].filter(Boolean);
+    return showCh.map(function (ch, ci) {
+      const realCi = selCh < 0 ? ci : selCh;
+      return (
+        '<div class="formula-group">' +
+        '<div class="formula-group-title"><span class="line" style="background:' + (sc.color || "#2563EB") + '"></span>' +
+        esc(ch.chapter) + '<span class="muted">（' + (ch.points || []).length + "）</span></div>" +
+        (ch.outline ? '<p class="muted" style="font-size:12px;margin:-4px 0 8px;line-height:1.6">' + esc(ch.outline) + "</p>" : "") +
+        '<div class="card" style="padding:0;overflow:hidden">' +
+        (ch.points || []).map(function (p, pi) {
+          return (
+            '<button class="kp-card" data-act="learn-open" data-id="' + attr(p.id) + '" type="button">' +
+            '<span class="num" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;flex-shrink:0;background:' +
+            (sc.color || "#2563EB") + ';color:#fff">' + (realCi + 1) + "." + (pi + 1) + "</span>" +
+            '<span style="flex:1;min-width:0"><span class="t" style="display:block;font-weight:700;font-size:15px">' + esc(p.name) + "</span>" +
+            '<span class="s" style="font-size:12px;color:var(--text-sub);display:block;margin-top:2px">' + esc(p.outline || "") + "</span>" +
+            '<span style="font-size:11px;color:var(--text-sub);display:block;margin-top:4px">' + esc(p.level || "") + " · " + (p.minutes || 6) + " 分钟 · " + esc(p.relatedFormula || "") + "</span></span>" +
+            '<span class="kp-badge ' + (p.level === "冲刺" ? "hard" : p.level === "强化" ? "mid" : "") + '">' + esc(p.level || "") + "</span>" +
+            "</button>"
+          );
+        }).join("") +
+        "</div></div>"
+      );
+    }).join("");
+  }
+
   function viewLearn() {
     setTitle("学习一刻", true);
     const book = (window.STUDY_DATA && window.STUDY_DATA.LEARN_BOOK) || {};
     const subjects = Object.keys(book);
     const cur = state.learnSubj && book[state.learnSubj] ? state.learnSubj : subjects[0];
+    if (state.learnSubj !== cur) state.learnSubj = cur;
     const chapters = book[cur] || [];
     const sc = subjOf(cur);
+    const selCh = (state.learnChapterSel == null || state.learnChapterSel < 0) ? -1 : state.learnChapterSel;
     const total = chapters.reduce(function (n, ch) { return n + (ch.points || []).length; }, 0);
     return (
       '<div class="learn-hero"><h2>学习一刻</h2><p>严格按 2027 考纲精讲：高数走步骤，英语讲规则，电工讲定律，C 讲执行，计网讲过程。学完直接去练。</p></div>' +
@@ -2762,28 +2796,13 @@ function ensureExplain(q) {
       }).join("") +
       "</div>" +
       '<div class="subject-banner ' + (sc.cls || "") + '"><span class="swatch"></span><strong>' + esc(cur) + '</strong><span class="muted">' + chapters.length + " 个大纲小节 · " + total + " 个知识点</span></div>" +
-      chapters.map(function (ch, ci) {
-        return (
-          '<div class="formula-group">' +
-          '<div class="formula-group-title"><span class="line" style="background:' + (sc.color || "#2563EB") + '"></span>' +
-          esc(ch.chapter) + '<span class="muted">（' + (ch.points || []).length + "）</span></div>" +
-          (ch.outline ? '<p class="muted" style="font-size:12px;margin:-4px 0 8px;line-height:1.6">' + esc(ch.outline) + "</p>" : "") +
-          '<div class="card" style="padding:0;overflow:hidden">' +
-          (ch.points || []).map(function (p, pi) {
-            return (
-              '<button class="kp-card" data-act="learn-open" data-id="' + attr(p.id) + '" type="button">' +
-              '<span class="num" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;flex-shrink:0;background:' +
-              (sc.color || "#2563EB") + ';color:#fff">' + (ci + 1) + "." + (pi + 1) + "</span>" +
-              '<span style="flex:1;min-width:0"><span class="t" style="display:block;font-weight:700;font-size:15px">' + esc(p.name) + "</span>" +
-              '<span class="s" style="font-size:12px;color:var(--text-sub);display:block;margin-top:2px">' + esc(p.outline || "") + "</span>" +
-              '<span style="font-size:11px;color:var(--text-sub);display:block;margin-top:4px">' + esc(p.level || "") + " · " + (p.minutes || 6) + " 分钟 · " + esc(p.relatedFormula || "") + "</span></span>" +
-              '<span class="kp-badge ' + (p.level === "冲刺" ? "hard" : p.level === "强化" ? "mid" : "") + '">' + esc(p.level || "") + "</span>" +
-              "</button>"
-            );
-          }).join("") +
-          "</div></div>"
-        );
-      }).join("") +
+      '<div class="fnav-row">' +
+        '<button class="chip fnav-chip ' + (selCh < 0 ? "is-active" : "") + '" data-act="learn-chapter" data-ci="-1" type="button">全部</button>' +
+        chapters.map(function (ch, ci) {
+          return '<button class="chip fnav-chip ' + (ci === selCh ? "is-active" : "") + '" data-act="learn-chapter" data-ci="' + ci + '" type="button">' + esc(ch.chapter.length > 6 ? ch.chapter.slice(0, 6) + "…" : ch.chapter) + ' <span class="muted">' + (ch.points || []).length + "</span></button>";
+        }).join("") +
+      "</div>" +
+      '<div id="learnList">' + buildLearnListHTML(cur) + "</div>" +
       '<p class="muted" style="font-size:12px;margin-top:16px;text-align:center">共 ' + total + " 个知识点 · 按 2027 广西专升本考纲编写</p>"
     );
   }
@@ -4294,7 +4313,16 @@ function formulaFilter() {
       render();
     } else if (act === "learn-subj") {
       state.learnSubj = t.getAttribute("data-v");
+      state.learnChapterSel = -1;
       render();
+    } else if (act === "learn-chapter") {
+      state.learnChapterSel = parseInt(t.getAttribute("data-ci"), 10);
+      document.querySelectorAll(".fnav-chip").forEach(function (c) {
+        c.classList.toggle("is-active", parseInt(c.getAttribute("data-ci"), 10) === state.learnChapterSel);
+      });
+      var ll = document.getElementById("learnList");
+      if (ll) ll.innerHTML = buildLearnListHTML(state.learnSubj);
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else if (act === "learn-back-list") {
       go("learn");
       render();
