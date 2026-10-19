@@ -1883,6 +1883,17 @@
     const done = q.id in s.results;
     const exp = ensureExplain(q);
     const wrongN = (state.wrong[q.id] && state.wrong[q.id].n) || 0;
+    // 本趟即时反馈：已答数 / 答对数 / 正确率 / 末尾连对
+    var answeredN = Object.keys(s.results).length;
+    var okRun = 0;
+    for (var ri = s.q.length - 1; ri >= 0; ri--) {
+      var rid = s.q[ri].id;
+      if (!(rid in s.results)) break;
+      if (s.results[rid]) okRun++; else break;
+    }
+    var accRun = answeredN
+      ? Math.round((Object.keys(s.results).filter(function (k) { return s.results[k]; }).length / answeredN) * 100)
+      : null;
 
     return `
       <div class="q-progress"><i style="width:${((s.i + 1) / s.q.length) * 100}%"></i></div>
@@ -1899,7 +1910,7 @@
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
         <span style="display:inline-flex;gap:4px;align-items:center">
           ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习" : "📝 测试") + "</button>"}
-          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:#8b5cf6;font-weight:600">范文学习</span>' : ""}</span>
+          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${accRun != null ? ' · 本趟正确率 <b style="color:var(--success)">' + accRun + '%</b>' : ""}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:#8b5cf6;font-weight:600">范文学习</span>' : ""}</span>
         </span>
       </div>
 
@@ -1977,8 +1988,8 @@
                   extra = `<div class="ref-answer"><b>参考答案：</b>${mathHtml(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
                 }
                 const bar = showSmart
-                  ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
-                  : `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}</div>`;
+                  ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${ok && okRun >= 3 ? ` · 🔥 连对 ${okRun}` : ""}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
+                  : `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}${ok && okRun >= 3 ? ` · 🔥 连对 ${okRun}` : ""}</div>`;
                 const selfBtns = showSmart
                   ? `<div class="self-assess">
                       <button class="btn btn-primary btn-sm" data-act="self-ok" type="button">我答对了</button>
