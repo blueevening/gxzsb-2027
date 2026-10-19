@@ -5099,6 +5099,7 @@ function formulaFilter() {
     } else if (act === "fnav") {
       state.formulaGroupSel = parseInt(t.getAttribute("data-gi"), 10);
       render();
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
       go("word-learn");
