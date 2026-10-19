@@ -1219,6 +1219,8 @@
         </div>
       </section>
 
+      ${buildWeakPoints()}
+
       <!-- 快捷入口 -->
       <section>
         <div class="quick-3">
@@ -3056,6 +3058,28 @@ function ensureExplain(q) {
       '<span class="sync-msg">' + msg + '</span>' + extra + '</div>';
   }
 
+  // 薄弱考点：按错题知识点统计错误次数，取前 3
+  function buildWeakPoints() {
+    var counts = {};
+    Object.keys(state.wrong || {}).forEach(function (id) {
+      var q = qById(id); var w = state.wrong[id];
+      if (!q || !w || w.mastered) return;
+      var kp = q.knowledgePoint || q.subject || "未分类";
+      counts[kp] = (counts[kp] || 0) + (w.n || 1);
+    });
+    var arr = Object.keys(counts).map(function (k) { return { kp: k, n: counts[k] }; })
+      .sort(function (a, b) { return b.n - a.n; }).slice(0, 3);
+    if (!arr.length) return "";
+    var html = '<div class="card" style="margin:12px 0"><div style="font-size:13px;font-weight:700;margin-bottom:4px">⚡ 你的薄弱考点 <span style="font-weight:400;color:var(--text-sub);font-size:11px">错最多的知识点，点进去专练</span></div>';
+    arr.forEach(function (it) {
+      html += '<button class="list-row" data-act="weak-practice" data-p="' + attr(it.kp) + '" type="button">' +
+        '<span class="main"><span class="t">' + esc(it.kp) + '</span></span>' +
+        '<span class="end" style="color:var(--error)">错 ' + it.n + ' 次 ›</span></button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
   function buildWeekChart() {
     var days = [];
     for (var i = 6; i >= 0; i--) {
@@ -3074,11 +3098,11 @@ function ensureExplain(q) {
       var h = x.t ? Math.max(6, Math.round(x.t / max * 100)) : 2;
       var rate = x.t ? Math.round(x.c / x.t * 100) : null;
       return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:118px">' +
-        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t : "") + '</div>' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t + (rate != null ? '·' + rate + '%' : '') : "") + '</div>' +
         '<div style="width:70%;border-radius:4px 4px 0 0;background:var(--primary);opacity:' + (0.35 + 0.65 * x.t / max) + ';height:' + h + '%"></div>' +
         '<div style="font-size:10px;color:var(--text-sub);margin-top:3px">' + x.label + '</div></div>';
     }).join("");
-    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题量 <span style="font-weight:400;color:var(--text-sub);font-size:11px">共 ' + total + ' 题</span></div>' +
+    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题 <span style="font-weight:400;color:var(--text-sub);font-size:11px">柱=做题量 · 数字后=正确率 · 共 ' + total + ' 题</span></div>' +
       '<div style="display:flex;align-items:flex-end;gap:4px;height:118px">' + bars + '</div></div>';
   }
 
@@ -5105,6 +5129,8 @@ function formulaFilter() {
       render();
     } else if (act === "prac-point") {
       startSession({ point: t.getAttribute("data-p"), limit: 10, title: "考点专练" });
+    } else if (act === "weak-practice") {
+      startSession({ point: t.getAttribute("data-p"), limit: 10, title: "薄弱点专练" });
     } else if (act === "fgroup") {
       state.formulaGroup = t.getAttribute("data-v") || "public";
       state.formulaTab = state.formulaGroup === "major" ? "电工电子技术基础" : "高等数学";

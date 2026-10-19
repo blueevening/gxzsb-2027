@@ -763,6 +763,10 @@ html.qa-modal-open { overflow: hidden; }
 .home-progress { display:grid; gap:16px; }
 .chapter-grid { display:flex; flex-direction:column; }
 .practice-wrap { display:grid; gap:16px; }
+/* 翻题淡入上滑，避免整页重绘的闪白感 */
+.practice-wrap > div > .card,
+.practice-wrap > .card { animation: qIn .18s ease-out; }
+@keyframes qIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .answer-card-panel { display:none; }
 .formula-wrap { display:grid; gap:12px; }
 .formula-page { max-width: 100%; }
