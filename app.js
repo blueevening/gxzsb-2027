@@ -243,8 +243,9 @@
   }
   function applyFontSize() {
     var k = state.fontSize || "md";
-    var scale = k === "sm" ? 0.9 : (k === "lg" ? 1.12 : 1.0);
-    document.documentElement.style.fontSize = (16 * scale) + "px";
+    var scale = k === "sm" ? 0.92 : (k === "lg" ? 1.1 : 1.0);
+    // 页面大量使用硬编码 px，改根字号(rem)无效；用 zoom 整体缩放，所有 px 跟着变
+    document.documentElement.style.zoom = scale;
   }
 
   const state = {
