@@ -2010,18 +2010,8 @@
               <div class="content">
             ${
               (q.steps || []).length
-                ? `<ol class="f-steps">${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
-                : exp.split("\n").filter(function(l){return l.trim();}).map(function(l){
-                    // 一行里的 ①②③ 拆成多行，②③ 缩进，不再挤成一行
-                    var parts = l.split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])/).filter(function(p){return p.trim();});
-                    if (parts.length > 1) {
-                      return parts.map(function(p){
-                        var isHead = /^【/.test(p);
-                        return '<p style="margin-left:' + (isHead ? '0' : '16px') + '">' + (isHead ? '<strong>' : '') + mathHtml(p) + (isHead ? '</strong>' : '') + '</p>';
-                      }).join("");
-                    }
-                    return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`;
-                  }).join("")
+                ? q.steps.map(fmtExpLine).join("")
+                : exp.split("\n").filter(function(l){return l.trim();}).map(fmtExpLine).join("")
             }
             ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}
             ${q.sample ? `<p><strong>范文/译文：</strong></p><div>${esc(q.sample).replace(/\n/g,"<br/>")}</div>` : ""}
@@ -3258,6 +3248,18 @@ function formulaFilter() {
   function fracSpan(num, den) {
     return '<span class="frac"><span class="num">' + mathHtml(num) + '</span><span class="den">' + mathHtml(den) + "</span></span>";
   }
+  // 解析行渲染：去掉外层 1.2.3. 编号；一行里的 ①②③ 拆成多行、②③ 缩进
+  function fmtExpLine(l) {
+    var parts = String(l).split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])/).filter(function (p) { return p.trim(); });
+    if (parts.length > 1) {
+      return parts.map(function (p) {
+        var isHead = /^【/.test(p);
+        return '<p style="margin-left:' + (isHead ? '0' : '16px') + ';margin:4px 0">' + (isHead ? '<strong>' : '') + mathHtml(p) + (isHead ? '</strong>' : '') + '</p>';
+      }).join("");
+    }
+    return '<p style="margin:4px 0">' + (/^【/.test(l) ? '<strong>' : '') + mathHtml(l) + (/^【/.test(l) ? '</strong>' : '') + '</p>';
+  }
+
   function mathHtml(expr) {
     const raw = String(expr == null ? "" : expr);
     let out = "";

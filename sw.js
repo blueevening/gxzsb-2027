@@ -1,5 +1,5 @@
 /* gxzsb sw v64 — App Shell 策略：静态资源缓存优先(秒开)，index.html 网络优先(拿最新版本号) */
-const CACHE = "gxzsb-appshell-2.1.2";
+const CACHE = "gxzsb-appshell-2.1.3";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {
