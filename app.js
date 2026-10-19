@@ -2051,6 +2051,7 @@
         <div class="q-nav-row">
           <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
           <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
+          <button class="btn btn-ghost" data-act="print-q" type="button">🖨 打印</button>
           <button class="btn btn-ghost" data-act="next" type="button">${s.i >= s.q.length - 1 ? "完成" : "下一题"}</button>
           ${s.submitted ? "" : `<button class="btn btn-primary" data-act="submit" type="button">提交</button>`}
         </div>
@@ -2490,6 +2491,57 @@
   }
 
   /* ========== 错题本 ========== */
+  // 当前错题本/收藏页「可见」的题目 ids：跟随科目/错误次数筛选，导出 TXT 与打印 PDF 共用，
+  // 避免「屏幕筛了 C 语言，导出却是全部」的口径不一致。
+  function visibleExportIds() {
+    if (state.wrongTab === "fav") {
+      return Object.keys(state.fav).filter(function (id) { return state.fav[id] && qById(id); });
+    }
+    var subjFilter = state.wrongSubj || "all";
+    var nFilter = state.wrongNFilter || 0;
+    return Object.keys(state.wrong)
+      .map(function (id) { var q = qById(id); var w = state.wrong[id]; return (q && w && !w.mastered) ? { q: q, w: w } : null; })
+      .filter(Boolean)
+      .filter(function (it) { return subjFilter === "all" || it.q.subject === subjFilter; })
+      .filter(function (it) { return !nFilter || (it.w.n || 1) >= nFilter; })
+      .map(function (it) { return it.q.id; });
+  }
+
+  // 生成完整打印稿（题干+选项+答案+解析）并触发浏览器打印，打印后自动移除。
+  // ids 为题目 id 数组，kindLabel 为标题后缀（如「错题本」「收藏题」「本题」）。
+  function doPrintSheet(ids, kindLabel) {
+    ids = (ids || []).filter(function (id) { return qById(id); });
+    if (!ids.length) { toastLite("暂无内容可打印"); return; }
+    var html = '<div class="print-sheet" id="printSheet">' +
+      '<h1>gxzsb ' + esc(kindLabel) + ' · 共 ' + ids.length + ' 题</h1>' +
+      '<p class="p-meta">导出日期 ' + new Date().toLocaleDateString() + ' · 含题干 / 选项 / 答案 / 解析</p>';
+    ids.forEach(function (id, i) {
+      var q = qById(id); if (!q) return;
+      html += '<div class="p-item">';
+      html += '<div class="p-stem"><b>' + (i + 1) + '.</b> ' + mathHtml(String(q.stem || "")) + '</div>';
+      if (q.options && q.options.length) {
+        html += '<div class="p-opts">';
+        q.options.forEach(function (o, idx) {
+          var letter = "ABCD"[idx] || ("#" + (idx + 1));
+          var isCorrect = String(o) === String(q.answer);
+          html += '<div class="p-opt' + (isCorrect ? " p-correct" : "") + '">' + letter + '. ' + mathHtml(String(o)) + (isCorrect ? '  ✓' : '') + '</div>';
+        });
+        html += '</div>';
+      }
+      html += '<div class="p-ans"><b>答案：</b>' + esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || ""))) + '</div>';
+      var exp = ensureExplain(q) || q.analysis || "";
+      html += '<div class="p-exp"><b>解析：</b>' + String(exp).replace(/<[^>]+>/g, "") + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    var oldSheet = document.getElementById("printSheet"); if (oldSheet) oldSheet.remove();
+    document.body.insertAdjacentHTML("beforeend", html);
+    setTimeout(function () { window.print(); }, 60);
+    window.onafterprint = function () {
+      var p = document.getElementById("printSheet"); if (p) p.remove();
+    };
+  }
+
   function viewWrong() {
     setTitle("错题 / 收藏", true);
     const now = Date.now();
@@ -2974,6 +3026,32 @@ function ensureExplain(q) {
       '<span class="sync-msg">' + msg + '</span>' + extra + '</div>';
   }
 
+  function buildWeekChart() {
+    var days = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(Date.now() - i * 86400000);
+      days.push({ key: localDayKey(d), label: (d.getMonth() + 1) + "/" + d.getDate(), t: 0, c: 0 });
+    }
+    var map = {}; days.forEach(function (x) { map[x.key] = x; });
+    (state.attempts || []).forEach(function (a) {
+      if (!a || !a.at) return;
+      var k = localDayKey(new Date(a.at));
+      if (map[k]) { map[k].t++; if (a.correct) map[k].c++; }
+    });
+    var max = 1; days.forEach(function (x) { if (x.t > max) max = x.t; });
+    var total = days.reduce(function (s, x) { return s + x.t; }, 0);
+    var bars = days.map(function (x) {
+      var h = x.t ? Math.max(6, Math.round(x.t / max * 100)) : 2;
+      var rate = x.t ? Math.round(x.c / x.t * 100) : null;
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:118px">' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t : "") + '</div>' +
+        '<div style="width:70%;border-radius:4px 4px 0 0;background:var(--primary);opacity:' + (0.35 + 0.65 * x.t / max) + ';height:' + h + '%"></div>' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-top:3px">' + x.label + '</div></div>';
+    }).join("");
+    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题量 <span style="font-weight:400;color:var(--text-sub);font-size:11px">共 ' + total + ' 题</span></div>' +
+      '<div style="display:flex;align-items:flex-end;gap:4px;height:118px">' + bars + '</div></div>';
+  }
+
   function viewMe() {
     setTitle("我的", false);
     const total = state.attempts.length;
@@ -2991,6 +3069,7 @@ function ensureExplain(q) {
         <div style="font-size:16px;font-weight:bold">${esc(nick)}</div>
       </div>
 
+      ${buildWeekChart()}
       <div class="section-title">账号与数据</div>
       ${syncStatusHtml()}
       <div class="card" style="padding:0;margin-bottom:16px">
@@ -4768,10 +4847,8 @@ function formulaFilter() {
       applyFontSize();
       render();
     } else if (act === "export-txt") {
-      // P2-1：导出 TXT（题目+答案+解析），错题本/收藏通用
-      var ids = state.wrongTab === "fav"
-        ? Object.keys(state.fav).filter(function(id){ return state.fav[id] && qById(id); })
-        : Object.keys(state.wrong).filter(function(id){ return qById(id); });
+      // P2-1：导出 TXT（题目+答案+解析），错题本/收藏通用；跟随当前科目/次数筛选
+      var ids = visibleExportIds();
       if (!ids.length) { toastLite("暂无内容可导出"); return; }
       var lines = ["# gxzsb 导出 · " + (state.wrongTab === "fav" ? "收藏题" : "错题本") + " · 共 " + ids.length + " 题", ""];
       ids.forEach(function(id, i){
@@ -4792,40 +4869,11 @@ function formulaFilter() {
       document.body.appendChild(a); a.click(); a.remove();
       toastLite("已导出 TXT");
     } else if (act === "export-print") {
-      // 生成完整打印稿（题干+选项+答案+解析），而不是打印截断的列表页
-      var pIds = state.wrongTab === "fav"
-        ? Object.keys(state.fav).filter(function(id){ return state.fav[id] && qById(id); })
-        : Object.keys(state.wrong).filter(function(id){ return qById(id); });
-      if (!pIds.length) { toastLite("暂无内容可打印"); return; }
-      var pKind = state.wrongTab === "fav" ? "收藏题" : "错题本";
-      var ph = '<div class="print-sheet" id="printSheet">' +
-        '<h1 style="font-size:16px;margin:0 0 4px">gxzsb ' + esc(pKind) + ' · 共 ' + pIds.length + ' 题</h1>' +
-        '<p style="font-size:11px;color:#666;margin:0 0 14px">含题干 · 选项 · 答案 · 解析</p>';
-      pIds.forEach(function(id, i){
-        var q = qById(id); if (!q) return;
-        ph += '<div class="p-item">';
-        ph += '<div class="p-stem"><b>' + (i+1) + '.</b> ' + mathHtml(String(q.stem || "")) + '</div>';
-        if (q.options && q.options.length) {
-          ph += '<div class="p-opts">';
-          q.options.forEach(function(o, idx){
-            var letter = "ABCD"[idx] || ("#" + (idx+1));
-            var isCorrect = String(o) === String(q.answer);
-            ph += '<div class="p-opt' + (isCorrect ? " p-correct" : "") + '">' + letter + '. ' + mathHtml(String(o)) + (isCorrect ? '  ✓' : '') + '</div>';
-          });
-          ph += '</div>';
-        }
-        ph += '<div class="p-ans"><b>答案：</b>' + esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || ""))) + '</div>';
-        var exp = ensureExplain(q) || q.analysis || "";
-        ph += '<div class="p-exp"><b>解析：</b>' + String(exp).replace(/<[^>]+>/g, "") + '</div>';
-        ph += '</div>';
-      });
-      ph += '</div>';
-      var oldSheet = document.getElementById("printSheet"); if (oldSheet) oldSheet.remove();
-      document.body.insertAdjacentHTML("beforeend", ph);
-      setTimeout(function () { window.print(); }, 60);
-      window.onafterprint = function () {
-        var p = document.getElementById("printSheet"); if (p) p.remove();
-      };
+      // 打印完整题稿（跟随当前筛选）：题干+选项(正确答案✓)+答案+解析
+      doPrintSheet(visibleExportIds(), state.wrongTab === "fav" ? "收藏题" : "错题本");
+    } else if (act === "print-q") {
+      var sNow = state.session;
+      if (sNow && sNow.q && sNow.q[sNow.i]) doPrintSheet([sNow.q[sNow.i].id], "本题");
     } else if (act === "toggle-pwd") {
       var tp = document.getElementById(t.getAttribute("data-target"));
       if (tp) {
