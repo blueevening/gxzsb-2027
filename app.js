@@ -5122,6 +5122,8 @@ function formulaFilter() {
       });
       var fl = document.getElementById("fList");
       if (fl) fl.innerHTML = buildFListHTML(state.formulaTab);
+      var fq = document.getElementById("fq");
+      if (fq && fq.value) fq.dispatchEvent(new Event("input"));
       window.scrollTo({ top: 0, behavior: "auto" });
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
