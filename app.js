@@ -2844,7 +2844,65 @@ function ensureExplain(q) {
   }
 
 
-    function viewFormula() {
+    // 公式列表渲染：切分组时只更新 #fList，不重建整个页面（导航条不闪）
+  function buildFListHTML(cur) {
+    const book = window.STUDY_DATA.FORMULA_BOOK || {};
+    const groups = book[cur] || [];
+    const sc = subjOf(cur);
+    const isEnLang = cur === "英语";
+    const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
+    const bodyHtml = function (f) {
+      const raw = String(f == null ? "" : f);
+      const parts = raw.split(/[；;]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (parts.length <= 1) return '<div class="f-single">' + ft(raw) + "</div>";
+      return parts.map(function (l) { return '<div class="f-line">' + ft(l) + "</div>"; }).join("");
+    };
+    const selGi = (state.formulaGroupSel == null || state.formulaGroupSel < 0) ? -1 : state.formulaGroupSel;
+    const showGroups = selGi < 0 ? groups : [groups[selGi]].filter(Boolean);
+    return showGroups
+      .map(
+        (grp) => `<div class="formula-group">
+          <div class="formula-group-title">
+            <span class="line" style="background:${sc.color}"></span>
+            <span class="formula-group-name">${esc(grp.key)}</span>
+            <span class="muted">（${grp.items.length}）</span>
+          </div>
+          ${grp.items
+            .map(
+              (it) => `<div class="f-card f-item" style="border-left:3px solid ${sc.color}">
+                <div class="f-head">
+                  <span class="f-name">${esc(it.name)}</span>
+                  ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
+                  <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
+                </div>
+                <div class="f-body">${bodyHtml(it.formula)}</div>
+                ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><div class="f-txt">${ft(it.plain)}</div></div>` : ""}
+                <div class="f-row"><span class="f-tag">怎么用</span><div class="f-txt">${ft(it.use)}</div></div>
+                ${it.work && it.work.length ? `
+                  <div class="f-example">
+                    <div class="f-example-h"><span class="f-example-badge">例题详解</span></div>
+                    <div class="f-example-q">${ft(it.example)}</div>
+                    <ol class="f-example-work">${it.work.map((w) => `<li>${ft(w)}</li>`).join("")}</ol>
+                    ${it.answer ? `<div class="f-example-a"><span>答案</span><b>${ft(it.answer)}</b></div>` : ""}
+                  </div>` : `
+                  ${it.example ? `<div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>` : ""}
+                  ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
+                  ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}`}
+                ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><div class="f-txt">${ft(it.tip)}</div></div>` : ""}
+                <div class="f-row"><span class="f-tag bad">易错</span><div class="f-txt">${ft(it.wrong)}</div></div>
+                <div class="f-actions">
+                  <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>
+                  <button class="btn btn-ghost btn-sm" data-act="copy" data-t="${attr(it.formula)}" type="button">复制公式</button>
+                </div>
+              </div>`
+            )
+            .join("")}
+        </div>`
+      )
+      .join("");
+  }
+
+  function viewFormula() {
     setTitle("公式速查", true);
     const book = window.STUDY_DATA.FORMULA_BOOK || {};
     const PUB = ["高等数学", "英语"];
@@ -2903,47 +2961,7 @@ function ensureExplain(q) {
       </div>
 
       <div id="fList">
-        ${showGroups
-          .map(
-            (grp) => `<div class="formula-group">
-              <div class="formula-group-title">
-                <span class="line" style="background:${sc.color}"></span>
-                <span class="formula-group-name">${esc(grp.key)}</span>
-                <span class="muted">（${grp.items.length}）</span>
-              </div>
-              ${grp.items
-                .map(
-                  (it) => `<div class="f-card f-item" style="border-left:3px solid ${sc.color}">
-                    <div class="f-head">
-                      <span class="f-name">${esc(it.name)}</span>
-                      ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
-                      <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
-                    </div>
-                    <div class="f-body">${bodyHtml(it.formula)}</div>
-                    ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><div class="f-txt">${ft(it.plain)}</div></div>` : ""}
-                    <div class="f-row"><span class="f-tag">怎么用</span><div class="f-txt">${ft(it.use)}</div></div>
-                    ${it.work && it.work.length ? `
-                      <div class="f-example">
-                        <div class="f-example-h"><span class="f-example-badge">例题详解</span></div>
-                        <div class="f-example-q">${ft(it.example)}</div>
-                        <ol class="f-example-work">${it.work.map((w) => `<li>${ft(w)}</li>`).join("")}</ol>
-                        ${it.answer ? `<div class="f-example-a"><span>答案</span><b>${ft(it.answer)}</b></div>` : ""}
-                      </div>` : `
-                      ${it.example ? `<div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>` : ""}
-                      ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
-                      ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}`}
-                    ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><div class="f-txt">${ft(it.tip)}</div></div>` : ""}
-                    <div class="f-row"><span class="f-tag bad">易错</span><div class="f-txt">${ft(it.wrong)}</div></div>
-                    <div class="f-actions">
-                      <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>
-                      <button class="btn btn-ghost btn-sm" data-act="copy" data-t="${attr(it.formula)}" type="button">复制公式</button>
-                    </div>
-                  </div>`
-                )
-                .join("")}
-            </div>`
-          )
-          .join("")}
+        ${buildFListHTML(cur)}
       </div>
       <div class="empty hidden" id="fEmpty">没有匹配的公式</div>
       </div>
@@ -5098,7 +5116,12 @@ function formulaFilter() {
       render();
     } else if (act === "fnav") {
       state.formulaGroupSel = parseInt(t.getAttribute("data-gi"), 10);
-      render();
+      // 只换列表内容，导航条不重建不闪；高亮当前 chip
+      document.querySelectorAll(".fnav-chip").forEach(function (c) {
+        c.classList.toggle("is-active", parseInt(c.getAttribute("data-gi"), 10) === state.formulaGroupSel);
+      });
+      var fl = document.getElementById("fList");
+      if (fl) fl.innerHTML = buildFListHTML(state.formulaTab);
       window.scrollTo({ top: 0, behavior: "auto" });
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
