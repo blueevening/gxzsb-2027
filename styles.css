@@ -211,11 +211,25 @@ body.boot-loading .shell { padding: 32px 16px; }
   .q-actions { bottom: calc(var(--keyboard-h, 0px) + 8px); }
 }
 
-/* P2-1 打印样式：只留题目内容，隐藏导航/按钮 */
+/* 打印稿：屏幕上隐藏，打印时只显示它（完整题干/选项/答案/解析） */
+.print-sheet { display: none; }
 @media print {
   .topbar, .tabbar, .side-nav, .q-actions, .btn, .chip, .section-title, .stat-grid, .seg-top { display: none !important; }
   body { padding: 0; background: #fff; color: #000; }
   .card { box-shadow: none; border: 1px solid #999; break-inside: avoid; }
+  /* 隐藏整个应用界面，只留打印稿 */
+  #app { display: none !important; }
+  .print-sheet {
+    display: block !important;
+    color: #000; background: #fff; font-size: 12px; line-height: 1.6;
+  }
+  .print-sheet .p-item { break-inside: avoid; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #ccc; }
+  .print-sheet .p-stem { font-size: 13px; }
+  .print-sheet .p-opts { margin: 6px 0; }
+  .print-sheet .p-opt { padding: 1px 0; }
+  .print-sheet .p-correct { font-weight: 700; color: #16a34a; }
+  .print-sheet .p-ans, .print-sheet .p-exp { margin-top: 4px; }
+  .print-sheet .p-exp { color: #333; }
 }
 
 /* P2-3 深色模式细节：主观题参考区/解析区对比度 */

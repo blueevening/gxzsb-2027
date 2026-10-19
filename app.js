@@ -4792,8 +4792,40 @@ function formulaFilter() {
       document.body.appendChild(a); a.click(); a.remove();
       toastLite("已导出 TXT");
     } else if (act === "export-print") {
-      // P2-1：调浏览器打印，可另存为 PDF
-      window.print();
+      // 生成完整打印稿（题干+选项+答案+解析），而不是打印截断的列表页
+      var pIds = state.wrongTab === "fav"
+        ? Object.keys(state.fav).filter(function(id){ return state.fav[id] && qById(id); })
+        : Object.keys(state.wrong).filter(function(id){ return qById(id); });
+      if (!pIds.length) { toastLite("暂无内容可打印"); return; }
+      var pKind = state.wrongTab === "fav" ? "收藏题" : "错题本";
+      var ph = '<div class="print-sheet" id="printSheet">' +
+        '<h1 style="font-size:16px;margin:0 0 4px">gxzsb ' + esc(pKind) + ' · 共 ' + pIds.length + ' 题</h1>' +
+        '<p style="font-size:11px;color:#666;margin:0 0 14px">含题干 · 选项 · 答案 · 解析</p>';
+      pIds.forEach(function(id, i){
+        var q = qById(id); if (!q) return;
+        ph += '<div class="p-item">';
+        ph += '<div class="p-stem"><b>' + (i+1) + '.</b> ' + mathHtml(String(q.stem || "")) + '</div>';
+        if (q.options && q.options.length) {
+          ph += '<div class="p-opts">';
+          q.options.forEach(function(o, idx){
+            var letter = "ABCD"[idx] || ("#" + (idx+1));
+            var isCorrect = String(o) === String(q.answer);
+            ph += '<div class="p-opt' + (isCorrect ? " p-correct" : "") + '">' + letter + '. ' + mathHtml(String(o)) + (isCorrect ? '  ✓' : '') + '</div>';
+          });
+          ph += '</div>';
+        }
+        ph += '<div class="p-ans"><b>答案：</b>' + esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || ""))) + '</div>';
+        var exp = ensureExplain(q) || q.analysis || "";
+        ph += '<div class="p-exp"><b>解析：</b>' + String(exp).replace(/<[^>]+>/g, "") + '</div>';
+        ph += '</div>';
+      });
+      ph += '</div>';
+      var oldSheet = document.getElementById("printSheet"); if (oldSheet) oldSheet.remove();
+      document.body.insertAdjacentHTML("beforeend", ph);
+      setTimeout(function () { window.print(); }, 60);
+      window.onafterprint = function () {
+        var p = document.getElementById("printSheet"); if (p) p.remove();
+      };
     } else if (act === "toggle-pwd") {
       var tp = document.getElementById(t.getAttribute("data-target"));
       if (tp) {
