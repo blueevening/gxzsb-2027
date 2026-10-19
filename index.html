@@ -7,6 +7,9 @@
 <title>广西专升本练习 · gxzsb</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="theme-color" content="#2563eb" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="专升本" />
 <link rel="icon" href="data:," />
 <script>
 /* 首帧即应用持久化主题，避免深色用户加载页闪白 */
@@ -14,9 +17,10 @@
   try { if (localStorage.getItem("gxzsb.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="styles.css?v=2.0.5" />
+<link rel="stylesheet" href="styles.css?v=2.1.0" />
 </head>
 <body>
+  <div id="offlineBar" hidden>📡 离线模式 · 数据存本地，联网后自动同步</div>
   <header class="topbar">
     <button class="back" id="btnBack" type="button" aria-label="返回">←</button>
     <span class="title" id="pageTitle">广西专升本练习</span>
@@ -27,13 +31,28 @@
   <div class="app-frame">
     <nav class="side-nav" id="sideNav" aria-label="主导航"></nav>
     <main class="shell">
-      <div id="app"></div>
+      <div id="app">
+        <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div style="height:120px;border-radius:12px;background:var(--border,#e2e8f0);animation:pulse 1.2s infinite"></div>
+          <div style="height:60px;border-radius:12px;background:var(--border,#e2e8f0);animation:pulse 1.2s infinite"></div>
+          <div style="height:60px;border-radius:12px;background:var(--border,#e2e8f0);animation:pulse 1.2s infinite"></div>
+          <p style="text-align:center;color:var(--text-sub,#94a3b8);font-size:12px;margin-top:8px">正在加载…</p>
+        </div>
+      </div>
     </main>
   </div>
 
   <nav class="tabbar" id="tabbar" aria-label="底部导航"></nav>
 
 <script>
+/* 离线状态提示 */
+(function () {
+  var bar = document.getElementById('offlineBar');
+  function sync() { if (bar) bar.hidden = navigator.onLine; }
+  window.addEventListener('online', sync);
+  window.addEventListener('offline', sync);
+  sync();
+})();
 /* SW：仅在 http(s) 下注册（file:// 双击打开时跳过，不影响使用） */
 if ('serviceWorker' in navigator &&
     (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
@@ -42,6 +61,6 @@ if ('serviceWorker' in navigator &&
   });
 }
 </script>
-<script defer src="boot.js?v=2.0.5"></script>
+<script defer src="boot.js?v=2.1.0"></script>
 </body>
 </html>
