@@ -3095,11 +3095,7 @@ function ensureExplain(q) {
         <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机数据</span></span><span class="end">›</span></button>
       </div>
 
-      <div class="disclaimer">
-        本站为个人整理的广西专升本备考工具，非官方平台，内容仅供参考。
-        ${activeUser() ? "已登录，进度同步云端。" : "游客模式，数据仅存本机。"}
-        <br/>版本 v3.0 · 五科1500+题
-      </div>
+      <div class="disclaimer">版本 v${window.V || "464"}</div>
       </div>
     `;
   }

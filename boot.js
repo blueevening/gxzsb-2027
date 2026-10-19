@@ -10,7 +10,8 @@
 (function () {
   "use strict";
 
-  var V = "464";          // 与 index.html 的版本号保持一致
+  var V = "465";          // 与 index.html 的版本号保持一致
+  try { window.V = V; } catch (e) {}
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 
