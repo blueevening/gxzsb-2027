@@ -3264,7 +3264,9 @@ function formulaFilter() {
     let raw = String(expr == null ? "" : expr);
     // 横排简单分数 a/b → frac{a}{b}，统一渲染成上下堆叠（分子上/分母下）
     // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
-    raw = raw.replace(/(?<![a-zA-Z])(\([^()]*\)|[0-9.]+|[a-zA-Z][²³√]?)\s*\/\s*(\([^()]*\)|[0-9.]+|[a-zA-Z][²³√]?)(?![a-zA-Z])/g, "frac{$1}{$2}");
+    // 横排分数 a/b → frac{a}{b}：支持数字、单/双字母短变量(x/R1/Rf/ui)、括号表达式
+    // 3 字母以上英文单词(DNS/int/because)与 URL 不转
+    raw = raw.replace(/(?<![a-zA-Z])(\([^()]*\)|[0-9.]+|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9.]+|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
     let out = "";
     let i = 0;
     while (i < raw.length) {
