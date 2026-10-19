@@ -3261,7 +3261,10 @@ function formulaFilter() {
   }
 
   function mathHtml(expr) {
-    const raw = String(expr == null ? "" : expr);
+    let raw = String(expr == null ? "" : expr);
+    // 横排简单分数 a/b → frac{a}{b}，统一渲染成上下堆叠（分子上/分母下）
+    // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
+    raw = raw.replace(/(?<![a-zA-Z])(\([^()]*\)|[0-9.]+|[a-zA-Z][²³√]?)\s*\/\s*(\([^()]*\)|[0-9.]+|[a-zA-Z][²³√]?)(?![a-zA-Z])/g, "frac{$1}{$2}");
     let out = "";
     let i = 0;
     while (i < raw.length) {
