@@ -1869,6 +1869,10 @@
       if (hasUnfinishedSession()) {
         return '<div class="practice-restore"><div class="practice-restore-spin">⟳</div><div class="practice-restore-txt">正在恢复上次答题…</div></div>';
       }
+      // 题库脚本还在异步加载：显示加载中，而不是误报"没有可练习的题目"
+      if (typeof window !== "undefined" && !window.GXZSB_DATA_READY) {
+        return '<div class="practice-restore"><div class="practice-restore-spin">⟳</div><div class="practice-restore-txt">题库加载中，马上就好…</div></div>';
+      }
       return `<div class="empty">没有可练习的题目<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div></div>`;
     }
     const q = s.q[s.i];
