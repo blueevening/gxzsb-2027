@@ -2010,7 +2010,7 @@
               <div class="content">
             ${
               (q.steps || []).length
-                ? `<ol>${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
+                ? `<ol class="f-steps">${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
                 : exp.split("\n").filter(function(l){return l.trim();}).map(function(l){ return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`; }).join("")
             }
             ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}

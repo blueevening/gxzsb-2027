@@ -2041,6 +2041,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .f-steps {
   margin: 4px 0 0;
   padding-left: 22px;
+  list-style: decimal;
 }
 .f-steps li {
   font-size: 13.5px;
