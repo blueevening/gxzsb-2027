@@ -2853,6 +2853,8 @@ function ensureExplain(q) {
     const list = g === "public" ? PUB : MAJ;
     const cur = list.indexOf(state.formulaTab) >= 0 ? state.formulaTab : list[0];
     const groups = book[cur] || [];
+    const selGi = (state.formulaGroupSel == null || state.formulaGroupSel < 0) ? -1 : state.formulaGroupSel;
+    const showGroups = selGi < 0 ? groups : [groups[selGi]].filter(Boolean);
     const sc = subjOf(cur);
     const isEnLang = cur === "英语";
     const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
@@ -2891,16 +2893,17 @@ function ensureExplain(q) {
       </div>
 
       <div class="fnav-row">
+        <button class="chip fnav-chip ${selGi < 0 ? "is-active" : ""}" data-act="fnav" data-gi="-1" type="button">全部</button>
         ${groups
           .map(
             (grp, gi) =>
-              `<button class="chip fnav-chip" data-act="fnav" data-gi="${gi}" type="button">${esc(grp.key)} <span class="muted">${grp.items.length}</span></button>`
+              `<button class="chip fnav-chip ${gi === selGi ? "is-active" : ""}" data-act="fnav" data-gi="${gi}" type="button">${esc(grp.key)} <span class="muted">${grp.items.length}</span></button>`
           )
           .join("")}
       </div>
 
       <div id="fList">
-        ${groups
+        ${showGroups
           .map(
             (grp) => `<div class="formula-group">
               <div class="formula-group-title">
@@ -5087,18 +5090,15 @@ function formulaFilter() {
     } else if (act === "fgroup") {
       state.formulaGroup = t.getAttribute("data-v") || "public";
       state.formulaTab = state.formulaGroup === "major" ? "电工电子技术基础" : "高等数学";
+      state.formulaGroupSel = -1;
       render();
     } else if (act === "ftab") {
       state.formulaTab = t.getAttribute("data-v");
+      state.formulaGroupSel = -1;
       render();
     } else if (act === "fnav") {
-      var gi = parseInt(t.getAttribute("data-gi"), 10) || 0;
-      var els = document.querySelectorAll("#fList .formula-group");
-      if (els[gi]) {
-        els[gi].scrollIntoView({ behavior: "smooth", block: "start" });
-        els[gi].style.outline = "2px solid var(--primary)";
-        setTimeout(function () { els[gi].style.outline = ""; }, 1200);
-      }
+      state.formulaGroupSel = parseInt(t.getAttribute("data-gi"), 10);
+      render();
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
       go("word-learn");
