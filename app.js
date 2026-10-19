@@ -2011,7 +2011,17 @@
             ${
               (q.steps || []).length
                 ? `<ol class="f-steps">${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
-                : exp.split("\n").filter(function(l){return l.trim();}).map(function(l){ return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`; }).join("")
+                : exp.split("\n").filter(function(l){return l.trim();}).map(function(l){
+                    // 一行里的 ①②③ 拆成多行，②③ 缩进，不再挤成一行
+                    var parts = l.split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])/).filter(function(p){return p.trim();});
+                    if (parts.length > 1) {
+                      return parts.map(function(p){
+                        var isHead = /^【/.test(p);
+                        return '<p style="margin-left:' + (isHead ? '0' : '16px') + '">' + (isHead ? '<strong>' : '') + mathHtml(p) + (isHead ? '</strong>' : '') + '</p>';
+                      }).join("");
+                    }
+                    return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`;
+                  }).join("")
             }
             ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}
             ${q.sample ? `<p><strong>范文/译文：</strong></p><div>${esc(q.sample).replace(/\n/g,"<br/>")}</div>` : ""}
@@ -2054,7 +2064,6 @@
         <div class="q-nav-row">
           <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
           <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
-          <button class="btn btn-ghost" data-act="print-q" type="button">🖨 打印</button>
           <button class="btn btn-ghost" data-act="next" type="button">${s.i >= s.q.length - 1 ? "完成" : "下一题"}</button>
           ${s.submitted ? "" : `<button class="btn btn-primary" data-act="submit" type="button">提交</button>`}
         </div>
