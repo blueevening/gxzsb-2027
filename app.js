@@ -2890,6 +2890,15 @@ function ensureExplain(q) {
         <span class="muted">${groups.reduce((a, x) => a + x.items.length, 0)} 条公式</span>
       </div>
 
+      <div class="fnav-row">
+        ${groups
+          .map(
+            (grp, gi) =>
+              `<button class="chip fnav-chip" data-act="fnav" data-gi="${gi}" type="button">${esc(grp.key)} <span class="muted">${grp.items.length}</span></button>`
+          )
+          .join("")}
+      </div>
+
       <div id="fList">
         ${groups
           .map(
@@ -5082,6 +5091,14 @@ function formulaFilter() {
     } else if (act === "ftab") {
       state.formulaTab = t.getAttribute("data-v");
       render();
+    } else if (act === "fnav") {
+      var gi = parseInt(t.getAttribute("data-gi"), 10) || 0;
+      var els = document.querySelectorAll("#fList .formula-group");
+      if (els[gi]) {
+        els[gi].scrollIntoView({ behavior: "smooth", block: "start" });
+        els[gi].style.outline = "2px solid var(--primary)";
+        setTimeout(function () { els[gi].style.outline = ""; }, 1200);
+      }
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
       go("word-learn");

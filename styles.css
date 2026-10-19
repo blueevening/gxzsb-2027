@@ -770,6 +770,15 @@ html.qa-modal-open { overflow: hidden; }
   .formula-page { max-width: 720px; margin-left: auto; margin-right: auto; }
 }
 .formula-group { margin-bottom:12px; }
+.fnav-row {
+  position: sticky; top: 50px; z-index: 6;
+  display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap;
+  padding: 8px 2px; margin-bottom: 10px;
+  background: var(--bg, #fff);
+  border-bottom: 1px solid var(--border, #eee);
+}
+.fnav-row::-webkit-scrollbar { display: none; }
+.fnav-chip { flex-shrink: 0; white-space: nowrap; }
 .formula-group-title {
   display:flex; align-items:center; gap:10px;
   font-size:15px; font-weight:800; color:var(--text);
