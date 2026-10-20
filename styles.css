@@ -2215,3 +2215,19 @@ sup.math-sup .frac .den { padding-top: 1px; }
 
 /* 首屏骨架屏动画 */
 @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ===== 桌面端(≥1024px)首页密度优化：只影响宽屏，手机端不变 ===== */
+@media (min-width: 1024px) {
+  /* 快捷入口 6 个一行，卡片改横排图标+文字，压缩空高 */
+  .quick-3 { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .quick-3 .qi {
+    min-height: 56px; padding: 10px 12px; gap: 8px;
+    flex-direction: row; justify-content: flex-start;
+    font-size: 13px; text-align: left;
+  }
+  .quick-3 .qi .ico { font-size: 18px; flex-shrink: 0; }
+  /* 今日任务右侧按钮改横排，不再竖排撑高 */
+  .today-side { width: 280px; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 8px; }
+  .today-side .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; padding-left: 8px; padding-right: 8px; font-size: 13px; }
+  .today-card { align-items: center; }
+}
