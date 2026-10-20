@@ -143,7 +143,7 @@ body.boot-loading .shell { padding: 32px 16px; }
   padding: 16px 16px 24px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   body { padding-bottom: 24px; }
   .tabbar { display: none !important; }
   .app-frame {
@@ -578,7 +578,7 @@ body.boot-loading .shell { padding: 32px 16px; }
 .q-actions .q-nav-row .btn { flex: 1; }
 .q-actions .btn { min-height: 44px; padding: 0 8px; font-size: 13px; }
 .q-actions .btn-block { width: 100%; }
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .q-actions { position: static; background: transparent; backdrop-filter: none; max-width: 760px; margin-left: 0; }
 }
 
@@ -770,7 +770,7 @@ html.qa-modal-open { overflow: hidden; }
 .answer-card-panel { display:none; }
 .formula-wrap { display:grid; gap:12px; }
 .formula-page { max-width: 100%; }
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .formula-page { max-width: 960px; margin-left: auto; margin-right: auto; }
 }
 .formula-group { margin-bottom:12px; }
@@ -837,7 +837,7 @@ html.qa-modal-open { overflow: hidden; }
 .acc-mid { background:var(--warning); }
 .acc-bad { background:var(--error); }
 
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .home-tasks { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
   .home-tasks .card { margin:0; }
   .home-tasks .task-row { border-bottom:0; }
@@ -906,7 +906,7 @@ html.qa-modal-open { overflow: hidden; }
 .task-row .s { display:block; font-size:12px; color:var(--text-sub); line-height:1.4; }
 .home-tasks { width:100%; }
 .home-tasks > .card { width:100%; }
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .home-tasks { display:block; width:100%; }
   .home-tasks > .card { width:100%; max-width:800px; }
 }
@@ -1059,7 +1059,7 @@ html.qa-modal-open { overflow: hidden; }
   font-size:17px;
   line-height:1.8;
 }
-@media (min-width:1024px) {
+@media (min-width: 1200px) {
   .mathline { font-size:18px; }
   .frac .num, .frac .den { min-width:36px; padding:4px 12px; }
 }
@@ -1977,7 +1977,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 }
 
 /* Զ޿ѹ */
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .practice-wrap,
   #app > .q-progress + *,
   .shell .practice-wrap {
@@ -2219,8 +2219,8 @@ sup.math-sup .frac .den { padding-top: 1px; }
 /* 首屏骨架屏动画 */
 @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-/* ===== 桌面端(≥1024px)首页密度优化：只影响宽屏，手机端不变 ===== */
-@media (min-width: 1024px) {
+/* ===== 桌面端(≥1200px)首页密度优化：只影响宽屏，手机端不变 ===== */
+@media (min-width: 1200px) {
   /* 快捷入口 6 个一行，卡片改横排图标+文字，压缩空高 */
   .quick-3 { grid-template-columns: repeat(6, 1fr); gap: 10px; }
   .quick-3 .qi {
