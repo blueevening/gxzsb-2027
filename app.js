@@ -3259,9 +3259,7 @@ function ensureExplain(q) {
         </div>
         <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
-      </div>
-
-      <div class="disclaimer">版本 v${window.V || "464"}</div>
+        <div style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-sub)">版本 v${window.V || "2.2.0"}</div>
       </div>
     `;
   }
