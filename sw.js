@@ -1,5 +1,5 @@
 /* gxzsb sw v65 — 双缓存策略：静态资源永久缓存(秒开、更新不重下)，index.html 网络优先拿最新版 */
-const CACHE = "gxzsb-appshell-2.2.0";   // 版本化：只存 index.html，版本一变才换
+const CACHE = "gxzsb-appshell-2.2.1";   // 版本化：只存 index.html，版本一变才换
 const STATIC = "gxzsb-static-v1";        // 固定名：题库/JS/CSS 永久缓存，更新版本不清空它
 
 self.addEventListener("install", () => self.skipWaiting());

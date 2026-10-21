@@ -1219,7 +1219,7 @@
             <div class="bar light"><i style="width:${Math.min((todayDone / 30) * 100, 100)}%"></i></div>
           </div>
           <div class="today-side">
-            <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续今日 30 题" : "开始今日 30 题"}</button>
+            <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续30题" : "今日30题"}</button>
             <button class="btn btn-ghost btn-block" data-act="due" type="button">到期错题 ${due || 0}</button>
             <button class="btn btn-ghost btn-block" data-act="last" type="button">${last ? "继续上次" : "综合练习"}</button>
           </div>

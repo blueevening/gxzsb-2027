@@ -1845,7 +1845,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .hh-stats { display: flex; gap: 12px; width: 100%; justify-content: space-between; }
 .hh-stats > div { text-align: center; flex: 1; }
 .hh-stats b { display: block; font-size: 16px; }
-.hh-stats span { font-size: 11px; opacity: .85; }
+.hh-stats span { font-size: 11px; opacity: .85; white-space: nowrap; }
 
 .home-today { margin-bottom: 8px; }
 .today-card {
