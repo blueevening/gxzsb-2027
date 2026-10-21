@@ -3569,6 +3569,13 @@ function formulaFilter() {
 
   function viewWords() {
     setTitle("英语核心词汇", false);
+    if (!window.WORDS || !window.WORDS.getStats) {
+      var s = document.createElement("script");
+      s.src = "wordbook.js?v=" + (window.V || Date.now());
+      s.onload = function(){ render(); };
+      document.head.appendChild(s);
+      return '<div class="card" style="padding:40px 16px;text-align:center;color:var(--text-sub)">正在加载词库…</div>';
+    }
     var S = window.WORDS.getStats();
     var goal = window.WORDS.getDailyGoal();
     var dueReview = window.WORDS.getDueReview();
