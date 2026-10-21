@@ -2988,6 +2988,19 @@ function ensureExplain(q) {
           { name: "现代 JavaScript 教程", desc: "免费开源中文教程，从基础到 Promise/异步", url: "https://zh.javascript.info/" },
           { name: "MDN Web Docs", desc: "HTML/CSS/JS 权威参考，官方免费", url: "https://developer.mozilla.org/zh-CN/docs/Web" }
         ]
+      },
+      {
+        subj: "开源仓库（GitHub）",
+        items: [
+          { name: "TheAlgorithms/C", desc: "C语言算法/数据结构开源练习，边看边写", url: "https://github.com/TheAlgorithms/C" },
+          { name: "huihut/interview", desc: "C/C++/计网知识点开源总结，面试级复习", url: "https://github.com/huihut/interview" }
+        ]
+      },
+      {
+        subj: "广西官方（政策/院校以这里为准）",
+        items: [
+          { name: "广西招生考试院", desc: "专升本政策、报名、成绩官方发布，唯一权威源", url: "https://www.gxeea.cn/" }
+        ]
       }
     ];
     return `
