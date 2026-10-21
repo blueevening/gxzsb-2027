@@ -2979,7 +2979,7 @@ function ensureExplain(q) {
       {
         subj: "计算机网络",
         items: [
-          { name: "菜鸟教程 · 网络协议", desc: "OSI/TCP-IP/HTTP 通俗入门", url: "https://www.runoob.com/np/np-tutorial.html" }
+          { name: "中国大学MOOC · 搜计算机网络", desc: "国家精品课免费看，含TCP/IP/HTTP", url: "https://www.icourse163.org/" }
         ]
       },
       {
