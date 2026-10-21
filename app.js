@@ -1080,6 +1080,12 @@
     const todayDone = todayDoneCount();
     const streakN = (state.streak && state.streak.n) || 0;
 
+    // 本周(近7天)做题统计
+    const weekAgo = Date.now() - 7 * 86400000;
+    const weekList = (state.attempts || []).filter(function (a) { return a.at >= weekAgo; });
+    const weekN = weekList.length;
+    const weekAcc = weekN ? Math.round((weekList.filter(function (a) { return a.correct; }).length / weekN) * 100) : null;
+
     // 全库已练 / 正确率（去重题目）
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
     const totalQ = totalQuestions();
@@ -1217,6 +1223,11 @@
             <button class="btn btn-ghost btn-block" data-act="due" type="button">到期错题 ${due || 0}</button>
             <button class="btn btn-ghost btn-block" data-act="last" type="button">${last ? "继续上次" : "综合练习"}</button>
           </div>
+        </div>
+        <div class="week-stat">
+          <span>🔥 连续打卡 <b>${streakN}</b> 天</span>
+          <span>本周做 <b>${weekN}</b> 题</span>
+          <span>本周正确率 <b>${weekAcc == null ? "—" : weekAcc + "%"}</b></span>
         </div>
       </section>
 

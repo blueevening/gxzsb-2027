@@ -2225,6 +2225,13 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .offline-bar .ob-ico { font-size: 18px; }
 .offline-bar .ob-txt { flex: 1; min-width: 0; }
 
+/* 首页本周统计条 */
+.week-stat {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  padding: 10px 4px 0; font-size: 13px; color: var(--text-sub);
+}
+.week-stat b { color: var(--text); }
+
 /* 首屏骨架屏动画 */
 @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 
