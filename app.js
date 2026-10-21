@@ -3667,13 +3667,13 @@ function formulaFilter() {
           <div class="wb-card-front">
             <div class="wb-word">${esc(w.w)}</div>
             <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button" onclick="event.stopPropagation()">🔊 发音</button>
+            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
             <div class="wb-hint">点击卡片查看释义</div>
           </div>
           <div class="wb-card-back">
             <div class="wb-word">${esc(w.w)}</div>
             <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button" onclick="event.stopPropagation()">🔊 发音</button>
+            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
             <div class="wb-pos">${esc(w.pos)}</div>
             <div class="wb-meaning">${esc(w.m)}</div>
           </div>
