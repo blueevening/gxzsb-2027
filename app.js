@@ -3242,17 +3242,11 @@ function ensureExplain(q) {
       </div>
 
       ${buildWeekChart()}
-      <div class="section-title">账号与数据</div>
       ${syncStatusHtml()}
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
-      </div>
-
-      <div class="section-title">设置</div>
-      <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
         <div class="list-row" style="display:flex;align-items:center;gap:8px;padding:12px 16px">
           <span class="main" style="flex:1"><span class="t">字号大小</span></span>
@@ -3264,7 +3258,7 @@ function ensureExplain(q) {
           </div>
         </div>
         <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机数据</span></span><span class="end">›</span></button>
+        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
       </div>
 
       <div class="disclaimer">版本 v${window.V || "464"}</div>
