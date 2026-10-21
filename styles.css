@@ -2216,6 +2216,15 @@ sup.math-sup .frac .den { padding-top: 1px; }
 }
 #offlineBar[hidden] { display: none; }
 
+/* 首页离线题库预载条 */
+.offline-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+  border-radius: 12px; padding: 10px 14px; font-size: 13px; margin-bottom: 8px;
+}
+.offline-bar .ob-ico { font-size: 18px; }
+.offline-bar .ob-txt { flex: 1; min-width: 0; }
+
 /* 首屏骨架屏动画 */
 @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 

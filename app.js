@@ -1234,6 +1234,15 @@
         </div>
       </section>
 
+      <!-- 离线题库预载 -->
+      <section>
+        <div class="offline-bar" id="offlineBarHome">
+          <span class="ob-ico">📶</span>
+          <span class="ob-txt" id="offlineBarTxt">离线题库：点这里一键下载，没网也能刷题</span>
+          <button class="btn btn-ghost btn-sm" data-act="preload-offline" type="button" id="offlineBtn">一键下载</button>
+        </div>
+      </section>
+
       <!-- 按大纲：三卷学习进度 -->
       <section>
         <div class="section-title">按大纲备考 <span class="muted" style="font-weight:400;font-size:12px">公共两科各 150 · 专业合卷 300</span></div>
@@ -4333,12 +4342,31 @@ function formulaFilter() {
   }
 
   /* ========== events ========== */
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     const t = e.target.closest("[data-act],[data-nav]");
     if (!t) return;
     const nav = t.getAttribute("data-nav");
     const act = t.getAttribute("data-act");
     if (!act && nav) return go(nav);
+
+    if (act === "preload-offline") {
+      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js"];
+      const btn = document.getElementById("offlineBtn");
+      const txt = document.getElementById("offlineBarTxt");
+      if (btn) btn.disabled = true;
+      let done = 0;
+      for (const f of files) {
+        try {
+          if (txt) txt.textContent = "正在下载 " + f + "（" + done + "/" + files.length + "）…";
+          await fetch(f + "?v=offline", { cache: "force-cache" }).then(function(r){ return r.ok ? r.blob() : null; });
+        } catch (e) {}
+        done++;
+        if (txt) txt.textContent = "已下载 " + done + "/" + files.length + "（没网也能刷题）";
+      }
+      if (txt) txt.textContent = "✅ 全部题库已离线可用，断网也能刷";
+      if (btn) { btn.textContent = "已完成"; btn.disabled = true; }
+      return;
+    }
 
     if (act === "learn-open") {
       go("learn-point/" + t.getAttribute("data-id"));
