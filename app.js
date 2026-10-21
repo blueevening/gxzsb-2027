@@ -1399,7 +1399,8 @@
   function viewBank() {
     setTitle("题库", true);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const totalQ = totalQuestions();
+    const allSubjNames = ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"];
+    const totalQ = allSubjNames.reduce(function (s, n) { return s + (subjStat(n).total || 0); }, 0) || totalQuestions();
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
