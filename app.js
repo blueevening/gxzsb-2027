@@ -5335,12 +5335,18 @@ function formulaFilter() {
       render();
     } else if (act === "wb-speak") {
       var word = t.getAttribute("data-word");
-      if (window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
         var utter = new SpeechSynthesisUtterance(word);
         utter.lang = "en-US";
         utter.rate = 0.9;
-        window.speechSynthesis.speak(utter);
-      }
+        var voices = window.speechSynthesis.getVoices();
+        var en = voices.find(function(v){ return /en[-_]US/i.test(v.lang) && /google/i.test(v.name); })
+              || voices.find(function(v){ return /en[-_]US/i.test(v.lang); })
+              || voices.find(function(v){ return /^en/i.test(v.lang); });
+        if (en) utter.voice = en;
+        setTimeout(function(){ window.speechSynthesis.speak(utter); }, 50);
+      } catch(e) {}
     } else if (act === "wb-start-quiz") {
       var mode = t.getAttribute("data-mode");
       var goal3 = window.WORDS.getDailyGoal();
