@@ -1245,16 +1245,6 @@
         </div>
       </section>
 
-      <!-- 离线题库预载 -->
-      <section>
-        <div class="offline-bar" id="offlineBarHome">
-          <span class="ob-ico">📶</span>
-          <span class="ob-txt" id="offlineBarTxt">离线题库：点这里一键下载，没网也能刷题</span>
-          <button class="btn btn-ghost btn-sm" data-act="preload-offline" type="button" id="offlineBtn">一键下载</button>
-        </div>
-        <button class="btn btn-ghost btn-block" data-nav="resources" type="button" style="margin-top:8px">📚 免费学习资料（C语言 / 计网 / 前端）</button>
-      </section>
-
       <!-- 按大纲：三卷学习进度 -->
       <section>
         <div class="section-title">按大纲备考 <span class="muted" style="font-weight:400;font-size:12px">公共两科各 150 · 专业合卷 300</span></div>
@@ -3246,6 +3236,7 @@ function ensureExplain(q) {
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
+        <button class="list-row" data-nav="resources" type="button"><span class="main"><span class="t">学习资料（C语言 / 计网 / 电工）</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
         <div class="list-row" style="display:flex;align-items:center;gap:8px;padding:12px 16px">
