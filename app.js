@@ -2970,6 +2970,13 @@ function ensureExplain(q) {
         ]
       },
       {
+        subj: "电子电工技术基础",
+        items: [
+          { name: "中国大学MOOC · 电工学（哈工大）", desc: "电路基础+模电+数电，国家级精品课，免费", url: "https://www.icourse163.org/course/HIT-1001998009" },
+          { name: "中国大学MOOC（搜电工电子）", desc: "西安交大等高校公开课，免费注册即看", url: "https://www.icourse163.org/" }
+        ]
+      },
+      {
         subj: "计算机网络",
         items: [
           { name: "菜鸟教程 · 计算机网络", desc: "OSI/TCP-IP/HTTP 通俗入门", url: "https://www.runoob.com/cnetwork/cnetwork-tutorial.html" }
