@@ -1241,6 +1241,7 @@
           <span class="ob-txt" id="offlineBarTxt">离线题库：点这里一键下载，没网也能刷题</span>
           <button class="btn btn-ghost btn-sm" data-act="preload-offline" type="button" id="offlineBtn">一键下载</button>
         </div>
+        <button class="btn btn-ghost btn-block" data-nav="resources" type="button" style="margin-top:8px">📚 免费学习资料（C语言 / 计网 / 前端）</button>
       </section>
 
       <!-- 按大纲：三卷学习进度 -->
@@ -2947,6 +2948,49 @@ function ensureExplain(q) {
       .join("");
   }
 
+  function viewResources() {
+    setTitle("学习资料", true);
+    const groups = [
+      {
+        subj: "C 语言",
+        items: [
+          { name: "C语言中文网", desc: "从入门到指针/结构体，中文循序渐进", url: "http://c.biancheng.net/c/" },
+          { name: "菜鸟教程 · C语言", desc: "边学边练，适合打基础语法", url: "https://www.runoob.com/cprogramming/c-tutorial.html" }
+        ]
+      },
+      {
+        subj: "计算机网络",
+        items: [
+          { name: "菜鸟教程 · 计算机网络", desc: "OSI/TCP-IP/HTTP 通俗入门", url: "https://www.runoob.com/cnetwork/cnetwork-tutorial.html" }
+        ]
+      },
+      {
+        subj: "前端（做毕设用）",
+        items: [
+          { name: "现代 JavaScript 教程", desc: "免费开源中文教程，从基础到 Promise/异步", url: "https://zh.javascript.info/" },
+          { name: "MDN Web Docs", desc: "HTML/CSS/JS 权威参考，官方免费", url: "https://developer.mozilla.org/zh-CN/docs/Web" }
+        ]
+      }
+    ];
+    return `
+      <div class="section-title">免费学习资料 <span class="muted" style="font-weight:400;font-size:12px">点开跳官方/正版免费源，本站不存文件</span></div>
+      ${groups.map(function (g) {
+        return `
+        <div class="card" style="padding:14px 16px;margin-bottom:12px">
+          <div style="font-weight:750;margin-bottom:10px">${esc(g.subj)}</div>
+          ${g.items.map(function (it) {
+            return `
+            <a href="${attr(it.url)}" target="_blank" rel="noopener" style="display:block;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;text-decoration:none;color:var(--text)">
+              <div style="font-weight:650">${esc(it.name)} →</div>
+              <div style="font-size:12px;color:var(--text-sub);margin-top:2px">${esc(it.desc)}</div>
+            </a>`;
+          }).join("")}
+        </div>`;
+      }).join("")}
+      <p class="muted" style="font-size:12px;margin-top:8px">注：以上均为官方/公开免费资源，链接失效告诉我。付费教材请用学校正版。</p>
+    `;
+  }
+
   function viewFormula() {
     setTitle("公式速查", true);
     const book = window.STUDY_DATA.FORMULA_BOOK || {};
@@ -4260,6 +4304,7 @@ function formulaFilter() {
     else if (route === "stats") app.innerHTML = viewStats();
     else if (route === "wrong") app.innerHTML = viewWrong();
     else if (route === "formula") app.innerHTML = viewFormula();
+    else if (route === "resources") app.innerHTML = viewResources();
     else if (route === "learn") app.innerHTML = viewLearn();
     else if (route === "learn-point") app.innerHTML = viewLearnDetail(params[0] || "");
     else if (route === "syllabus") app.innerHTML = viewSyllabus(params[0] ? decodeURIComponent(params[0]) : "");
