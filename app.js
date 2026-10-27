@@ -3117,31 +3117,31 @@ function ensureExplain(q) {
   ];
   const SCHOOLS_DATA = [
     /* ---- 公办（15所）—— majors 只列 51 电子与信息大类能报的专业 ---- */
-    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/zsb/", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年" },
-    { name: "桂林理工大学", city: "桂林", tier: "公办本科", plan26: 1000, plan25: 1000, itMajor: true, url: "https://zsb.glut.edu.cn/", majors: ["数据科学与大数据技术(南宁分校)"], note: "51大类对口约137人，10000元/年(南宁扶绥分校)" },
-    { name: "广西民族大学", city: "南宁", tier: "公办本科", plan26: 2000, plan25: 1300, itMajor: true, url: "https://zsb.gxun.edu.cn/", majors: ["计算机科学与技术(武鸣校区)"], note: "51大类对口约275人，5520元/年，不录色盲色弱" },
-    { name: "广西科技师范学院", city: "来宾", tier: "公办本科", plan26: 2200, plan25: 2000, itMajor: true, url: "https://www.gxstnu.edu.cn/zb/", majors: ["电子信息工程", "计算机科学与技术", "软件工程", "物联网工程", "数据科学与大数据技术"], note: "51大类对口约750人，公办4600元/年，性价比首选" },
-    { name: "北部湾大学", city: "钦州", tier: "公办本科", plan26: 3200, plan25: 695, itMajor: true, url: "https://zsw.bbgu.edu.cn/", majors: ["电子信息工程", "人工智能", "计算机科学与技术", "物联网工程"], note: "2026大幅扩招(695→3200)，51大类对口约330人，4600元/年" },
-    { name: "梧州学院", city: "梧州", tier: "公办本科", plan26: 1000, plan25: 1200, itMajor: true, url: "https://zs.gxuwz.edu.cn/", majors: ["电子信息工程", "通信工程"], note: "51大类对口约80人，4593元/年" },
-    { name: "百色学院", city: "百色", tier: "公办本科", plan26: 2300, plan25: 500, itMajor: true, url: "https://zsw.bsuc.cn/", majors: ["数据科学与大数据技术(东合校区)"], note: "2026大幅扩招(500→2300)，51大类对口约50人，4600元/年" },
-    { name: "河池学院", city: "河池", tier: "公办本科", plan26: 1300, plan25: 550, itMajor: true, url: "https://www.hcnu.edu.cn/zsb/", majors: ["计算机科学与技术"], note: "51大类对口约67人，4600元/年，不招色盲" },
-    { name: "广西民族师范学院", city: "崇左", tier: "公办本科", plan26: 1800, plan25: 1400, itMajor: true, url: "https://zsb.gxnun.edu.cn/", majors: ["电子信息工程", "通信工程", "计算机科学与技术"], note: "51大类对口约191人，4600元/年" },
-    { name: "广西财经学院", city: "南宁", tier: "公办本科", plan26: 6200, plan25: 5800, itMajor: true, url: "https://zsb.gxufe.edu.cn/", majors: ["人工智能(明秀)", "计算机科学与技术", "数字媒体技术", "数据科学与大数据技术"], note: "51大类对口约684人，4600元/年，南宁市区" },
-    { name: "桂林航天工业学院", city: "桂林", tier: "公办本科", plan26: 1300, plan25: 0, itMajor: true, url: "https://zsb.guat.edu.cn/", majors: ["电子信息工程", "通信工程", "软件工程", "数字媒体技术"], note: "2026新增公办，51大类对口约266人，4600-10000元/年" },
-    { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 2500, plan25: 2000, itMajor: true, url: "https://www.gxau.edu.cn/zsb/", majors: ["电子信息工程技术", "计算机应用工程", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约316人，7500元/年" },
-    { name: "南宁职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 500, plan25: 0, itMajor: true, url: "https://www.nncxy.edu.cn/zsw/", majors: ["软件工程技术(相思湖校区)"], note: "2026新增公办职业本科，51大类对口约200人，7500元/年" },
-    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://zs.lzzytech.edu.cn/", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
-    { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://zsb.glit.edu.cn/", majors: ["数据科学与大数据技术"], note: "51大类对口约90人，9999元/年" },
+    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年" },
+    { name: "桂林理工大学", city: "桂林", tier: "公办本科", plan26: 1000, plan25: 1000, itMajor: true, url: "https://www.glut.edu.cn/", majors: ["数据科学与大数据技术(南宁分校)"], note: "51大类对口约137人，10000元/年(南宁扶绥分校)" },
+    { name: "广西民族大学", city: "南宁", tier: "公办本科", plan26: 2000, plan25: 1300, itMajor: true, url: "https://www.gxun.edu.cn/", majors: ["计算机科学与技术(武鸣校区)"], note: "51大类对口约275人，5520元/年，不录色盲色弱" },
+    { name: "广西科技师范学院", city: "来宾", tier: "公办本科", plan26: 2200, plan25: 2000, itMajor: true, url: "https://www.gxstnu.edu.cn/", majors: ["电子信息工程", "计算机科学与技术", "软件工程", "物联网工程", "数据科学与大数据技术"], note: "51大类对口约750人，公办4600元/年，性价比首选" },
+    { name: "北部湾大学", city: "钦州", tier: "公办本科", plan26: 3200, plan25: 695, itMajor: true, url: "https://www.bbgu.edu.cn/", majors: ["电子信息工程", "人工智能", "计算机科学与技术", "物联网工程"], note: "2026大幅扩招(695→3200)，51大类对口约330人，4600元/年" },
+    { name: "梧州学院", city: "梧州", tier: "公办本科", plan26: 1000, plan25: 1200, itMajor: true, url: "https://www.gxuwz.edu.cn/", majors: ["电子信息工程", "通信工程"], note: "51大类对口约80人，4593元/年" },
+    { name: "百色学院", city: "百色", tier: "公办本科", plan26: 2300, plan25: 500, itMajor: true, url: "https://www.bsuc.cn/", majors: ["数据科学与大数据技术(东合校区)"], note: "2026大幅扩招(500→2300)，51大类对口约50人，4600元/年" },
+    { name: "河池学院", city: "河池", tier: "公办本科", plan26: 1300, plan25: 550, itMajor: true, url: "https://www.hcnu.edu.cn/", majors: ["计算机科学与技术"], note: "51大类对口约67人，4600元/年，不招色盲" },
+    { name: "广西民族师范学院", city: "崇左", tier: "公办本科", plan26: 1800, plan25: 1400, itMajor: true, url: "https://www.gxnun.edu.cn/", majors: ["电子信息工程", "通信工程", "计算机科学与技术"], note: "51大类对口约191人，4600元/年" },
+    { name: "广西财经学院", city: "南宁", tier: "公办本科", plan26: 6200, plan25: 5800, itMajor: true, url: "https://www.gxufe.edu.cn/", majors: ["人工智能(明秀)", "计算机科学与技术", "数字媒体技术", "数据科学与大数据技术"], note: "51大类对口约684人，4600元/年，南宁市区" },
+    { name: "桂林航天工业学院", city: "桂林", tier: "公办本科", plan26: 1300, plan25: 0, itMajor: true, url: "https://www.guat.edu.cn/", majors: ["电子信息工程", "通信工程", "软件工程", "数字媒体技术"], note: "2026新增公办，51大类对口约266人，4600-10000元/年" },
+    { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 2500, plan25: 2000, itMajor: true, url: "https://www.gxau.edu.cn/", majors: ["电子信息工程技术", "计算机应用工程", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约316人，7500元/年" },
+    { name: "南宁职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 500, plan25: 0, itMajor: true, url: "https://www.nncxy.edu.cn/", majors: ["软件工程技术(相思湖校区)"], note: "2026新增公办职业本科，51大类对口约200人，7500元/年" },
+    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://www.lzzytech.edu.cn/", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
+    { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://www.glit.edu.cn/", majors: ["数据科学与大数据技术"], note: "51大类对口约90人，9999元/年" },
     /* ---- 民办（9所） ---- */
-    { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan26: 4400, plan25: 6000, itMajor: true, url: "https://www.gist.edu.cn/zsw/", majors: ["计算机科学与技术", "软件工程", "电子信息工程", "电子信息科学与技术", "通信工程", "网络工程", "人工智能", "物联网工程", "医学信息工程", "虚拟现实技术", "数据科学与大数据技术"], note: "原桂电信科，IT类最强民办，51大类对口约880人，24500元/年" },
-    { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan26: 4900, plan25: 6500, itMajor: true, url: "https://www.nnlgxy.edu.cn/zsw/", majors: ["人工智能", "计算机科学与技术", "电子信息工程", "数据科学与大数据技术"], note: "招生大校，51大类对口约330人，24800元/年" },
-    { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", plan26: 2000, plan25: 4030, itMajor: true, url: "https://www.gxcsxy.com/zsw/", majors: ["计算机应用工程", "大数据工程技术", "信息安全与管理"], note: "职业本科，51大类对口约165人，26000元/年" },
-    { name: "广西外国语学院", city: "南宁", tier: "民办本科", plan26: 3015, plan25: 4500, itMajor: true, url: "https://www.gxflc.cn/zsb/", majors: ["人工智能", "计算机科学与技术", "软件工程", "网络工程", "数据科学与大数据技术"], note: "51大类对口约195人，25200元/年" },
-    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://zsb.nnxy.edu.cn/", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
+    { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan26: 4400, plan25: 6000, itMajor: true, url: "https://www.gist.edu.cn/", majors: ["计算机科学与技术", "软件工程", "电子信息工程", "电子信息科学与技术", "通信工程", "网络工程", "人工智能", "物联网工程", "医学信息工程", "虚拟现实技术", "数据科学与大数据技术"], note: "原桂电信科，IT类最强民办，51大类对口约880人，24500元/年" },
+    { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan26: 4900, plan25: 6500, itMajor: true, url: "https://www.nnlgxy.edu.cn/", majors: ["人工智能", "计算机科学与技术", "电子信息工程", "数据科学与大数据技术"], note: "招生大校，51大类对口约330人，24800元/年" },
+    { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", plan26: 2000, plan25: 4030, itMajor: true, url: "https://www.gxcsxy.com/", majors: ["计算机应用工程", "大数据工程技术", "信息安全与管理"], note: "职业本科，51大类对口约165人，26000元/年" },
+    { name: "广西外国语学院", city: "南宁", tier: "民办本科", plan26: 3015, plan25: 4500, itMajor: true, url: "https://www.gxflc.cn/", majors: ["人工智能", "计算机科学与技术", "软件工程", "网络工程", "数据科学与大数据技术"], note: "51大类对口约195人，25200元/年" },
+    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://www.nnxy.edu.cn/", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
     { name: "广西民族大学相思湖学院", city: "南宁", tier: "民办本科", plan26: 2000, plan25: 2800, itMajor: true, url: "https://www.gxun.edu.cn/xsh/", majors: ["计算机科学与技术", "软件工程", "网络工程"], note: "民大独立学院，51大类对口约460人，20000元/年" },
     { name: "南宁师范大学师园学院", city: "南宁", tier: "民办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://www.nsy.gxnu.edu.cn/", majors: ["计算机科学与技术"], note: "南师独立学院，51大类对口100人，15000元/年" },
-    { name: "柳州工学院", city: "柳州", tier: "民办本科", plan26: 725, plan25: 725, itMajor: true, url: "https://zsb.lzit.edu.cn/", majors: ["电子信息工程"], note: "原鹿山学院，51大类对口65人，22500元/年" },
-    { name: "桂林学院", city: "桂林", tier: "民办本科", plan26: 500, plan25: 1500, itMajor: true, url: "https://www.glc.edu.cn/zsw/", majors: ["软件工程", "数据科学与大数据技术"], note: "原漓江学院，51大类对口100人，19000元/年" },
+    { name: "柳州工学院", city: "柳州", tier: "民办本科", plan26: 725, plan25: 725, itMajor: true, url: "https://www.lit.edu.cn/", majors: ["电子信息工程"], note: "原鹿山学院，51大类对口65人，22500元/年" },
+    { name: "桂林学院", city: "桂林", tier: "民办本科", plan26: 500, plan25: 1500, itMajor: true, url: "https://www.glc.edu.cn/", majors: ["软件工程", "数据科学与大数据技术"], note: "原漓江学院，51大类对口100人，19000元/年" },
   ];
 
   /* 2026 专业级详情（从广西招考院 PDF 逐专业抄录，单位：人；学费元/学年） */
@@ -3429,8 +3429,12 @@ function ensureExplain(q) {
             </div>
             ${expanded ? (() => {
               const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
-              const officialUrl = s.url || "https://www.gxeea.cn/view/content_1215_32740.htm";
-              const officialLink = `<a href="${officialUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🔗 进入 ${esc(s.name)}招生网查看专业详情 ↗</a>`;
+              const officialUrl = s.url || "https://www.guet.edu.cn/";
+              const pdfUrl = "https://www.gxeea.cn/view/content_1215_32740.htm";
+              const officialLink = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                <a href="${officialUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🏫 ${esc(s.name)}官网 ↗</a>
+                <a href="${pdfUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:#fff;color:var(--primary);border:1px solid var(--primary);border-radius:8px;font-size:12px;text-decoration:none">📄 广西招考院2026计划PDF(公开) ↗</a>
+              </div>`;
               if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">${officialLink}</div>`;
               return `
               <div style="margin-top:10px;padding:12px;border-radius:10px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-left:3px solid var(--primary)">
