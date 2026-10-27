@@ -3428,7 +3428,9 @@ function ensureExplain(q) {
             </div>
             ${expanded ? (() => {
               const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
-              if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">该专业 2026 详细计划见广西招考院原文：<a href="https://www.gxeea.cn/view/content_1215_32740.htm" target="_blank" rel="noopener">查看 PDF ↗</a></div>`;
+              const baiduQ = encodeURIComponent(s.name + " " + expanded + " 专升本 招生简章 专业介绍");
+              const officialLink = `<a href="https://www.baidu.com/s?wd=${baiduQ}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🔗 查看 ${esc(s.name)}「${esc(expanded)}」官方招生简章 ↗</a>`;
+              if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">${officialLink}</div>`;
               return `
               <div style="margin-top:10px;padding:12px;border-radius:10px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-left:3px solid var(--primary)">
                 <div style="font-weight:700;font-size:14px;margin-bottom:6px">${esc(d.name)}<span class="pill" style="margin-left:8px;background:#dbeafe;color:#1e40af">招 ${d.plan} 人</span></div>
@@ -3438,6 +3440,7 @@ function ensureExplain(q) {
                   <div style="grid-column:1/-1"><span class="muted">📍 校区：</span>${esc(d.campus)}</div>
                   <div style="grid-column:1/-1" class="muted">📝 ${esc(d.note || "")}</div>
                 </div>
+                ${officialLink}
               </div>`;
             })() : ""}
             <div class="muted" style="font-size:12px;margin-top:6px">📝 ${esc(s.note)}</div>
@@ -4716,7 +4719,10 @@ function formulaFilter() {
     renderNav();
     // 同路由刷新时恢复滚动位置（避免点击专业 chip 等操作被拉回顶部）
     if (savedScrollY > 0) {
-      requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollY);
+        setTimeout(() => window.scrollTo(0, savedScrollY), 50);
+      });
     }
     // 防呆：非登录页底部导航被误清空时自动补回
     if (state.route !== "login" && state.user && $("#tabbar") && !$("#tabbar").innerHTML) {
@@ -5486,13 +5492,6 @@ function formulaFilter() {
         state.schoolMajor = { school: sn, major: mj };
       }
       render();
-      // 展开后把详情面板滚动到视口内
-      requestAnimationFrame(() => {
-        if (state.schoolMajor) {
-          const card = t.closest(".card");
-          if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }
-      });
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
       state.wrongPage = 1;
