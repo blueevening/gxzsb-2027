@@ -3132,12 +3132,7 @@ function ensureExplain(q) {
     { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 2500, plan25: 2000, itMajor: true, majors: ["电子信息工程技术", "计算机应用工程", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约316人，7500元/年" },
     { name: "南宁职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 500, plan25: 0, itMajor: true, majors: ["软件工程技术(相思湖)", "自动化技术与应用"], note: "2026新增公办职业本科，51大类对口约200人，7500元/年" },
     { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口48人，7494元/年" },
-    { name: "广西职业师范学院", city: "南宁", tier: "公办本科", plan26: 200, plan25: 500, itMajor: false, majors: ["金融科技", "工程造价"], note: "南宁市区，招生缩减" },
-    { name: "贺州学院", city: "贺州", tier: "公办本科", plan26: 400, plan25: 2000, itMajor: false, majors: ["国际经济与贸易", "网络与新媒体"], note: "2026大幅缩招(2000→400)" },
-    { name: "玉林师范学院", city: "玉林", tier: "公办本科", plan26: 200, plan25: 200, itMajor: false, majors: ["法学", "体育教育", "机械电子工程"], note: "玉林，师范为主" },
     { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1000, itMajor: true, majors: ["数据科学与大数据技术(9999元/年)"], note: "旅游为主，51大类对口约90人" },
-    { name: "广西科技大学", city: "柳州", tier: "公办本科", plan26: 100, plan25: 100, itMajor: false, majors: ["纺织工程", "临床医学", "药学"], note: "柳州，招生极少(100人)" },
-    { name: "广西警察学院", city: "南宁", tier: "公办本科", plan26: 100, plan25: 400, itMajor: false, majors: ["司法警察学", "应急管理"], note: "公安类，需政审" },
     /* ---- 民办（13所） ---- */
     { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan26: 4400, plan25: 6000, itMajor: true, majors: ["计算机科学与技术", "软件工程", "电子信息工程", "网络工程", "人工智能", "自动化", "机器人工程", "物联网工程"], note: "原桂电信科，IT类最强民办，51大类对口约880人，24500元/年" },
     { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan26: 4900, plan25: 6500, itMajor: true, majors: ["人工智能", "计算机科学与技术", "电气工程及其自动化", "数据科学与大数据技术"], note: "招生大校，51大类对口约230人，24800元/年" },
@@ -3148,9 +3143,223 @@ function ensureExplain(q) {
     { name: "南宁师范大学师园学院", city: "南宁", tier: "民办本科", plan26: 1500, plan25: 1000, itMajor: true, majors: ["计算机科学与技术", "数学与应用数学"], note: "南师独立学院，51大类对口100人，15000元/年" },
     { name: "柳州工学院", city: "柳州", tier: "民办本科", plan26: 725, plan25: 725, itMajor: true, majors: ["电子信息工程", "电气工程及其自动化", "机械工程"], note: "原鹿山学院，51大类对口65人，22500元/年" },
     { name: "桂林学院", city: "桂林", tier: "民办本科", plan26: 500, plan25: 1500, itMajor: true, majors: ["软件工程", "数据科学与大数据技术"], note: "原漓江学院，51大类对口100人，19000元/年" },
-    { name: "广西中医药大学赛恩斯新医药学院", city: "南宁", tier: "民办本科", plan26: 400, plan25: 200, itMajor: false, majors: ["药学", "护理学", "医学检验技术"], note: "医药类" },
-    { name: "北海艺术设计学院", city: "北海", tier: "民办本科", plan26: 200, plan25: 200, itMajor: false, majors: ["视觉传达设计", "环境设计"], note: "艺术设计类" },
   ];
+
+  /* 2026 专业级详情（从广西招考院 PDF 逐专业抄录，单位：人；学费元/学年） */
+  const MAJOR_DETAIL = {
+    "桂林电子科技大学": [
+      { name: "电子信息科学与技术", plan: 186, fee: 7500, campus: "本校区(金鸡路1号)", category: "电子信息类·51大类", note: "两年制，不招色盲" },
+      { name: "电信工程及管理", plan: 138, fee: 7500, campus: "本校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "人工智能", plan: 138, fee: 6000, campus: "本校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "机器人工程", plan: 138, fee: 6000, campus: "本校区", category: "自动化类·46装备制造", note: "两年制" },
+      { name: "网络工程", plan: 216, fee: 7500, campus: "本校区", category: "计算机类·51大类", note: "两年制，名额最多" },
+      { name: "数据科学与大数据技术", plan: 138, fee: 6000, campus: "本校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "工业设计", plan: 62, fee: 7500, campus: "本校区", category: "机械类·44/46大类", note: "两年制，含土木建筑+装备制造两个方向" },
+      { name: "物流管理", plan: 234, fee: 7000, campus: "本校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "公共艺术", plan: 45, fee: 12000, campus: "本校区", category: "设计学类·55文化艺术", note: "两年制，不招色盲" },
+      { name: "工艺美术", plan: 45, fee: 12000, campus: "本校区", category: "设计学类·55文化艺术", note: "两年制，不招色盲" },
+      { name: "数字媒体艺术", plan: 60, fee: 12000, campus: "本校区", category: "设计学类·55文化艺术", note: "两年制，不招色盲" },
+    ],
+    "桂林理工大学": [
+      { name: "智能制造工程", plan: 247, fee: 6000, campus: "南宁分校(扶绥空港大道21号)", category: "机械类·46装备制造", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 137, fee: 10000, campus: "南宁分校", category: "计算机类·51大类", note: "两年制，学费高于其他公办" },
+      { name: "土木、水利与交通工程", plan: 146, fee: 6000, campus: "南宁分校", category: "土木类·44土木建筑", note: "两年制" },
+      { name: "地理空间信息工程", plan: 37, fee: 6000, campus: "南宁分校", category: "测绘类·44土木建筑", note: "两年制" },
+      { name: "资源循环科学与工程", plan: 73, fee: 6000, campus: "南宁分校", category: "化工与制药类·47生物化工", note: "两年制" },
+      { name: "财务管理", plan: 183, fee: 6000, campus: "南宁分校", category: "工商管理类·53财经商贸", note: "两年制" },
+      { name: "会展经济与管理", plan: 91, fee: 6000, campus: "南宁分校", category: "旅游管理类·54旅游(文科)", note: "两年制" },
+    ],
+    "广西科技师范学院": [
+      { name: "电子信息工程", plan: 91, fee: 4600, campus: "来宾校区(铁北大道966号)", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 140, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "软件工程", plan: 141, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "物联网工程", plan: 191, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制，名额多" },
+      { name: "数据科学与大数据技术", plan: 192, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制，名额最多" },
+      { name: "电气工程及其自动化", plan: 116, fee: 4600, campus: "来宾校区", category: "电气类·43/46大类", note: "两年制，含多个大类方向" },
+      { name: "学前教育", plan: 187, fee: 4200, campus: "来宾校区", category: "教育学类·57教育体育", note: "两年制，文/理科均招" },
+      { name: "小学教育", plan: 41, fee: 4200, campus: "来宾校区", category: "教育学类·57教育体育", note: "两年制" },
+      { name: "英语", plan: 108, fee: 4200, campus: "来宾校区", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "商务英语", plan: 108, fee: 4200, campus: "来宾校区", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "网络与新媒体", plan: 60, fee: 4200, campus: "来宾校区", category: "新闻传播学类·56大类", note: "两年制" },
+      { name: "应用化学", plan: 91, fee: 4600, campus: "来宾校区", category: "化学类·42资源环境", note: "两年制，不招色盲色弱" },
+    ],
+    "广西财经学院": [
+      { name: "人工智能", plan: 120, fee: 4600, campus: "明秀校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 394, fee: 4600, campus: "明秀校区", category: "计算机类·51大类", note: "两年制，名额最多" },
+      { name: "数字媒体技术", plan: 60, fee: 4600, campus: "明秀校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 110, fee: 4600, campus: "明秀校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "税收学", plan: 180, fee: 4600, campus: "相思湖校区", category: "财政学类·53大类", note: "两年制" },
+      { name: "金融学", plan: 295, fee: 4600, campus: "相思湖校区", category: "金融学类·53大类", note: "两年制" },
+      { name: "保险学", plan: 165, fee: 4600, campus: "相思湖校区", category: "金融学类·53大类", note: "两年制" },
+      { name: "投资学", plan: 180, fee: 4600, campus: "相思湖校区", category: "金融学类·53大类", note: "两年制" },
+      { name: "国际经济与贸易", plan: 215, fee: 4600, campus: "相思湖校区", category: "经济与贸易类·53大类", note: "两年制" },
+      { name: "商务英语", plan: 280, fee: 6999, campus: "明秀校区", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "会计学", plan: 620, fee: 4600, campus: "明秀校区", category: "工商管理类·53大类", note: "两年制，全校名额最多" },
+      { name: "财务管理", plan: 300, fee: 4600, campus: "明秀校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "国际商务", plan: 240, fee: 4600, campus: "相思湖校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "市场营销", plan: 220, fee: 4600, campus: "相思湖校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "劳动与社会保障", plan: 165, fee: 4600, campus: "相思湖校区", category: "公共管理类·59大类", note: "两年制" },
+      { name: "土地资源管理", plan: 120, fee: 4600, campus: "相思湖校区", category: "公共管理类·59大类", note: "两年制" },
+      { name: "物流管理", plan: 300, fee: 4600, campus: "相思湖校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "电子商务", plan: 228, fee: 4600, campus: "明秀校区", category: "电子商务类·53大类", note: "两年制" },
+    ],
+    "北部湾大学": [
+      { name: "电子信息工程", plan: 85, fee: 4600, campus: "钦州滨海校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "人工智能", plan: 100, fee: 4600, campus: "钦州滨海校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 95, fee: 4600, campus: "钦州滨海校区", category: "计算机类·51大类", note: "两年制，不招色盲色弱" },
+      { name: "物联网工程", plan: 50, fee: 4600, campus: "钦州滨海校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "自动化", plan: 50, fee: 4600, campus: "钦州滨海校区", category: "自动化类·46大类", note: "两年制" },
+      { name: "机械设计制造及其自动化", plan: 52, fee: 4600, campus: "钦州滨海校区", category: "机械类·46大类", note: "两年制" },
+      { name: "港口航道与海岸工程", plan: 90, fee: 4600, campus: "钦州滨海校区", category: "水利类·45水利", note: "两年制" },
+      { name: "测绘工程", plan: 75, fee: 4600, campus: "钦州滨海校区", category: "测绘类·44土木建筑", note: "两年制" },
+      { name: "化学工程与工艺", plan: 80, fee: 4600, campus: "钦州滨海校区", category: "化工与制药类·47生物化工", note: "两年制，不招色盲色弱" },
+      { name: "航海技术", plan: 30, fee: 4600, campus: "钦州滨海校区", category: "交通运输类·50大类", note: "两年制，要求身高1.60米以上，辨色正常" },
+      { name: "水产养殖学", plan: 170, fee: 3800, campus: "钦州滨海校区", category: "水产类·41农林牧渔", note: "两年制，不招色盲色弱" },
+      { name: "舞蹈表演", plan: 200, fee: 12000, campus: "钦州滨海校区", category: "音乐与舞蹈学类·55大类", note: "两年制" },
+    ],
+    "桂林航天工业学院": [
+      { name: "电子信息工程", plan: 61, fee: 4600, campus: "桂林金鸡路2号", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 57, fee: 7500, campus: "桂林金鸡路2号", category: "电子信息类·51大类", note: "两年制，学费偏高" },
+      { name: "软件工程", plan: 73, fee: 10000, campus: "桂林金鸡路2号", category: "计算机类·51大类", note: "两年制，IT方向但学费高" },
+      { name: "数字媒体技术", plan: 75, fee: 4600, campus: "桂林金鸡路2号", category: "计算机类·51大类", note: "两年制" },
+      { name: "自动化", plan: 62, fee: 4600, campus: "桂林金鸡路2号", category: "自动化类·46大类", note: "两年制" },
+      { name: "机械电子工程", plan: 56, fee: 4600, campus: "桂林金鸡路2号", category: "机械类·44/46大类", note: "两年制" },
+      { name: "汽车服务工程", plan: 61, fee: 7500, campus: "桂林金鸡路2号", category: "机械类·46大类", note: "两年制" },
+      { name: "商务英语", plan: 80, fee: 4200, campus: "桂林金鸡路2号", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "市场营销", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "工商管理类·53大类", note: "两年制" },
+      { name: "国际商务", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "工商管理类·44/53大类", note: "两年制" },
+      { name: "物流管理", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "酒店管理", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "旅游管理类·54大类", note: "两年制，公共基础课须选语文" },
+    ],
+    "南宁职业技术大学": [
+      { name: "软件工程技术", plan: 200, fee: 7500, campus: "相思湖校区", category: "计算机类·51大类", note: "职业本科两年制，51大类对口主力" },
+      { name: "自动化技术与应用", plan: 50, fee: 7500, campus: "相思湖校区", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "建筑装饰工程", plan: 47, fee: 7500, campus: "相思湖校区", category: "建筑设计类·44大类", note: "职业本科两年制，无色盲色弱" },
+      { name: "建筑工程", plan: 57, fee: 7500, campus: "相思湖校区", category: "土建施工类·44大类", note: "职业本科两年制" },
+      { name: "现代物流管理", plan: 160, fee: 6500, campus: "相思湖校区", category: "物流类·53大类", note: "职业本科两年制" },
+    ],
+    "柳州职业技术大学": [
+      { name: "工业互联网技术", plan: 50, fee: 7494, campus: "柳州官塘校区(社湾路28号)", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "装备智能化技术", plan: 50, fee: 7494, campus: "官塘校区", category: "机电设备类·46大类", note: "职业本科两年制" },
+      { name: "机械电子工程技术", plan: 50, fee: 7494, campus: "官塘校区", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "汽车工程技术", plan: 50, fee: 7494, campus: "官塘校区", category: "汽车制造类·46大类", note: "职业本科两年制" },
+      { name: "现代物流管理", plan: 50, fee: 7477, campus: "官塘校区", category: "物流类·53大类", note: "职业本科两年制" },
+    ],
+    "广西民族师范学院": [
+      { name: "电子信息工程", plan: 77, fee: 4600, campus: "崇左校区(佛子路23号)", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 34, fee: 4600, campus: "崇左校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 80, fee: 4600, campus: "崇左校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "学前教育", plan: 96, fee: 4200, campus: "崇左校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "小学教育", plan: 92, fee: 4200, campus: "崇左校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "汉语言文学", plan: 86, fee: 4200, campus: "崇左校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "秘书学", plan: 92, fee: 4200, campus: "崇左校区", category: "中国语言文学类·59大类", note: "两年制" },
+      { name: "英语", plan: 44, fee: 4200, campus: "崇左校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "越南语", plan: 44, fee: 4200, campus: "崇左校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "网络与新媒体", plan: 41, fee: 4200, campus: "崇左校区", category: "新闻传播学类·56大类", note: "两年制" },
+    ],
+    "百色学院": [
+      { name: "数据科学与大数据技术", plan: 50, fee: 4600, campus: "东合校区", category: "计算机类·51大类", note: "两年制，2026扩招明显" },
+      { name: "国际经济与贸易", plan: 200, fee: 4600, campus: "澄碧校区", category: "经济与贸易类·53大类", note: "两年制" },
+      { name: "学前教育", plan: 100, fee: 4200, campus: "澄碧校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "小学教育", plan: 90, fee: 4200, campus: "澄碧校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "体育教育", plan: 50, fee: 4200, campus: "澄碧校区", category: "体育学类·57大类(文科)", note: "两年制，需加试" },
+      { name: "市场营销", plan: 290, fee: 4600, campus: "澄碧校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "财务管理", plan: 295, fee: 4600, campus: "澄碧校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "电子商务", plan: 176, fee: 4600, campus: "澄碧校区", category: "电子商务类·53大类", note: "两年制" },
+    ],
+    "梧州学院": [
+      { name: "电子信息工程", plan: 40, fee: 4593, campus: "本校(富民三路82号)", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 40, fee: 4593, campus: "本校", category: "电子信息类·51大类", note: "两年制" },
+      { name: "金融科技", plan: 25, fee: 4600, campus: "本校", category: "金融学类·53大类", note: "两年制" },
+      { name: "汉语言文学", plan: 55, fee: 4200, campus: "本校", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "商务英语", plan: 100, fee: 4195, campus: "本校", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "机械设计制造及其自动化", plan: 55, fee: 4593, campus: "本校", category: "机械类·46大类", note: "两年制" },
+      { name: "机械电子工程", plan: 25, fee: 4593, campus: "本校", category: "机械类·46大类", note: "两年制" },
+      { name: "环境设计", plan: 30, fee: 10800, campus: "本校", category: "设计学类·55大类", note: "两年制，不招色盲色弱" },
+    ],
+    "河池学院": [
+      { name: "计算机科学与技术", plan: 67, fee: 4600, campus: "龙江校区(宜州)", category: "计算机类·51大类", note: "两年制，不招色盲" },
+      { name: "电气工程及其自动化", plan: 34, fee: 4600, campus: "龙江校区", category: "电气类·43/46大类", note: "两年制" },
+      { name: "应用统计学", plan: 90, fee: 4600, campus: "龙江校区", category: "统计学类·53大类", note: "两年制" },
+      { name: "社会工作", plan: 49, fee: 4200, campus: "金山湖校区", category: "社会学类·59大类", note: "两年制" },
+      { name: "学前教育", plan: 40, fee: 4200, campus: "龙江校区", category: "教育学类·57大类(文科)", note: "两年制，不招色盲色弱" },
+      { name: "小学教育", plan: 32, fee: 4200, campus: "龙江校区", category: "教育学类·57大类", note: "两年制，文/理科均招" },
+      { name: "汉语言文学", plan: 36, fee: 4200, campus: "龙江校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "英语", plan: 41, fee: 4200, campus: "金山湖校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "环境设计", plan: 41, fee: 12000, campus: "龙江校区", category: "设计学类·55大类", note: "两年制，不招色盲" },
+    ],
+    "广西民族大学": [
+      { name: "计算机科学与技术", plan: 275, fee: 5520, campus: "武鸣校区", category: "计算机类·51大类", note: "两年制，名额多" },
+      { name: "自动化", plan: 275, fee: 5520, campus: "武鸣校区", category: "自动化类·46大类", note: "两年制" },
+      { name: "环境工程", plan: 100, fee: 5520, campus: "武鸣校区", category: "环境科学与工程类·42大类", note: "两年制，不招色盲色弱" },
+      { name: "工商管理", plan: 150, fee: 5520, campus: "武鸣校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "会计学", plan: 375, fee: 5520, campus: "武鸣校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "物流管理", plan: 225, fee: 5520, campus: "武鸣校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "旅游管理", plan: 100, fee: 5520, campus: "武鸣校区", category: "旅游管理类·54大类(文科)", note: "两年制" },
+      { name: "广播电视编导", plan: 150, fee: 12000, campus: "思源湖校区", category: "戏剧与影视学类·55大类", note: "两年制" },
+      { name: "视觉传达设计", plan: 70, fee: 12000, campus: "思源湖校区", category: "设计学类·55大类", note: "两年制，不招色盲" },
+      { name: "环境设计", plan: 70, fee: 12000, campus: "思源湖校区", category: "设计学类·55大类", note: "两年制，不招色盲" },
+      { name: "体育教育", plan: 120, fee: 5040, campus: "思源湖校区", category: "体育学类·57大类(文科)", note: "两年制" },
+    ],
+    "南宁师范大学": [
+      { name: "自动化", plan: 47, fee: 7499, campus: "武鸣校区", category: "自动化类·46大类", note: "两年制" },
+      { name: "测绘工程", plan: 37, fee: 4595, campus: "武鸣校区", category: "测绘类·44土木建筑", note: "两年制" },
+      { name: "学前教育", plan: 26, fee: 4195, campus: "五合校区", category: "教育学类·57大类(文科)", note: "两年制，不招色盲色弱" },
+      { name: "小学教育", plan: 37, fee: 4189, campus: "五合校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "汉语言文学", plan: 53, fee: 4191, campus: "五合校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "汉语国际教育", plan: 47, fee: 4195, campus: "明秀校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "商务英语", plan: 36, fee: 6999, campus: "武鸣校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "新闻学", plan: 47, fee: 4195, campus: "五合校区", category: "新闻传播学类·56大类", note: "两年制" },
+      { name: "广告学", plan: 47, fee: 4195, campus: "五合校区", category: "新闻传播学类·56大类", note: "两年制" },
+      { name: "市场营销", plan: 58, fee: 4598, campus: "五合校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "物流管理", plan: 58, fee: 4598, campus: "武鸣校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "旅游管理", plan: 45, fee: 4598, campus: "武鸣校区", category: "旅游管理类·54大类(文科)", note: "两年制" },
+    ],
+    "桂林信息科技学院": [
+      { name: "计算机科学与技术", plan: 240, fee: 24500, campus: "桂林临桂校区", category: "计算机类·51大类", note: "两年制，民办IT主力" },
+      { name: "电子信息工程", plan: 100, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "电子信息科学与技术", plan: 40, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 30, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "人工智能", plan: 50, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "医学信息工程", plan: 20, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "软件工程", plan: 60, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "网络工程", plan: 50, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "物联网工程", plan: 20, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "虚拟现实技术", plan: 40, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 30, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "电气工程及其自动化", plan: 780, fee: 24500, campus: "临桂校区", category: "电气类·44/46大类", note: "两年制，全校名额最多" },
+      { name: "机械设计制造及其自动化", plan: 580, fee: 24500, campus: "临桂校区", category: "机械类·44/46大类", note: "两年制" },
+      { name: "机械电子工程", plan: 300, fee: 24500, campus: "临桂校区", category: "机械类·44/46大类", note: "两年制" },
+      { name: "智能制造工程", plan: 240, fee: 24500, campus: "临桂校区", category: "机械类·44/46大类", note: "两年制" },
+      { name: "自动化", plan: 520, fee: 24500, campus: "临桂校区", category: "自动化类·44/46大类", note: "两年制" },
+      { name: "机器人工程", plan: 140, fee: 24500, campus: "临桂校区", category: "自动化类·44/46大类", note: "两年制" },
+    ],
+    "南宁理工学院": [
+      { name: "人工智能", plan: 100, fee: 24800, campus: "南宁/桂林校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 80, fee: 24800, campus: "桂林校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 100, fee: 24800, campus: "桂林校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "电气工程及其自动化", plan: 1280, fee: 24800, campus: "桂林校区", category: "电气类·43/44/45/46大类", note: "两年制，全校名额最多" },
+      { name: "电子信息工程", plan: 50, fee: 24800, campus: "桂林校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "机器人工程", plan: 205, fee: 24800, campus: "南宁/桂林校区", category: "自动化类·44/46大类", note: "两年制" },
+      { name: "土木工程", plan: 400, fee: 24800, campus: "南宁/桂林校区", category: "土木类·44大类", note: "两年制" },
+      { name: "工程管理", plan: 545, fee: 24800, campus: "桂林校区", category: "管理科学与工程类·44/50大类", note: "两年制" },
+      { name: "工程造价", plan: 650, fee: 24800, campus: "桂林校区", category: "管理科学与工程类·44/50大类", note: "两年制" },
+      { name: "汉语言文学", plan: 540, fee: 24800, campus: "南宁校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "地理信息科学", plan: 400, fee: 24800, campus: "桂林校区", category: "地理科学类·42大类", note: "两年制" },
+    ],
+    "广西农业职业技术大学": [
+      { name: "电子信息工程技术", plan: 69, fee: 7500, campus: "南宁本校(大学东路176号)", category: "电子信息类·51大类", note: "职业本科两年制" },
+      { name: "计算机应用工程", plan: 69, fee: 7500, campus: "本校", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "网络工程技术", plan: 89, fee: 7500, campus: "本校", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "数字媒体技术", plan: 89, fee: 7500, campus: "本校", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "电气工程及自动化", plan: 168, fee: 7500, campus: "本校", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "智能控制技术", plan: 123, fee: 7500, campus: "本校", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "建筑工程", plan: 180, fee: 7500, campus: "本校", category: "土建施工类·44大类", note: "职业本科两年制" },
+      { name: "园林景观工程", plan: 125, fee: 7500, campus: "本校", category: "建筑设计类·44大类", note: "职业本科两年制" },
+      { name: "动物医学", plan: 131, fee: 7000, campus: "本校", category: "畜牧业类·41大类", note: "职业本科两年制" },
+      { name: "作物生产与品质改良", plan: 83, fee: 7000, campus: "本校", category: "农业类·41农林牧渔", note: "职业本科两年制" },
+    ],
+  };
 
   function viewSchools() {
     setTitle("院校查询", true);
@@ -3188,15 +3397,17 @@ function ensureExplain(q) {
         ${cities.map((c) => `<button class="chip ${cityFilter === c ? "is-active" : ""}" data-act="school-city" data-v="${attr(c)}" type="button">${c === "all" ? "全部城市" : esc(c)}</button>`).join("")}
       </div>
       <div class="stat-grid" style="margin-bottom:12px">
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">2026招生院校</div></div>
-        <div class="stat-box"><div class="n">${itCount}</div><div class="l">💻电子信息类对口</div></div>
-        <div class="stat-box"><div class="n">${(total26 / 10000).toFixed(2)}万</div><div class="l">2026总计划</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">51大类可报院校</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length}</div><div class="l">公办</div></div>
+        <div class="stat-box"><div class="n">${(total26 / 10000).toFixed(2)}万</div><div class="l">2026对口总计划</div></div>
       </div>
       ${list.length ? list.map((s) => {
         const delta = s.plan26 - s.plan25;
         const deltaTxt = s.plan25 === 0 ? '<span class="pill" style="background:#dcfce7;color:#166534">🆕 2026新增</span>'
           : (delta > 0 ? `<span class="pill" style="background:#dcfce7;color:#166534">↑扩招${delta}</span>`
             : (delta < 0 ? `<span class="pill" style="background:#fee2e2;color:#991b1b">↓缩招${-delta}</span>` : ""));
+        const detail = MAJOR_DETAIL[s.name] || [];
+        const expanded = (state.schoolMajor && state.schoolMajor.school === s.name) ? state.schoolMajor.major : null;
         return `
         <div class="card" style="margin-bottom:10px;padding:14px">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3208,12 +3419,33 @@ function ensureExplain(q) {
             <span class="pill" style="margin-left:auto;font-weight:700">2026招 ${s.plan26} 人</span>
           </div>
           <div style="margin-top:8px;font-size:13px;line-height:1.7">
-            <div><b>招生专业：</b>${s.majors.map((m) => `<span class="pill" style="margin-right:4px;margin-top:4px">${esc(m)}</span>`).join("")}</div>
-            <div class="muted" style="font-size:12px;margin-top:4px">📝 ${esc(s.note)}</div>
+            <div><b>招生专业（点 chip 看详情）：</b></div>
+            <div style="margin-top:6px">
+              ${s.majors.map((m) => {
+                const hasDetail = detail.some((d) => d.name === m || m.indexOf(d.name) >= 0 || d.name.indexOf(m) >= 0);
+                const isOpen = expanded === m;
+                return `<button type="button" data-act="school-major" data-school="${attr(s.name)}" data-major="${attr(m)}" class="pill" style="margin-right:6px;margin-top:6px;cursor:pointer;border:1px solid ${isOpen ? "var(--primary)" : "transparent"};background:${isOpen ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "color-mix(in srgb, var(--text) 6%, transparent)"}">${esc(m)}${hasDetail ? " ▸" : ""}</button>`;
+              }).join("")}
+            </div>
+            ${expanded ? (() => {
+              const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
+              if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">该专业 2026 详细计划见广西招考院原文：<a href="https://www.gxeea.cn/view/content_1215_32740.htm" target="_blank" rel="noopener">查看 PDF ↗</a></div>`;
+              return `
+              <div style="margin-top:10px;padding:12px;border-radius:10px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-left:3px solid var(--primary)">
+                <div style="font-weight:700;font-size:14px;margin-bottom:6px">${esc(d.name)}<span class="pill" style="margin-left:8px;background:#dbeafe;color:#1e40af">招 ${d.plan} 人</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                  <div><span class="muted">💰 学费：</span>${d.fee} 元/学年</div>
+                  <div><span class="muted">📚 类别：</span>${esc(d.category)}</div>
+                  <div style="grid-column:1/-1"><span class="muted">📍 校区：</span>${esc(d.campus)}</div>
+                  <div style="grid-column:1/-1" class="muted">📝 ${esc(d.note || "")}</div>
+                </div>
+              </div>`;
+            })() : ""}
+            <div class="muted" style="font-size:12px;margin-top:6px">📝 ${esc(s.note)}</div>
           </div>
         </div>`;
       }).join("") : '<div class="empty">没有匹配的院校，换个关键词试试</div>'}
-      <div class="disclaimer">数据为广西招生考试院 2026 年专升本招生计划（共36所，约5.19万人；下表列32所，未列医药类4所约600人：广西医科大学/右江民族医学院/广西中医药大学/桂林医学院）。2024=5.2万为教育厅公布总数。2027 年招生计划与分数线以当年公布为准。</div>
+      <div class="disclaimer">数据为广西招生考试院 2026 年专升本招生计划（仅列 25 所面向"51 电子与信息大类"招生的院校，约 4.7 万对口名额）；未列医药/师范/公安/纯艺术等不对口院校。2024=5.2万、2025=5.31万为历年总数。2027 年招生计划与分数线以当年公布为准。</div>
     `;
   }
 
@@ -5239,6 +5471,16 @@ function formulaFilter() {
       render();
     } else if (act === "school-city") {
       state.schoolCity = t.getAttribute("data-v");
+      render();
+    } else if (act === "school-major") {
+      const sn = t.getAttribute("data-school");
+      const mj = t.getAttribute("data-major");
+      // 再次点同一个 = 收起
+      if (state.schoolMajor && state.schoolMajor.school === sn && state.schoolMajor.major === mj) {
+        state.schoolMajor = null;
+      } else {
+        state.schoolMajor = { school: sn, major: mj };
+      }
       render();
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
