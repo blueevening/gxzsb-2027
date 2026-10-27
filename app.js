@@ -4666,6 +4666,7 @@ function formulaFilter() {
     // 仅在「路由切换」时回到顶部；同一页面的数据加载/状态刷新保持滚动位置，
     // 避免用户正在浏览时异步加载完成被强制拉回顶部
     var routeKey = route + "|" + params.join("/");
+    var savedScrollY = (routeKey === _lastRouteKey) ? window.scrollY : 0;
     if (routeKey !== _lastRouteKey) {
       window.scrollTo(0, 0);
       _lastRouteKey = routeKey;
@@ -4713,6 +4714,10 @@ function formulaFilter() {
       app.innerHTML = viewHome();
     }
     renderNav();
+    // 同路由刷新时恢复滚动位置（避免点击专业 chip 等操作被拉回顶部）
+    if (savedScrollY > 0) {
+      requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
+    }
     // 防呆：非登录页底部导航被误清空时自动补回
     if (state.route !== "login" && state.user && $("#tabbar") && !$("#tabbar").innerHTML) {
       renderNav();
@@ -5481,6 +5486,13 @@ function formulaFilter() {
         state.schoolMajor = { school: sn, major: mj };
       }
       render();
+      // 展开后把详情面板滚动到视口内
+      requestAnimationFrame(() => {
+        if (state.schoolMajor) {
+          const card = t.closest(".card");
+          if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
       state.wrongPage = 1;
