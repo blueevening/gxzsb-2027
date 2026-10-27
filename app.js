@@ -3102,7 +3102,64 @@ function ensureExplain(q) {
         <strong>考试时间</strong>
         <p class="muted" style="font-size:13px;margin-top:8px">2027 年 4 月 24–25 日</p>
       </div>
+      <button class="btn btn-primary btn-block" data-nav="schools" type="button" style="margin-bottom:12px">🏫 招生院校查询（14 所）</button>
       <div class="disclaimer">公共课和专业课分开复习更高效。</div>
+    `;
+  }
+
+  /* ========== 院校查询（P3：广西专升本招生院校，纯前端 JSON） ========== */
+  const SCHOOLS_DATA = [
+    { name: "桂林电子科技大学", city: "桂林", tier: "一本/公办", majors: ["计算机科学与技术", "电子信息工程", "通信工程"], note: "电子信息类王牌校，竞争激烈" },
+    { name: "桂林理工大学", city: "桂林", tier: "一本/公办", majors: ["计算机科学与技术", "电子信息工程", "数据科学"], note: "理工类强校" },
+    { name: "南宁师范大学", city: "南宁", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "师范+理工，招生规模较大" },
+    { name: "广西民族大学", city: "南宁", tier: "一本/公办", majors: ["计算机科学与技术", "信息管理与信息系统"], note: "综合性民族院校" },
+    { name: "广西科技师范学院", city: "来宾", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "招生名额多，分数线适中" },
+    { name: "北部湾大学", city: "钦州", tier: "公办", majors: ["计算机科学与技术", "电子信息工程", "物联网工程"], note: "沿海城市，理工类发展快" },
+    { name: "梧州学院", city: "梧州", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "分数线相对友好" },
+    { name: "百色学院", city: "百色", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "区域公办，性价比高" },
+    { name: "贺州学院", city: "贺州", tier: "公办", majors: ["计算机科学与技术", "物联网工程"], note: "公办二本" },
+    { name: "河池学院", city: "河池", tier: "公办", majors: ["计算机科学与技术"], note: "区域公办" },
+    { name: "南宁学院", city: "南宁", tier: "民办", majors: ["计算机科学与技术", "电子信息工程", "软件工程"], note: "南宁市民办，招生计划多" },
+    { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", majors: ["计算机应用工程", "电子信息工程"], note: "职业本科，2024 年起招生" },
+    { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", majors: ["计算机应用工程", "电子信息工程"], note: "民办职业本科" },
+    { name: "广西职业师范学院", city: "南宁", tier: "公办", majors: ["计算机科学与技术", "信息管理"], note: "公办，南宁市区位好" },
+  ];
+
+  function viewSchools() {
+    setTitle("院校查询", true);
+    const kw = (state.schoolQ || "").trim().toLowerCase();
+    const cityFilter = state.schoolCity || "all";
+    const cities = ["all", ...Array.from(new Set(SCHOOLS_DATA.map((s) => s.city)))];
+    let list = SCHOOLS_DATA;
+    if (cityFilter !== "all") list = list.filter((s) => s.city === cityFilter);
+    if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw));
+
+    return `
+      <div class="card" style="margin-bottom:12px">
+        <input class="input" id="schoolSearch" placeholder="搜院校名 / 专业（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" />
+      </div>
+      <div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">
+        ${cities.map((c) => `<button class="chip ${cityFilter === c ? "is-active" : ""}" data-act="school-city" data-v="${attr(c)}" type="button">${c === "all" ? "全部城市" : esc(c)}</button>`).join("")}
+      </div>
+      <div class="stat-grid" style="margin-bottom:12px">
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">收录院校</div></div>
+        <div class="stat-box"><div class="n">${cities.length - 1}</div><div class="l">覆盖城市</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length}</div><div class="l">公办院校</div></div>
+      </div>
+      ${list.length ? list.map((s) => `
+        <div class="card" style="margin-bottom:10px;padding:14px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong style="font-size:16px">${esc(s.name)}</strong>
+            <span class="pill" style="background:${s.tier.indexOf("公办") >= 0 ? "#dcfce7;color:#166534" : "#fef3c7;color:#92400e"}">${esc(s.tier)}</span>
+            <span class="pill">📍 ${esc(s.city)}</span>
+          </div>
+          <div style="margin-top:8px;font-size:13px;line-height:1.7">
+            <div><b>招生专业：</b>${s.majors.map((m) => `<span class="pill" style="margin-right:4px;margin-top:4px">${esc(m)}</span>`).join("")}</div>
+            <div class="muted" style="font-size:12px;margin-top:4px">📝 ${esc(s.note)}</div>
+          </div>
+        </div>
+      `).join("") : '<div class="empty">没有匹配的院校，换个关键词试试</div>'}
+      <div class="disclaimer">数据为 2024–2025 广西专升本公开招生信息整理，2027 年招生计划与分数线以广西招生考试院当年公布为准。</div>
     `;
   }
 
@@ -4356,6 +4413,7 @@ function formulaFilter() {
     else if (route === "learn-point") app.innerHTML = viewLearnDetail(params[0] || "");
     else if (route === "syllabus") app.innerHTML = viewSyllabus(params[0] ? decodeURIComponent(params[0]) : "");
     else if (route === "exam-info") app.innerHTML = viewExamInfo();
+    else if (route === "schools") app.innerHTML = viewSchools();
     else if (route === "me") app.innerHTML = viewMe();
     else if (route === "search") app.innerHTML = viewSearch();
     else if (route === "words") app.innerHTML = viewWords();
@@ -4408,6 +4466,17 @@ function formulaFilter() {
       }
     }
     if (route === "me") refreshOfflineStat();
+    if (route === "schools") {
+      var si = document.getElementById("schoolSearch");
+      if (si) {
+        si.focus();
+        si.setSelectionRange(si.value.length, si.value.length);
+        si.oninput = function() {
+          state.schoolQ = si.value;
+          render();
+        };
+      }
+    }
     if (route === "word-quiz") {
       var spellInp = document.getElementById("wbSpellInput");
       if (spellInp && !state.wbQuiz.showAnswer) {
@@ -5113,6 +5182,9 @@ function formulaFilter() {
       render();
     } else if (act === "wrong-more") {
       state.wrongPage = (state.wrongPage || 1) + 1;
+      render();
+    } else if (act === "school-city") {
+      state.schoolCity = t.getAttribute("data-v");
       render();
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
