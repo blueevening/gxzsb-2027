@@ -5491,7 +5491,12 @@ function formulaFilter() {
       } else {
         state.schoolMajor = { school: sn, major: mj };
       }
+      // 同步保存滚动位置，render 后立即恢复（不用 overflow:hidden，那会阻止 scrollTo）
+      var _sy = window.scrollY;
       render();
+      window.scrollTo(0, _sy);
+      requestAnimationFrame(() => window.scrollTo(0, _sy));
+      setTimeout(() => window.scrollTo(0, _sy), 80);
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
       state.wrongPage = 1;
