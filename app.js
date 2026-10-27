@@ -3102,27 +3102,44 @@ function ensureExplain(q) {
         <strong>考试时间</strong>
         <p class="muted" style="font-size:13px;margin-top:8px">2027 年 4 月 24–25 日</p>
       </div>
-      <button class="btn btn-primary btn-block" data-nav="schools" type="button" style="margin-bottom:12px">🏫 招生院校查询（14 所）</button>
+      <button class="btn btn-primary btn-block" data-nav="schools" type="button" style="margin-bottom:12px">🏫 招生院校查询（28所·含51大类对口标记）</button>
       <div class="disclaimer">公共课和专业课分开复习更高效。</div>
     `;
   }
 
   /* ========== 院校查询（P3：广西专升本招生院校，纯前端 JSON） ========== */
+  /* 数据来源：广西招生考试院 2025 年普通高校专升本招生计划（公办22所/民办11所，共53100人） */
   const SCHOOLS_DATA = [
-    { name: "桂林电子科技大学", city: "桂林", tier: "一本/公办", majors: ["计算机科学与技术", "电子信息工程", "通信工程"], note: "电子信息类王牌校，竞争激烈" },
-    { name: "桂林理工大学", city: "桂林", tier: "一本/公办", majors: ["计算机科学与技术", "电子信息工程", "数据科学"], note: "理工类强校" },
-    { name: "南宁师范大学", city: "南宁", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "师范+理工，招生规模较大" },
-    { name: "广西民族大学", city: "南宁", tier: "一本/公办", majors: ["计算机科学与技术", "信息管理与信息系统"], note: "综合性民族院校" },
-    { name: "广西科技师范学院", city: "来宾", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "招生名额多，分数线适中" },
-    { name: "北部湾大学", city: "钦州", tier: "公办", majors: ["计算机科学与技术", "电子信息工程", "物联网工程"], note: "沿海城市，理工类发展快" },
-    { name: "梧州学院", city: "梧州", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "分数线相对友好" },
-    { name: "百色学院", city: "百色", tier: "公办", majors: ["计算机科学与技术", "电子信息工程"], note: "区域公办，性价比高" },
-    { name: "贺州学院", city: "贺州", tier: "公办", majors: ["计算机科学与技术", "物联网工程"], note: "公办二本" },
-    { name: "河池学院", city: "河池", tier: "公办", majors: ["计算机科学与技术"], note: "区域公办" },
-    { name: "南宁学院", city: "南宁", tier: "民办", majors: ["计算机科学与技术", "电子信息工程", "软件工程"], note: "南宁市民办，招生计划多" },
-    { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", majors: ["计算机应用工程", "电子信息工程"], note: "职业本科，2024 年起招生" },
-    { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", majors: ["计算机应用工程", "电子信息工程"], note: "民办职业本科" },
-    { name: "广西职业师范学院", city: "南宁", tier: "公办", majors: ["计算机科学与技术", "信息管理"], note: "公办，南宁市区位好" },
+    /* ---- 公办 ---- */
+    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan: 1500, itMajor: true, majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术", "机器人工程"], note: "电子信息类王牌，51大类对口名额最多（约800人），7500元/年" },
+    { name: "桂林理工大学", city: "桂林", tier: "公办本科", plan: 1000, itMajor: true, majors: ["计算机科学与技术", "电子信息工程", "数据科学"], note: "理工类强校，51大类对口约90人" },
+    { name: "南宁师范大学", city: "南宁", tier: "公办本科", plan: 1100, itMajor: true, majors: ["计算机科学与技术", "电子信息工程"], note: "师范+理工，招生规模较大" },
+    { name: "广西民族大学", city: "南宁", tier: "公办本科", plan: 1300, itMajor: true, majors: ["计算机科学与技术(武鸣校区)", "信息管理与信息系统"], note: "综合性民族院校，计算机7485元/年，不录色盲色弱" },
+    { name: "广西科技师范学院", city: "来宾", tier: "公办本科", plan: 2000, itMajor: true, majors: ["电气工程及其自动化", "电子信息工程", "软件工程", "物联网工程"], note: "51大类对口约25人，公办4600元/年，性价比高" },
+    { name: "北部湾大学", city: "钦州", tier: "公办本科", plan: 695, itMajor: true, majors: ["计算机科学与技术", "数据科学与大数据技术", "电子信息工程", "物联网工程"], note: "51大类对口约85人，沿海城市" },
+    { name: "梧州学院", city: "梧州", tier: "公办本科", plan: 1200, itMajor: true, majors: ["电子信息工程", "通信工程", "计算机科学与技术"], note: "51大类对口约70人，分数线友好" },
+    { name: "百色学院", city: "百色", tier: "公办本科", plan: 500, itMajor: true, majors: ["计算机科学与技术", "电子信息工程"], note: "区域公办，51大类对口约20人" },
+    { name: "贺州学院", city: "贺州", tier: "公办本科", plan: 2000, itMajor: true, majors: ["计算机科学与技术", "物联网工程"], note: "公办二本，招生名额多" },
+    { name: "河池学院", city: "河池", tier: "公办本科", plan: 550, itMajor: true, majors: ["计算机科学与技术"], note: "区域公办" },
+    { name: "广西民族师范学院", city: "崇左", tier: "公办本科", plan: 1400, itMajor: false, majors: ["师范类为主"], note: "崇左，51大类对口较少" },
+    { name: "玉林师范学院", city: "玉林", tier: "公办本科", plan: 200, itMajor: false, majors: ["师范类为主"], note: "玉林，师范方向" },
+    { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan: 2000, itMajor: true, majors: ["计算机应用工程", "电子信息工程技术", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约35人，7500元/年" },
+    { name: "广西职业师范学院", city: "南宁", tier: "公办本科", plan: 500, itMajor: false, majors: ["信息管理", "财经类"], note: "南宁市区位好" },
+    { name: "广西科技大学", city: "柳州", tier: "公办本科", plan: 100, itMajor: false, majors: ["少量理工类"], note: "柳州，招生计划少(100人)" },
+    { name: "广西财经学院", city: "南宁", tier: "公办本科", plan: 5800, itMajor: false, majors: ["财经类为主"], note: "公办招生大户(5800人)，偏财经" },
+    { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan: 1000, itMajor: false, majors: ["旅游管理类"], note: "旅游方向" },
+    { name: "广西警察学院", city: "南宁", tier: "公办本科", plan: 400, itMajor: false, majors: ["公安类"], note: "公安方向，需政审" },
+    /* ---- 民办 ---- */
+    { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan: 6000, itMajor: true, majors: ["计算机科学与技术", "软件工程", "电子信息工程", "网络工程"], note: "原桂电信息科技学院，IT类最强民办，招生大户" },
+    { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan: 6500, itMajor: true, majors: ["计算机科学与技术", "人工智能", "电子信息工程"], note: "招生计划最多(6500人)" },
+    { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", plan: 4030, itMajor: true, majors: ["计算机应用工程", "电子信息工程"], note: "职业本科，51大类对口" },
+    { name: "广西外国语学院", city: "南宁", tier: "民办本科", plan: 4500, itMajor: false, majors: ["外语类为主", "电子商务"], note: "外语方向" },
+    { name: "南宁学院", city: "南宁", tier: "民办本科", plan: 1700, itMajor: true, majors: ["人工智能", "计算机科学与技术", "软件工程", "网络工程"], note: "51大类对口约560人，23500元/年" },
+    { name: "广西民族大学相思湖学院", city: "南宁", tier: "民办本科", plan: 2800, itMajor: true, majors: ["计算机科学与技术", "数据科学与大数据技术"], note: "民大独立学院，2800人" },
+    { name: "桂林学院", city: "桂林", tier: "民办本科", plan: 1500, itMajor: false, majors: ["综合类"], note: "原广西师大漓江学院" },
+    { name: "南宁师范大学师园学院", city: "南宁", tier: "民办本科", plan: 1000, itMajor: false, majors: ["师范类"], note: "南师独立学院" },
+    { name: "柳州工学院", city: "柳州", tier: "民办本科", plan: 725, itMajor: false, majors: ["工科类"], note: "原广西科大鹿山学院" },
+    { name: "北海艺术设计学院", city: "北海", tier: "民办本科", plan: 200, itMajor: false, majors: ["艺术设计类"], note: "北海，艺术方向" },
   ];
 
   function viewSchools() {
@@ -3142,16 +3159,18 @@ function ensureExplain(q) {
         ${cities.map((c) => `<button class="chip ${cityFilter === c ? "is-active" : ""}" data-act="school-city" data-v="${attr(c)}" type="button">${c === "all" ? "全部城市" : esc(c)}</button>`).join("")}
       </div>
       <div class="stat-grid" style="margin-bottom:12px">
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">收录院校</div></div>
-        <div class="stat-box"><div class="n">${cities.length - 1}</div><div class="l">覆盖城市</div></div>
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length}</div><div class="l">公办院校</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">招生院校</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.itMajor).length}</div><div class="l">电子信息类对口</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.reduce((a, s) => a + (s.plan || 0), 0) / 10000}万</div><div class="l">2025总计划</div></div>
       </div>
       ${list.length ? list.map((s) => `
         <div class="card" style="margin-bottom:10px;padding:14px">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <strong style="font-size:16px">${esc(s.name)}</strong>
             <span class="pill" style="background:${s.tier.indexOf("公办") >= 0 ? "#dcfce7;color:#166534" : "#fef3c7;color:#92400e"}">${esc(s.tier)}</span>
+            ${s.itMajor ? '<span class="pill" style="background:#dbeafe;color:#1e40af">💻 51大类对口</span>' : ""}
             <span class="pill">📍 ${esc(s.city)}</span>
+            <span class="pill" style="margin-left:auto">2025招 ${s.plan} 人</span>
           </div>
           <div style="margin-top:8px;font-size:13px;line-height:1.7">
             <div><b>招生专业：</b>${s.majors.map((m) => `<span class="pill" style="margin-right:4px;margin-top:4px">${esc(m)}</span>`).join("")}</div>
@@ -3159,7 +3178,7 @@ function ensureExplain(q) {
           </div>
         </div>
       `).join("") : '<div class="empty">没有匹配的院校，换个关键词试试</div>'}
-      <div class="disclaimer">数据为 2024–2025 广西专升本公开招生信息整理，2027 年招生计划与分数线以广西招生考试院当年公布为准。</div>
+      <div class="disclaimer">数据为广西招生考试院 2025 年专升本招生计划（公办22所/民办11所，共53100人），2027 年招生计划与分数线以当年公布为准。</div>
     `;
   }
 
