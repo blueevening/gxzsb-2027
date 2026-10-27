@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "2.2.9";          // 与 index.html 的版本号保持一致
+  var V = "2.3.0";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
@@ -124,22 +124,25 @@
     return !!_loadedSubjectBanks[subject];
   };
 
-  /* 模拟题试卷题库（mock-bank.js）按需加载：点专项/模拟卷时才下载 */
-  var _mockLoaded = false;
-  window.loadMockBank = function() {
+  /* 模拟题试卷题库按需加载：点哪个专项只下哪个文件，966KB→最大733KB */
+  var _mockLoadedTags = {};
+  window.MOCK_FILE_MAP = { "math": "math-mock.js", "en": "en-mock.js", "engr": "engr-mock.js", "c": "c-mock.js", "": "mock-bank.js" };
+  window.loadMockBank = function(tag) {
+    tag = tag || "";
+    var fn = window.MOCK_FILE_MAP[tag] || "mock-bank.js";
+    if (_mockLoadedTags[fn]) return Promise.resolve();
     return new Promise(function (resolve, reject) {
-      if (_mockLoaded) { resolve(); return; }
       var s = document.createElement("script");
-      s.src = "mock-bank.js?v=" + V;
+      s.src = fn + "?v=" + V;
       s.onload = function () {
-        if (window.MOCK_BANK) { _mockLoaded = true; resolve(); }
+        if (window.MOCK_BANK) { _mockLoadedTags[fn] = true; resolve(); }
         else { reject(new Error("模拟题库校验失败")); }
       };
-      s.onerror = function () { reject(new Error("模拟题库加载失败")); };
+      s.onerror = function () { reject(new Error("模拟题库加载失败:" + fn)); };
       document.head.appendChild(s);
     });
   };
-  window.isMockBankLoaded = function () { return _mockLoaded; };
+  window.isMockBankLoaded = function () { return Object.keys(_mockLoadedTags).length > 0; };
 
   /* 英语拓展学习（english-extra.js）按需加载：短文/阅读/短语/写作/语法 */
   var _extraLoaded = false;

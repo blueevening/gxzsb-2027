@@ -1664,7 +1664,7 @@
     });
   }
   function startMockPractice(tag) {
-    window.loadMockBank().then(function () {
+    window.loadMockBank(tag).then(function () {
       const pool = buildMockQuestions(tag);
       if (!pool.length) { alert("该专项暂无题目"); return; }
       startSession({ pool: pool, ordered: true, title: tag, results: {} });
