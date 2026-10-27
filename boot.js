@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "2.3.0";          // 与 index.html 的版本号保持一致
+  var V = "2.4.0";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
@@ -225,48 +225,83 @@
     if (t) t.classList.add("is-hide");
   }
 
-  /* 登录壳阶段：拦截登录/注册/先逛逛等点击，提示初始化中（PHASE1 秒级完成） */
+  /* 登录壳阶段：拦截登录/注册等需 supabase 的点击，提示初始化中；
+     但「开始刷题」(游客) 与「展开登录表单」纯前端可用，不阻塞 */
   function blockClick(e) {
-    if (e.target && e.target.closest && e.target.closest("[data-act],[data-nav]")) {
+    var actEl = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
+    if (!actEl) return;
+    var act = actEl.getAttribute("data-act");
+    // 展开/折叠登录表单：纯 DOM 操作，立即生效
+    if (act === "boot-show-login") {
       e.preventDefault();
       e.stopPropagation();
-      toast("正在初始化登录组件，请稍候…");
+      var f = $("bootLoginForm");
+      var link = $("bootShowLogin");
+      if (f) {
+        f.hidden = !f.hidden;
+        if (link) link.textContent = f.hidden ? "登录同步进度 →" : "收起登录";
+      }
+      return;
     }
+    // 开始刷题（游客）：立即可用，不依赖 supabase
+    if (act === "boot-guest") {
+      e.preventDefault();
+      e.stopPropagation();
+      try { localStorage.setItem("gxzsb.guest", "1"); } catch (e2) {}
+      var app = $("app");
+      if (app) app.innerHTML = '<div class="boot" style="padding-top:40vh;text-align:center;opacity:.5">⟳</div>';
+      return;
+    }
+    // 其余需 supabase 的操作：短暂提示
+    e.preventDefault();
+    e.stopPropagation();
+    toast("正在初始化登录组件，请稍候…");
   }
   function unblockClick() {
     document.removeEventListener("click", blockClick, true);
   }
 
-  /* 登录壳：与 app.js viewLogin 同视觉（可输入），app.js 注入后无缝接管 */
+  /* 游客标志：曾选择「开始刷题」的用户，刷新后直接进首页，不再被登录壳拦截 */
+  function isGuestFlag() {
+    try { return localStorage.getItem("gxzsb.guest") === "1"; } catch (e) { return false; }
+  }
+
+  /* 首屏落地壳：大「开始刷题」按钮为核心 CTA，登录表单默认折叠（点「登录同步」才展开） */
   function loginShellHtml() {
-    return '<div class="login-wrap">' +
-      '<div class="login-hero">' +
+    return '<div class="landing-wrap">' +
+      '<div class="landing-hero">' +
         '<div class="logo">⚡</div>' +
         '<div class="name">广西专升本练习</div>' +
-        '<div class="sub">登录后云端同步学习进度</div>' +
+        '<div class="sub">2027 备考 · 数学 / 英语 / 电工 / C语言 / 网络</div>' +
       '</div>' +
-      '<div class="login-tabs" role="tablist">' +
-        '<button type="button" class="is-on" role="tab" aria-selected="true" data-act="boot-login">登录</button>' +
-        '<button type="button" role="tab" aria-selected="false" data-act="boot-register">注册</button>' +
+      '<button type="button" class="landing-cta" data-act="boot-guest">' +
+        '<span class="landing-cta-main">开始刷题</span>' +
+        '<span class="landing-cta-sub">无需登录 · 进度自动保存到本机</span>' +
+      '</button>' +
+      '<button type="button" class="landing-login-link" data-act="boot-show-login" id="bootShowLogin">登录同步进度 →</button>' +
+      '<div class="landing-login-form" id="bootLoginForm" hidden>' +
+        '<div class="login-tabs" role="tablist">' +
+          '<button type="button" class="is-on" role="tab" aria-selected="true" data-act="boot-login">登录</button>' +
+          '<button type="button" role="tab" aria-selected="false" data-act="boot-register">注册</button>' +
+        '</div>' +
+        '<div class="card" style="padding:20px">' +
+          '<div class="login-field"><label for="bootLoginEmail">邮箱</label>' +
+          '<input id="bootLoginEmail" type="email" placeholder="your@email.com" autocomplete="email" /></div>' +
+          '<div class="login-field"><label for="bootLoginPwd">密码</label>' +
+          '<input id="bootLoginPwd" type="password" placeholder="至少6位" autocomplete="current-password" /></div>' +
+          '<button type="button" class="login-submit" data-act="boot-submit">登录</button>' +
+          '<div class="login-msg" id="bootLoginMsg"></div>' +
+        '</div>' +
       '</div>' +
-      '<div class="card" style="padding:24px">' +
-        '<div class="login-field"><label for="bootLoginEmail">邮箱</label>' +
-        '<input id="bootLoginEmail" type="email" placeholder="your@email.com" autocomplete="email" /></div>' +
-        '<div class="login-field"><label for="bootLoginPwd">密码</label>' +
-        '<input id="bootLoginPwd" type="password" placeholder="至少6位" autocomplete="current-password" /></div>' +
-        '<button type="button" class="login-submit" data-act="boot-submit">登录</button>' +
-        '<div class="login-msg" id="bootLoginMsg"></div>' +
-      '</div>' +
-      '<button type="button" class="login-guest" data-act="boot-guest">先逛逛，稍后登录</button>' +
     '</div>';
   }
 
-  /* 首帧：有登录态→极简小转圈（静默加载）；无登录态→登录壳 */
+  /* 首帧：有登录态或游客标志→极简小转圈（静默加载）；新用户→落地壳（大刷题按钮） */
   function shell() {
     document.body.classList.add("boot-loading");
     var app = $("app");
     if (app) {
-      if (isLoggedIn()) {
+      if (isLoggedIn() || isGuestFlag()) {
         app.innerHTML = '<div class="boot" style="padding-top:40vh;text-align:center;opacity:.5">⟳</div>';
       } else {
         app.innerHTML = loginShellHtml();

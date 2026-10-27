@@ -576,7 +576,7 @@ body.boot-loading .shell { padding: 32px 16px; }
 }
 .q-actions .q-nav-row { display: flex; gap: 8px; }
 .q-actions .q-nav-row .btn { flex: 1; }
-.q-actions .btn { min-height: 44px; padding: 0 8px; font-size: 13px; }
+.q-actions .btn { min-height: 48px; padding: 0 10px; font-size: 14px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .q-actions .btn-block { width: 100%; }
 @media (min-width: 1200px) {
   .q-actions { position: static; background: transparent; backdrop-filter: none; max-width: 760px; margin-left: 0; }
@@ -682,11 +682,18 @@ html.qa-modal-open { overflow: hidden; }
 .q-stem, .opt, .explain-body, .ref-answer, .mistake-box {
   max-width: 100%;
   overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .q-stem .frac, .opt .frac, .explain-body .frac, .ref-answer .frac {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+/* 代码/英文长串不撑破 */
+.q-stem code, .explain-body code, .subj-view {
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 /* ===== 空状态 ===== */
@@ -1791,6 +1798,51 @@ sup.math-sup .frac .den { padding-top: 1px; }
   cursor: pointer;
 }
 .login-guest:hover { color: var(--text); }
+
+/* ===== 首屏落地壳（P0-1：大刷题按钮前置，登录折叠） ===== */
+.landing-wrap {
+  max-width: 420px; margin: 0 auto; padding: 8vh 24px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.landing-hero { text-align: center; margin-bottom: 4px; }
+.landing-hero .logo { font-size: 48px; margin-bottom: 10px; }
+.landing-hero .name { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: .5px; }
+.landing-hero .sub { font-size: 13px; color: var(--text-sub); margin-top: 6px; line-height: 1.6; }
+.landing-cta {
+  width: 100%; padding: 22px 20px; border: none; border-radius: 16px;
+  background: linear-gradient(135deg, #2D5BFF, #4f7cff); color: #fff;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  box-shadow: 0 8px 24px rgba(45,91,255,.35);
+}
+.landing-cta:active { transform: scale(.98); }
+.landing-cta-main { font-size: 22px; font-weight: 800; letter-spacing: 2px; }
+.landing-cta-sub { font-size: 12px; opacity: .85; font-weight: 400; }
+.landing-login-link {
+  background: none; border: none; color: var(--text-sub); font-size: 14px;
+  cursor: pointer; padding: 8px; text-decoration: underline; text-underline-offset: 3px;
+}
+.landing-login-link:hover { color: var(--text); }
+.landing-login-form { width: 100%; animation: fadeIn .25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ===== 全局同步状态条（P0-1：24px 高，本地/云端模式可视） ===== */
+.sync-bar {
+  position: relative; z-index: 100;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 24px; font-size: 11px; font-weight: 600;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  color: var(--text-sub);
+  border-bottom: 1px solid var(--border);
+}
+.sync-bar-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; flex-shrink: 0;
+}
+.sync-bar.is-cloud { color: #065f46; }
+.sync-bar.is-cloud .sync-bar-dot { background: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.2); }
+.sync-bar.is-syncing .sync-bar-dot { background: #3b82f6; animation: pulseDot 1s infinite; }
+.sync-bar.is-error { color: #991b1b; }
+.sync-bar.is-error .sync-bar-dot { background: #ef4444; }
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
 /* ¼ҳز/ȥɫ */
 .side-nav.is-hidden,

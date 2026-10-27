@@ -993,14 +993,18 @@
       const gapIdx = Math.min(n - 1, curve.wrong.length - 1);
       const gap = curve.wrong[gapIdx] * 86400000;
       const reason = prev.reason || guessWrongReason(q);
-      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason, mastered: false };
+      // P1-2：做错重置连对计数
+      state.wrong[q.id] = { ...prev, n, rs: 0, last: Date.now(), due: Date.now() + gap, reason, mastered: false };
     } else if (prev.n) {
-      const n = Math.max(prev.n - 1, 0);
-      if (!n && !prev.mastered) delete state.wrong[q.id];
-      else {
-        const gapIdx = Math.min(n - 1, curve.right.length - 1);
+      // P1-2：连续做对 3 次才自动移出错题本（符合记忆曲线），否则延长复习间隔
+      const rs = (prev.rs || 0) + 1;
+      if (rs >= 3 && !prev.mastered) {
+        delete state.wrong[q.id];
+      } else {
+        const n = Math.max(prev.n - 1, 0);
+        const gapIdx = Math.min(Math.max(n, 1) - 1, curve.right.length - 1);
         const gap = curve.right[gapIdx] * 86400000;
-        state.wrong[q.id] = { ...prev, n, last: Date.now(), due: prev.mastered ? Number.MAX_SAFE_INTEGER : Date.now() + gap, mastered: !!prev.mastered };
+        state.wrong[q.id] = { ...prev, n, rs, last: Date.now(), due: prev.mastered ? Number.MAX_SAFE_INTEGER : Date.now() + gap, mastered: !!prev.mastered };
       }
     }
     save(LS.wrong, state.wrong);
@@ -2071,6 +2075,10 @@
             <div class="explain-block"><h4>我的笔记</h4>
               <textarea class="note-input" id="noteInput">${esc(state.notes[q.id] || "")}</textarea>
               <button class="btn btn-ghost btn-sm" data-act="save-note" data-id="${attr(q.id)}" type="button" style="margin-top:8px">保存笔记</button>
+            </div>
+            <div class="explain-block"><h4>题目报错</h4>
+              <p class="muted" style="font-size:12px;margin:0 0 8px">答案有误、解析不清或题目残缺？点下方按钮反馈，存在本地，定期汇总优化题库。</p>
+              <button class="btn btn-ghost btn-sm" data-act="report-question" data-id="${attr(q.id)}" type="button">⚠ 报告此题有问题</button>
             </div>
           </div>
         </div>
@@ -3146,7 +3154,8 @@ function ensureExplain(q) {
     const hasQueue = !!load("gxzsb.syncQueue", null);
     if (isGuest) {
       return '<div class="card sync-card sync-guest" style="margin-bottom:12px"><span class="sync-dot">👤</span>' +
-        '<span class="sync-msg">游客模式：进度只保存在本机，登录后可云端同步</span></div>';
+        '<span class="sync-msg">游客模式：进度只保存在本机，登录后可云端同步</span>' +
+        '<button class="btn btn-ghost btn-sm" data-nav="login" type="button" style="white-space:nowrap">去登录同步</button></div>';
     }
     let ico, cls, msg, extra = "";
     if (syncUI.status === "syncing") {
@@ -3234,6 +3243,22 @@ function ensureExplain(q) {
 
       ${buildWeekChart()}
       ${syncStatusHtml()}
+
+      <!-- P0-3：离线题库管理卡片 -->
+      <div class="card" style="margin-bottom:16px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:18px">📡</span>
+          <strong style="font-size:14px">离线题库管理</strong>
+          <span class="mono muted" style="font-size:11px;margin-left:auto" id="offlineCacheStat">检测中…</span>
+        </div>
+        <p class="muted" style="font-size:12px;margin:0 0 10px;line-height:1.6">缓存题库到本机后，没网也能正常刷题。已缓存资源由浏览器自动管理。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" data-act="preload-offline" id="offlineBtn" type="button">一键缓存全部题库</button>
+          <button class="btn btn-ghost btn-sm" data-act="clear-offline-cache" type="button">清除离线缓存</button>
+        </div>
+        <div class="muted" id="offlineBarTxt" style="font-size:12px;margin-top:8px"></div>
+      </div>
+
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
@@ -4311,11 +4336,11 @@ function formulaFilter() {
     }
     // 数据未就绪也直接渲染首页（空数据），后台加载完自动刷新
     // 不再卡住转圈
-    if (sb && !state.user) {
-      app.innerHTML = viewLogin();
-      hideNav();
-      bindEvents();
-      return;
+    // P0-1：免登为默认逻辑 —— 未登录不再强制登录墙，直接以游客身份进首页；
+    // 登录入口收敛为首页「登录同步」按钮/弹窗，进度本地保存、登录仅做云端备份
+    if (sb && !state.user && route !== "login") {
+      state.user = { isGuest: true };
+      try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
     }
     if (route === "bank") app.innerHTML = viewBank();
     else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
@@ -4382,6 +4407,7 @@ function formulaFilter() {
         };
       }
     }
+    if (route === "me") refreshOfflineStat();
     if (route === "word-quiz") {
       var spellInp = document.getElementById("wbSpellInput");
       if (spellInp && !state.wbQuiz.showAnswer) {
@@ -4405,6 +4431,62 @@ function formulaFilter() {
           it.style.display = (!kw || it.textContent.toLowerCase().indexOf(kw) >= 0) ? "" : "none";
         });
       });
+    }
+    updateSyncBar();
+  }
+
+  /* 离线缓存状态：显示已缓存资源数与估算大小 */
+  function refreshOfflineStat() {
+    var el = document.getElementById("offlineCacheStat");
+    if (!el) return;
+    if (!window.caches) { el.textContent = "浏览器不支持缓存"; return; }
+    try {
+      caches.keys().then(function (keys) {
+        var gxzKeys = keys.filter(function (k) { return k.indexOf("gxzsb-") === 0; });
+        if (!gxzKeys.length) { el.textContent = "未缓存"; return; }
+        var totalSize = 0, totalCount = 0;
+        Promise.all(gxzKeys.map(function (k) {
+          return caches.open(k).then(function (c) {
+            return c.keys().then(function (reqs) {
+              totalCount += reqs.length;
+              return Promise.all(reqs.map(function (r) {
+                return c.match(r).then(function (res) {
+                  if (res && res.headers.get("content-length")) totalSize += parseInt(res.headers.get("content-length"), 10) || 0;
+                  else if (res) totalSize += 50000; // 估算
+                });
+              }));
+            });
+          });
+        })).then(function () {
+          var mb = (totalSize / 1048576).toFixed(1);
+          el.textContent = totalCount + " 个资源 · 约 " + mb + " MB";
+        });
+      });
+    } catch (e) { el.textContent = "统计失败"; }
+  }
+
+  /* 全局同步状态条：游客/已登录/同步中/同步失败 四态可视 */
+  function updateSyncBar() {
+    var bar = document.getElementById("syncBar");
+    if (!bar) return;
+    var txt = document.getElementById("syncBarText");
+    bar.classList.remove("is-cloud", "is-syncing", "is-error");
+    var u = activeUser();
+    if (!u) {
+      txt.textContent = "📱 本地模式 · 进度保存在本机";
+      return;
+    }
+    if (syncUI.status === "syncing") {
+      bar.classList.add("is-syncing");
+      txt.textContent = "☁️ 正在同步到云端…";
+    } else if (syncUI.status === "error" || load("gxzsb.syncQueue", null)) {
+      bar.classList.add("is-error");
+      txt.textContent = "⚠ 同步失败，进度暂存本地";
+    } else {
+      bar.classList.add("is-cloud");
+      var t = syncUI.at ? new Date(syncUI.at) : new Date();
+      var hh = String(t.getHours()).padStart(2, "0"), mm = String(t.getMinutes()).padStart(2, "0");
+      txt.textContent = "☁️ 已同步云端（" + hh + ":" + mm + "）· 多设备备份";
     }
   }
 
@@ -4432,6 +4514,35 @@ function formulaFilter() {
       }
       if (txt) txt.textContent = "✅ 全部题库已离线可用，断网也能刷";
       if (btn) { btn.textContent = "已完成"; btn.disabled = true; }
+      refreshOfflineStat();
+      return;
+    }
+
+    if (act === "clear-offline-cache") {
+      if (!confirm("清除离线题库缓存？\n\n下次刷题需重新联网加载题库，但本地学习进度不受影响。")) return;
+      try {
+        if (window.caches) {
+          const keys = await caches.keys();
+          await Promise.all(keys.filter(k => k.indexOf("gxzsb-") === 0).map(k => caches.delete(k)));
+        }
+        toastLite("离线缓存已清除");
+      } catch (e) { toastLite("清除失败：" + (e.message || e)); }
+      refreshOfflineStat();
+      return;
+    }
+
+    if (act === "report-question") {
+      const qid = t.getAttribute("data-id");
+      const q = qById(qid);
+      if (!q) { toastLite("题目未找到"); return; }
+      var reason = prompt("请简要说明这道题的问题（如：答案错误/解析不清/题目残缺）：", "");
+      if (reason && reason.trim()) {
+        var reports = load("gxzsb.qreports", []);
+        if (!Array.isArray(reports)) reports = [];
+        reports.push({ id: qid, subj: q.subject, stem: String(q.stem).slice(0, 80), reason: reason.trim(), at: Date.now() });
+        save("gxzsb.qreports", reports);
+        toastLite("已记录反馈，感谢！共 " + reports.length + " 条待汇总");
+      }
       return;
     }
 
@@ -5111,7 +5222,16 @@ function formulaFilter() {
         try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
         stopRealtime();
         go("home"); render();
-        pullAndMerge().then(subscribeRealtime);
+        // P0-2：首次登录且本机有刷题进度时，提示将合并到云端（mergeProgress 以本地为基准，不会覆盖）
+        var localAttempts = (state.attempts || []).length;
+        if (localAttempts > 0) {
+          setTimeout(function () {
+            toastLite("已检测到本机 " + localAttempts + " 次刷题记录，正在合并到云端…", 3200);
+            pullAndMerge().then(subscribeRealtime);
+          }, 300);
+        } else {
+          pullAndMerge().then(subscribeRealtime);
+        }
       }).catch(function (err) {
         if (err && err.message === "timeout") {
           msg.textContent = "登录超时（15s），请检查网络后重试";
