@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "2.4.2";          // 与 index.html 的版本号保持一致
+  var V = "2.4.4";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
@@ -373,18 +373,29 @@
   async function boot() {
     shell();
 
-    /* PHASE1：登录最小依赖就绪 → 注入 app.js（登录页立即可操作） */
-    var authFailed = [];
-    for (var i = 0; i < AUTH_SCRIPTS.length; i++) {
-      var af = await loadWithRetry(AUTH_SCRIPTS[i], i, AUTH_SCRIPTS.length);
-      if (af && AUTH_SCRIPTS[i].required) authFailed.push(af);
-      // 非必要（supabase）失败：继续，登录功能由 app.js 降级处理
-    }
-    if (authFailed.length) { toastFail(authFailed); return; }
+    /* PHASE1：先加载必需配置（sb-config），立即注入 app.js 让页面可交互；
+       supabase SDK（213KB）后台异步加载，不阻塞刷题。
+       用户点登录时若 SDK 未就绪，提示"正在加载"；加载失败则降级为纯本地模式。 */
+    var cfgScript = { src: "sb-config.js", required: true, label: "配置", verify: "SB_CONFIG" };
+    var cfgFail = await loadWithRetry(cfgScript, 0, 1);
+    if (cfgFail) { toastFail([cfgFail]); return; }
+
+    // 立即注入 app.js，页面开始渲染
     unblockClick();
     toastDone();
     document.body.classList.remove("boot-loading");
     injectAppJs();
+
+    // supabase SDK 后台异步加载，不阻塞主流程
+    var sbScript = { src: "vendor/supabase.min.js", required: false, label: "登录组件", verify: "" };
+    loadWithRetry(sbScript, 0, 1).then(function (failLabel) {
+      if (failLabel) {
+        // SDK 加载失败：静默降级为本地模式，不打扰用户
+        try { window.dispatchEvent(new CustomEvent("gxzsb:sb-unavailable")); } catch (e) {}
+      } else {
+        try { window.dispatchEvent(new CustomEvent("gxzsb:sb-ready")); } catch (e) {}
+      }
+    });
   }
 
   /* PHASE2（数据）延迟到进入主界面后再启动：未登录不下载数据，弱网下登录认证请求优先、
