@@ -1373,7 +1373,7 @@
   }
   function mockSectionHtml() {
     const cats = [
-      { tag: "数学专项", short: "数学专项", icon: "数", color: "#3B82F6", fallback: 99 },
+      { tag: "数学专项", short: "数学专项", icon: "数", color: "#3B82F6", fallback: 361 },
       { tag: "英语专项", short: "英语专项", icon: "英", color: "#8B5CF6", fallback: 400 },
       { tag: "英语语法精编", short: "英语语法精编", icon: "语", color: "#EC4899", fallback: 41 },
       { tag: "C语言精编", short: "C语言精编", icon: "C", color: "#10B981", fallback: 6 }
