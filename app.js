@@ -3119,7 +3119,7 @@ function ensureExplain(q) {
   ];
   const SCHOOLS_DATA = [
     /* ---- 公办（15所）—— majors 只列 51 电子与信息大类能报的专业 ---- */
-    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/zs/2023/0131/c2195a26259/pagem.htm", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年" },
+    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/zs/2023/0131/c2195a26259/pagem.htm", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年", majorUrls: { "电子信息科学与技术": "https://www.guet.edu.cn/zs/2023/0131/c2195a26259/pagem.htm", "人工智能": "https://www.guet.edu.cn/zs/2023/0131/c2191a26253/pagem.htm", "网络工程": "https://www.guet.edu.cn/zs/2023/0131/c2197a26261/pagem.htm" } },
     { name: "桂林理工大学", city: "桂林", tier: "公办本科", plan26: 1000, plan25: 1000, itMajor: true, url: "https://zj.glut.edu.cn/info/1059/1319.htm", majors: ["数据科学与大数据技术(南宁分校)"], note: "51大类对口约137人，10000元/年(南宁扶绥分校)" },
     { name: "广西民族大学", city: "南宁", tier: "公办本科", plan26: 2000, plan25: 1300, itMajor: true, url: "https://ai.gxmzu.edu.cn/info/1003/37421.htm", majors: ["计算机科学与技术(武鸣校区)"], note: "51大类对口约275人，5520元/年，不录色盲色弱" },
     { name: "广西科技师范学院", city: "来宾", tier: "公办本科", plan26: 2200, plan25: 2000, itMajor: true, url: "https://sjy.gxstnu.edu.cn/info/1008/12822.htm", majors: ["电子信息工程", "计算机科学与技术", "软件工程", "物联网工程", "数据科学与大数据技术"], note: "51大类对口约750人，公办4600元/年，性价比首选" },
@@ -3431,7 +3431,9 @@ function ensureExplain(q) {
             </div>
             ${expanded ? (() => {
               const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
-              const officialUrl = s.url || "https://www.guet.edu.cn/";
+              // 按当前展开的专业 chip 动态取专业介绍页 URL；没有配置则 fallback 到学校默认 url
+              const majorUrlMap = s.majorUrls || {};
+              const officialUrl = majorUrlMap[expanded] || s.url || "https://www.guet.edu.cn/";
               const pdfUrl = "https://www.gxeea.cn/view/content_1215_32740.htm";
               const officialLink = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
                 <a href="${officialUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🏫 ${esc(s.name)}官网 ↗</a>
@@ -4772,8 +4774,7 @@ function formulaFilter() {
     if (route === "schools") {
       var si = document.getElementById("schoolSearch");
       if (si) {
-        si.focus();
-        si.setSelectionRange(si.value.length, si.value.length);
+        // 只在用户主动聚焦过搜索框后才保持焦点；不再每次 render 自动 focus（避免点筛选/专业 chip 时键盘反复弹出导致页面跳动）
         var _searchTimer = null;
         si.oninput = function() {
           state.schoolQ = si.value;
@@ -4781,6 +4782,8 @@ function formulaFilter() {
           _searchTimer = setTimeout(function() {
             var _sy = window.scrollY;
             render();
+            var _si2 = document.getElementById("schoolSearch");
+            if (_si2) { _si2.focus(); _si2.setSelectionRange(_si2.value.length, _si2.value.length); }
             window.scrollTo(0, _sy);
             requestAnimationFrame(() => window.scrollTo(0, _sy));
           }, 300);
