@@ -2089,20 +2089,22 @@
       <div class="q-actions">
         <div class="q-nav-row">
           <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
-          <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
+          <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "★ 已收藏" : "☆ 收藏"}</button>
           <button class="btn btn-ghost" data-act="next" type="button">${s.i >= s.q.length - 1 ? "完成" : "下一题"}</button>
-          ${s.submitted ? "" : `<button class="btn btn-primary" data-act="submit" type="button">提交</button>`}
+          ${s.exam || s.submitted ? "" : `<button class="btn btn-primary" data-act="submit" type="button">提交</button>`}
         </div>
         ${
           s.exam && !s.examSubmitted
-            ? `<button class="btn btn-accent btn-block" data-act="submit-exam" type="button">交卷并出分</button>`
+            ? `<button class="btn btn-accent btn-block" data-act="submit-exam" type="button" style="margin-top:10px;font-size:16px;padding:14px 0;font-weight:700">
+                 📝 提交试卷${(() => { let n=0; s.q.forEach(q => { if (!(q.id in s.results) && q.type !== "translate" && q.type !== "write") n++; }); return n > 0 ? `（${n}题未答）` : ""; })()}
+               </button>`
             : ""
         }
         ${
           s.exam && !s.examSubmitted
             ? `<div style="display:flex;gap:8px;margin-top:8px">
-                 <button class="btn btn-ghost btn-sm" data-act="pause-exam" type="button" style="flex:1">⏸ 暂停并保存</button>
-                 <button class="btn btn-ghost btn-sm" data-act="exit-exam" type="button" style="flex:1;opacity:.65">放弃本场</button>
+                 <button class="btn btn-ghost btn-sm" data-act="pause-exam" type="button" style="flex:1">⏸ 暂停保存</button>
+                 <button class="btn btn-ghost btn-sm" data-act="exit-exam" type="button" style="flex:1;opacity:.6">放弃本场</button>
                </div>`
             : ""
         }
