@@ -359,7 +359,7 @@ ok(/safe-area-inset-top/.test(cssSrc), "移动端顶部刘海安全区");
 ok(/font-size:\s*16px/.test(cssSrc) && /避免 iOS Safari 聚焦时自动放大/.test(cssSrc), "移动端输入框 16px 防 iOS 聚焦放大");
 
 console.log("[21] 移除真题库：入口/路由/页面/事件已清除，题库保留");
-ok(!/viewSchool|data-act="school"|school-practice|start-exam-paper|route === "school"|真题库/.test(appSrc), "app.js 已无真题库功能");
+ok(!/viewSchool(?![s])|data-act="school"|school-practice|start-exam-paper|route === "school"|真题库/.test(appSrc), "app.js 已无真题库功能（院校查询 viewSchools 保留）");
 ok(/\.quick-3\s*\{[^}]*repeat\(3,\s*1fr\)/.test(cssSrc), "首页快捷入口三列网格");
 ok(/class="quick-3"/.test(appSrc) && /data-nav="words"/.test(appSrc) && /data-nav="mock"/.test(appSrc), "首页快捷入口含背单词/模拟考");
 // 题库本身不受影响：题目总数与五科分布不变
