@@ -3119,7 +3119,7 @@ function ensureExplain(q) {
   ];
   const SCHOOLS_DATA = [
     /* ---- 公办（15所）—— majors 只列 51 电子与信息大类能报的专业 ---- */
-    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/zs/2023/0131/c2146a26198/pagem.htm", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年" },
+    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/zs/2023/0131/c2195a26259/pagem.htm", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年" },
     { name: "桂林理工大学", city: "桂林", tier: "公办本科", plan26: 1000, plan25: 1000, itMajor: true, url: "https://zj.glut.edu.cn/", majors: ["数据科学与大数据技术(南宁分校)"], note: "51大类对口约137人，10000元/年(南宁扶绥分校)" },
     { name: "广西民族大学", city: "南宁", tier: "公办本科", plan26: 2000, plan25: 1300, itMajor: true, url: "https://zs.gxmzu.edu.cn/", majors: ["计算机科学与技术(武鸣校区)"], note: "51大类对口约275人，5520元/年，不录色盲色弱" },
     { name: "广西科技师范学院", city: "来宾", tier: "公办本科", plan26: 2200, plan25: 2000, itMajor: true, url: "https://zsw.gxstnu.edu.cn/", majors: ["电子信息工程", "计算机科学与技术", "软件工程", "物联网工程", "数据科学与大数据技术"], note: "51大类对口约750人，公办4600元/年，性价比首选" },
