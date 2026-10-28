@@ -4774,9 +4774,16 @@ function formulaFilter() {
       if (si) {
         si.focus();
         si.setSelectionRange(si.value.length, si.value.length);
+        var _searchTimer = null;
         si.oninput = function() {
           state.schoolQ = si.value;
-          render();
+          clearTimeout(_searchTimer);
+          _searchTimer = setTimeout(function() {
+            var _sy = window.scrollY;
+            render();
+            window.scrollTo(0, _sy);
+            requestAnimationFrame(() => window.scrollTo(0, _sy));
+          }, 300);
         };
       }
     }
@@ -5488,7 +5495,11 @@ function formulaFilter() {
       render();
     } else if (act === "school-city") {
       state.schoolCity = t.getAttribute("data-v");
+      var _sy = window.scrollY;
       render();
+      window.scrollTo(0, _sy);
+      requestAnimationFrame(() => window.scrollTo(0, _sy));
+      setTimeout(() => window.scrollTo(0, _sy), 80);
     } else if (act === "school-major") {
       const sn = t.getAttribute("data-school");
       const mj = t.getAttribute("data-major");
