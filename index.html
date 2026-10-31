@@ -15,8 +15,21 @@
 <meta name="apple-mobile-web-app-title" content="专升本">
 <link rel="icon" href="data:,">
 <script>
-/* 首帧即应用持久化主题，避免深色用户加载页闪白 */
+/* v2.9.1：立即清除所有旧SW和旧缓存，防止旧SW拦截新文件 */
 (function () {
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (r) { r.unregister(); });
+      }).catch(function () {});
+    }
+    if (window.caches) {
+      caches.keys().then(function (keys) {
+        keys.forEach(function (k) { caches.delete(k); });
+      }).catch(function () {});
+    }
+  } catch (e) {}
+  /* 应用主题 */
   try { if (localStorage.getItem("gxzsb.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
 })();
 </script>
@@ -95,17 +108,6 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
   window.addEventListener('offline', sync);
   sync();
 })();
-/* SW：临时禁用，清除旧缓存后再恢复 */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function (regs) {
-    regs.forEach(function (r) { r.unregister(); });
-    if (window.caches) {
-      caches.keys().then(function (keys) {
-        keys.forEach(function (k) { caches.delete(k); });
-      });
-    }
-  }).catch(function () {});
-}
 </script>
 <script defer src="boot.js?v=2.9.1"></script>
 </body>
