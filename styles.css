@@ -2349,14 +2349,14 @@ button, .btn { min-height: 44px; }
 [data-theme="dark"] .sync-bar { background: rgba(91,127,255,.14); color: #9DB4FF; }
 [data-theme="dark"] .sync-bar-dot { background: #9DB4FF; }
 
-/* 4) 桌面端容器：内容居中、横向留白、字号不拉伸失真 */
+/* 4) 桌面端容器 */
 @media (min-width: 768px) {
-  .shell { max-width: var(--content-max, 860px); margin: 0 auto; }
+  /* 平板不限制宽度，由1200px桌面规则统一处理 */
 }
 @media (min-width: 1200px) {
-  .shell { max-width: 100%; }
+  .shell { max-width: 100% !important; margin: 0 !important; }
   .app-frame { max-width: 1320px; margin: 0 auto; }
-  body { font-size: 16px; }  /* 大屏字号不随 viewport 拉伸 */
+  body { font-size: 16px; }
 }
 
 /* 5) 首屏 CLS 抑制：骨架元素固定尺寸，下方内容 content-visibility 跳过渲染 */
@@ -2570,69 +2570,39 @@ button, .btn { min-height: 44px; }
  * v2.8.0 桌面端内页全布局：所有页面利用宽屏，不再挤窄列
  * ============================================================ */
 @media (min-width: 1200px) {
-  /* 内页shell拉满，不再居中窄列 */
-  .shell { max-width: 100% !important; padding: 24px 32px !important; }
-  .app-frame { max-width: 1280px; }
+  .app-frame { max-width: 1320px; }
 
-  /* --- 单词本页面 --- */
-  .wb-hero { max-width: 100% !important; padding: 28px 32px !important; }
+  /* --- 单词本：hero和卡片全宽，练习模式4列网格 --- */
+  .wb-hero { padding: 28px 32px; }
   .wb-hero-title { font-size: 28px; }
   .wb-stats-row { gap: 32px; }
   .wb-stat-num { font-size: 28px; }
-  /* 今日任务卡片 + 练习模式 双列布局 */
-  .wb-today-card { max-width: 100% !important; padding: 24px 28px !important; }
+  .wb-today-card { padding: 24px 28px; }
   .wb-today-num { font-size: 42px; }
-  .wb-actions { max-width: 100% !important; }
-  /* 练习模式按钮网格：桌面端4列 */
-  .wb-mode-grid, .practice-wrap {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 14px !important;
+  .wb-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
   }
 
-  /* --- 题库页面：章节卡片多列 --- */
-  .chapter-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 14px !important;
-  }
+  /* --- 模拟卷列表：双列卡片 --- */
   .exam-stack {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px !important;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 
-  /* --- 学习一刻：章节卡片3列 --- */
-  .learn-chapter-grid, .subject-banner + .chapter-list {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 14px !important;
+  /* --- 卡片统一加大内边距 --- */
+  .outline-card, .today-card { padding: 20px 24px; }
+
+  /* --- 做题页保持居中阅读窄列 --- */
+  .app-frame.nav-hidden .shell {
+    max-width: 800px !important;
+    margin: 0 auto;
   }
-
-  /* --- 错题本/收藏：列表卡片双列 --- */
-  .wrong-list, .fav-list {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px !important;
-  }
-
-  /* --- 公式书：已经是220px侧栏+主区，保持但拉宽 --- */
-  .formula-wrap { gap: 28px !important; }
-
-  /* 首页快捷入口已经是6列，保持 */
-
-  /* 卡片统一在桌面端加大内边距 */
-  .outline-card, .today-card, .wb-today-card { padding: 20px 24px; }
-
-  /* 做题页面保持居中窄列（阅读体验） */
-  .app-frame.nav-hidden .shell { max-width: 800px !important; margin: 0 auto; }
 }
 
-/* 1200-1440 中等桌面：3列 */
+/* 900-1199px 中等屏：模拟卷单列，练习模式3列 */
 @media (min-width: 900px) and (max-width: 1199px) {
-  .wb-mode-grid, .practice-wrap {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-  .chapter-grid { grid-template-columns: repeat(2, 1fr) !important; }
-  .exam-stack { grid-template-columns: 1fr !important; }
+  .wb-mode-grid { grid-template-columns: repeat(3, 1fr); }
 }
