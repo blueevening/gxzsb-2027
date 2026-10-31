@@ -1888,6 +1888,7 @@
       <div>
       <div class="card">
         <div class="q-stem">${mathHtml(q.stem)}</div>
+        ${q.image ? '<div class="q-img" style="margin:12px 0;text-align:center">' + q.image + '</div>' : ''}
         ${
           q.type === "single" || q.type === "judge"
             ? (q.options || [])
