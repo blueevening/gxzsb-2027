@@ -5,21 +5,9 @@
   var sb = null;
   if (window.supabase && window.SB_CONFIG) {
     try {
-      sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key, {
-        auth: {
-          // 手机端从邮件 App 点开重置链接常跨浏览器，PKCE 的 code_verifier 会丢失导致打不开；
-          // 用隐式流，token 随链接带回，任何浏览器都能完成校验
-          detectSessionInUrl: true,
-          flowType: "implicit",
-          persistSession: true,
-          autoRefreshToken: true
-        }
-      });
+      sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key);
     } catch(e) {}
   }
-  // 标记本次打开是否为“密码重置链接”回调（URL 中带 token/code，或带 error 说明链接已失效）
-  var RECOVERY_URL = /(access_token|type=recovery|refresh_token|[?&]code=|error=|error_code=)/.test(location.hash + location.search);
-  var RECOVERY_ERROR = /(^|[?&#])(error|error_code)=/.test(location.hash + location.search);
 
   /* 题库快照：app.js 先于数据就绪注入（登录页不依赖数据），
      数据后台静默加载完成后由 gxzsb:data-ready 重建 */
@@ -255,8 +243,9 @@
   }
   function applyFontSize() {
     var k = state.fontSize || "md";
-    var scale = k === "sm" ? 0.9 : (k === "lg" ? 1.12 : 1.0);
-    document.documentElement.style.fontSize = (16 * scale) + "px";
+    var scale = k === "sm" ? 0.92 : (k === "lg" ? 1.1 : 1.0);
+    // 页面大量使用硬编码 px，改根字号(rem)无效；用 zoom 整体缩放，所有 px 跟着变
+    document.documentElement.style.zoom = scale;
   }
 
   const state = {
@@ -274,7 +263,6 @@
     history: load(LS.history, []),
     reports: load(LS.reports, []),
     session: null, wrongTab: "wrong",
-    recovery: false,   // 是否处于“忘记密码→设置新密码”流程
     practiceMode: load("gxzsb.practiceMode", "test"),
     forgetCurve: load("gxzsb.forgetCurve", "mid"),
     fontSize: load("gxzsb.fontSize", "md"),
@@ -337,6 +325,7 @@
       }
     });
     if (data.nick) save("gxzsb.nick", data.nick);
+    if (data.resetAt != null) save("gxzsb.resetAt", data.resetAt || 0);
   }
 
   function mergeMap(a, b, pick) {
@@ -348,15 +337,33 @@
     return out;
   }
 
+  // 该侧最新一条学习数据的时间（答题 / 错题 / 最近一次学习）。
+  // 用于判断 resetAt 是否仍然代表「当前已清空」：若重置后又产生了更晚的学习记录，
+  // 说明那次 resetAt 已被新数据覆盖（旧版本注册时误写的 resetAt 也属此情况），不应再据此清空。
+  function latestStudyAt(s) {
+    if (!s || typeof s !== "object") return 0;
+    let t = 0;
+    (s.attempts || []).forEach((r) => { if (r && (r.at || 0) > t) t = r.at || 0; });
+    if (s.last && (s.last.at || 0) > t) t = s.last.at || 0;
+    Object.keys(s.wrong || {}).forEach((id) => {
+      const w = s.wrong[id];
+      if (w && (w.last || 0) > t) t = w.last || 0;
+    });
+    return t;
+  }
+
   function mergeProgress(local, remote) {
     if (!remote || typeof remote !== "object") return local;
     const lR = Number(local && local.resetAt) || 0;
     const rR = Number(remote && remote.resetAt) || 0;
-    // 任一侧发生了「重置/清除」：用较新的 resetAt 整包覆盖，禁止把旧学习数据合并回来
-    if (rR > lR && rR > 0) {
+    // resetAt 仅在「该侧重置之后没有再产生任何更晚的学习数据」时才有效。
+    const rEff = rR > 0 && latestStudyAt(remote) <= rR;
+    const lEff = lR > 0 && latestStudyAt(local) <= lR;
+    // 任一侧发生了真正的「重置/清除」：用较新且仍有效的 resetAt 整包覆盖，禁止把旧学习数据合并回来
+    if (rEff && rR > lR) {
       return emptyStudyPayload(rR, remote.nick || (local && local.nick) || null);
     }
-    if (lR > rR && lR > 0) {
+    if (lEff && lR > rR) {
       return emptyStudyPayload(lR, (local && local.nick) || remote.nick || null);
     }
     const out = Object.assign({}, local);
@@ -415,7 +422,8 @@
 
     out.nick = remote.nick || local.nick || null;
     out.theme = local.theme;   // 主题为设备本地偏好，不参与同步
-    out.resetAt = Math.max(lR, rR);
+    // 仅保留仍然有效的 resetAt；已被新数据覆盖的污染标记（如旧版本注册时写入）归零，避免继续随同步扩散
+    out.resetAt = Math.max(lEff ? lR : 0, rEff ? rR : 0);
     return out;
   }
 
@@ -425,11 +433,20 @@
     } catch (e2) {}
   }
 
+  // 云同步状态（仅用于"我的"页展示，不频繁 render）
+  var syncUI = { status: "idle", at: 0 };
+  function setSyncStatus(st) {
+    syncUI.status = st;
+    syncUI.at = Date.now();
+    if (state.route === "me") render();
+  }
+
   async function pushProgress(data, attempt) {
     const u = activeUser();
     if (!u) return;
     const n = attempt || 0;
     const payload = data || gatherLocal();
+    setSyncStatus("syncing");
     try {
       const { error } = await sb.from("progress").upsert(
         { user_id: u.id, data: payload, updated_at: new Date().toISOString() },
@@ -439,12 +456,16 @@
         console.warn("sync push:", error.message);
         // 服务端返回 error：一律入队 + 轻提示
         enqueueSync(payload);
+        setSyncStatus("error");
         toastLite("进度暂存本地，稍后自动同步");
         if (n < 2) setTimeout(() => pushProgress(data, n + 1), 1500 * (n + 1));
+      } else {
+        setSyncStatus("ok");
       }
     } catch (e) {
       // 离线/网络失败：入队 + 轻提示
       enqueueSync(payload);
+      setSyncStatus("error");
       toastLite("网络异常，进度已暂存");
       if (n < 2) setTimeout(() => pushProgress(data, n + 1), 2000 * (n + 1));
     }
@@ -773,6 +794,14 @@
   }
   let _subjTotalCache = null;
 
+  // 全库题数：真实题数为准；题库尚未加载完时回退到数据文件声明的预估值；都没有则返回 null（显示"—"）
+  function totalQuestions() {
+    const realQ = (D.questions || []).length;
+    if (realQ > 0) return realQ;
+    if (D.meta && D.meta.estimatedQuestions) return D.meta.estimatedQuestions;
+    return null;
+  }
+
   function dueCount() {
     return Object.keys(state.wrong).filter((id) => {
       const w = state.wrong[id];
@@ -915,7 +944,25 @@
       bak.data["gxzsb.daily30"] = load("gxzsb.daily30", null);
       save("gxzsb.bak." + Date.now(), bak);
     } catch (e) {}
-    resetLearningData();
+    // 注册新账号：仅做「本机隔离」清空，避免串上本机旧账号/游客数据。
+    // 注意：这里不能写 resetAt。resetAt 只在用户主动「重置学习数据」时用于跨设备清空；
+    // 新账号云端本就为空，若写入 resetAt 会污染云端，之后任何新设备登录都会把云端
+    // 正常数据误判为「已重置」而整包清空（换设备进度全丢）。
+    STUDY_KEYS.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem("gxzsb.session");
+    localStorage.removeItem("gxzsb.dailySession");
+    localStorage.removeItem("gxzsb.daily30");
+    localStorage.removeItem("gxzsb.resetAt");
+    state.attempts = [];
+    state.wrong = {};
+    state.fav = {};
+    state.notes = {};
+    state.marks = {};
+    state.last = null;
+    state.streak = { d: null, n: 0, today: 0 };
+    state.history = [];
+    state.reports = [];
+    state.session = null;
   }
 
   /* P1-L1 遗忘曲线三档：单位天。wrong[n]=第 n+1 次错后的间隔；right[n]=答对降级后的间隔 */
@@ -946,14 +993,18 @@
       const gapIdx = Math.min(n - 1, curve.wrong.length - 1);
       const gap = curve.wrong[gapIdx] * 86400000;
       const reason = prev.reason || guessWrongReason(q);
-      state.wrong[q.id] = { ...prev, n, last: Date.now(), due: Date.now() + gap, reason, mastered: false };
+      // P1-2：做错重置连对计数
+      state.wrong[q.id] = { ...prev, n, rs: 0, last: Date.now(), due: Date.now() + gap, reason, mastered: false };
     } else if (prev.n) {
-      const n = Math.max(prev.n - 1, 0);
-      if (!n && !prev.mastered) delete state.wrong[q.id];
-      else {
-        const gapIdx = Math.min(n - 1, curve.right.length - 1);
+      // P1-2：连续做对 3 次才自动移出错题本（符合记忆曲线），否则延长复习间隔
+      const rs = (prev.rs || 0) + 1;
+      if (rs >= 3 && !prev.mastered) {
+        delete state.wrong[q.id];
+      } else {
+        const n = Math.max(prev.n - 1, 0);
+        const gapIdx = Math.min(Math.max(n, 1) - 1, curve.right.length - 1);
         const gap = curve.right[gapIdx] * 86400000;
-        state.wrong[q.id] = { ...prev, n, last: Date.now(), due: prev.mastered ? Number.MAX_SAFE_INTEGER : Date.now() + gap, mastered: !!prev.mastered };
+        state.wrong[q.id] = { ...prev, n, rs, last: Date.now(), due: prev.mastered ? Number.MAX_SAFE_INTEGER : Date.now() + gap, mastered: !!prev.mastered };
       }
     }
     save(LS.wrong, state.wrong);
@@ -996,7 +1047,7 @@
   const TAB_NAV = NAV.filter(function(n){ return TAB_NAV_IDS.indexOf(n.id) >= 0; });
   function renderNav() {
     // 登录页不显示导航；其余页面一律恢复底部 tab / 侧栏
-    const isLoginRoute = state.route === "login" || state.route === "reset" || (!state.user && sb && !state.authLoading);
+    const isLoginRoute = state.route === "login" || (!state.user && sb && !state.authLoading);
     if (isLoginRoute) {
       hideNav();
       return;
@@ -1033,11 +1084,15 @@
     const todayDone = todayDoneCount();
     const streakN = (state.streak && state.streak.n) || 0;
 
+    // 本周(近7天)做题统计
+    const weekAgo = Date.now() - 7 * 86400000;
+    const weekList = (state.attempts || []).filter(function (a) { return a.at >= weekAgo; });
+    const weekN = weekList.length;
+    const weekAcc = weekN ? Math.round((weekList.filter(function (a) { return a.correct; }).length / weekN) * 100) : null;
+
     // 全库已练 / 正确率（去重题目）
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const realQ = (D.questions || []).length;
-    // 题库还没全部加载完时，显示预估总题数1500
-    const totalQ = realQ < 1500 ? 1500 : realQ;
+    const totalQ = totalQuestions();
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
@@ -1168,22 +1223,29 @@
             <div class="bar light"><i style="width:${Math.min((todayDone / 30) * 100, 100)}%"></i></div>
           </div>
           <div class="today-side">
-            <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续今日 30 题" : "开始今日 30 题"}</button>
+            <button class="btn btn-accent btn-block" data-act="daily" type="button">${todayDone > 0 && todayDone < 30 ? "继续30题" : "今日30题"}</button>
             <button class="btn btn-ghost btn-block" data-act="due" type="button">到期错题 ${due || 0}</button>
             <button class="btn btn-ghost btn-block" data-act="last" type="button">${last ? "继续上次" : "综合练习"}</button>
           </div>
         </div>
+        <div class="week-stat">
+          <span>🔥 连续打卡 <b>${streakN}</b> 天</span>
+          <span>本周做 <b>${weekN}</b> 题</span>
+          <span>本周正确率 <b>${weekAcc == null ? "—" : weekAcc + "%"}</b></span>
+        </div>
       </section>
+
+      ${buildWeakPoints()}
 
       <!-- 快捷入口 -->
       <section>
         <div class="quick-3">
-          <button class="qi" data-nav="learn" type="button"><span class="ico">${iconBook()}</span>学习一刻</button>
-          <button class="qi" data-nav="formula" type="button"><span class="ico">${iconBook()}</span>公式速查</button>
+          <button class="qi" data-nav="learn" type="button"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg></span>学习一刻</button>
+          <button class="qi" data-nav="formula" type="button"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6l6 8-6 8h12"/></svg></span>公式速查</button>
           <button class="qi" data-nav="words" type="button"><span class="ico">${iconType()}</span>背单词</button>
-          <button class="qi" data-nav="mock" type="button"><span class="ico">${iconClock()}</span>模拟考</button>
-          <button class="qi" data-act="due" type="button"><span class="ico">${iconClock()}</span>错题重练</button>
-          <button class="qi" data-nav="bank" type="button"><span class="ico">${iconBook()}</span>章节 / 顺序</button>
+          <button class="qi" data-nav="mock" type="button"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></span>模拟考</button>
+          <button class="qi" data-nav="bank" type="button"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>章节 / 顺序</button>
+          <button class="qi" data-nav="schools" type="button"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></span>院校查询</button>
         </div>
       </section>
 
@@ -1308,12 +1370,41 @@
   function objSubLabel(q) {
     return isSubjective(q) ? "主观题" : "客观题";
   }
+  function mockSectionHtml() {
+    const cats = [
+      { tag: "数学专项", short: "数学专项", icon: "数", color: "#3B82F6", fallback: 361 },
+      { tag: "英语专项", short: "英语专项", icon: "英", color: "#8B5CF6", fallback: 400 },
+      { tag: "英语语法精编", short: "英语语法精编", icon: "语", color: "#EC4899", fallback: 41 },
+      { tag: "C语言精编", short: "C语言精编", icon: "C", color: "#10B981", fallback: 6 }
+    ];
+    let counts = {};
+    try {
+      const mb = window.MOCK_BANK;
+      if (mb && mb.meta && mb.meta.categories) counts = mb.meta.categories["专项练习"] || {};
+    } catch (e) {}
+    return (
+      '<div class="section-title">模拟题 · 专项练习（独立题库）</div>' +
+      cats.map(function (c) {
+        const n = counts[c.tag] != null ? counts[c.tag] : c.fallback;
+        return (
+          '<button class="bank-subject" data-act="mock-practice" data-name="' + attr(c.tag) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%">' +
+          '<div style="width:40px;height:40px;border-radius:10px;background:' + c.color + '20;color:' + c.color + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">' + c.icon + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:15px;font-weight:600">' + c.short + '</div>' +
+          '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + n + ' 题 · 点击开始顺序练习</div>' +
+          '</div>' +
+          '<div style="font-size:18px;color:var(--text-sub)">›</div>' +
+          '</button>'
+        );
+      }).join("")
+    );
+  }
+
   function viewBank() {
     setTitle("题库", true);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
-    const realQ = (D.questions || []).length;
-    // 题库还没全部加载完时，显示预估总题数1500
-    const totalQ = realQ < 1500 ? 1500 : realQ;
+    const allSubjNames = ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"];
+    const totalQ = allSubjNames.reduce(function (s, n) { return s + (subjStat(n).total || 0); }, 0) || totalQuestions();
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
@@ -1323,7 +1414,7 @@
     ];
     return (
       '<div class="card" style="display:flex;text-align:center;padding:16px;margin-bottom:16px">' +
-      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + totalQ + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
+      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
       '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">已练习</div></div>' +
       '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">正确率</div></div>' +
       '</div>' +
@@ -1346,8 +1437,30 @@
             );
           }).join("")
         );
-      }).join("")
+      }).join("") + mockSectionHtml()
     );
+  }
+
+  // 进入科目页时确保该科目题库已加载；加载中/失败通过 state 标志位驱动视图
+  function ensureSubjectBank(name) {
+    if (!window.loadSubjectBank) return;
+    const hasQs = Q.some((q) => q.subject === name);
+    if (hasQs || (window.isSubjectBankLoaded && window.isSubjectBankLoaded(name))) return;
+    state._bankLoading = state._bankLoading || {};
+    state._bankError = state._bankError || {};
+    if (state._bankLoading[name] || state._bankError[name]) return;
+    state._bankLoading[name] = true;
+    render();
+    window.loadSubjectBank(name).then(function () {
+      state._bankLoading[name] = false;
+      state._bankError[name] = false;
+      // 走统一的 data-ready 路径重建题库快照后再渲染（Q 快照/科目计数缓存才会刷新）
+      try { window.dispatchEvent(new CustomEvent("gxzsb:data-ready")); } catch (e) { render(); }
+    }).catch(function () {
+      state._bankLoading[name] = false;
+      state._bankError[name] = true;
+      render();
+    });
   }
 
   function viewSubject(name) {
@@ -1363,6 +1476,13 @@
     const chs = chapterList().filter((c) => c.subject === name);
     const f = state.filters;
     const qOf = Q.filter((q) => q.subject === name);
+    const bankLoading = state._bankLoading && state._bankLoading[name];
+    const bankError = state._bankError && state._bankError[name];
+    // 题库尚未加载完成时，主动触发加载并展示加载/失败状态
+    if (!qOf.length && !bankLoading && !bankError && window.loadSubjectBank &&
+        !(window.isSubjectBankLoaded && window.isSubjectBankLoaded(name))) {
+      ensureSubjectBank(name);
+    }
     let filtered = qOf;
     if (f.diff.length) filtered = filtered.filter((q) => f.diff.includes(q.difficultyLabel));
     if (f.type.length) filtered = filtered.filter((q) => f.type.includes(q.typeLabel));
@@ -1399,7 +1519,20 @@
       <p class="muted" style="font-size:12px;margin:8px 0 0">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → ${filtered.length} 题</p>
 
       <div class="section-title">章节</div>
-      <div class="card chapter-grid" style="padding:0">
+      ${
+        qOf.length === 0
+          ? (bankError
+              ? `<div class="card bank-load-err">
+                   <div class="bank-load-ico">⚠️</div>
+                   <div class="bank-load-txt">「${esc(name)}」题库加载失败</div>
+                   <div class="bank-load-sub">请检查网络后重试</div>
+                   <button class="btn btn-primary btn-sm" data-act="subject-retry" data-name="${attr(name)}" type="button">重新加载</button>
+                 </div>`
+              : `<div class="card bank-loading">
+                   <div class="bank-loading-bar"><i></i><i></i><i></i></div>
+                   <div class="bank-loading-txt">正在加载「${esc(name)}」题库…</div>
+                 </div>`)
+          : `<div class="card chapter-grid" style="padding:0">
         ${
           chs.length
             ? chs
@@ -1416,14 +1549,19 @@
                 .join("")
             : `<div class="empty">暂无章节数据</div>`
         }
-      </div>
+      </div>`
+      }
 
       <div style="margin-top:16px">
-        <div style="display:flex;flex-direction:column;gap:8px">
+        ${
+          qOf.length === 0
+            ? '<div class="muted" style="font-size:12px;text-align:center;padding:8px 0">题库加载完成后即可开始练习</div>'
+            : `<div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-primary btn-block" data-act="seq-practice" data-name="${attr(name)}" type="button">开始顺序练习</button>
         <button class="btn btn-ghost btn-block" data-act="seq-obj" data-name="${attr(name)}" type="button">只练客观题</button>
         <button class="btn btn-ghost btn-block" data-act="seq-subj" data-name="${attr(name)}" type="button">只练主观题</button>
-      </div>
+      </div>`
+        }
       </div>
 
       ${
@@ -1503,6 +1641,42 @@
     render();
   }
 
+  /* ========== 模拟题试卷题库（mock-bank）========== */
+  function buildMockQuestions(tag) {
+    const mb = window.MOCK_BANK;
+    if (!mb || !mb.questions) return [];
+    const list = tag ? mb.questions.filter((q) => q.tag === tag) : mb.questions;
+    return list.map((q, qi) => {
+      const letter = q.answer || "";
+      const ai = letter.charCodeAt(0) - 65;
+      const ansText = ai >= 0 && ai < (q.options || []).length ? q.options[ai] : letter;
+      return {
+        ...q,
+        _ord: qi,
+        module: "mock",
+        subject: q.tag || "模拟题",
+        chapter: q.tag || "模拟题",
+        knowledgePoint: q.section || q.tag || "模拟题",
+        answer: ansText,
+        answerLetter: letter,
+        difficulty: q.difficulty || 1,
+        difficultyLabel: q.difficultyLabel || "基础",
+        typeLabel: q.typeLabel || (q.type === "single" ? "单选" : "填空"),
+        steps: q.steps || [],
+        _mock: true,
+      };
+    });
+  }
+  function startMockPractice(tag) {
+    window.loadMockBank(tag).then(function () {
+      const pool = buildMockQuestions(tag);
+      if (!pool.length) { alert("该专项暂无题目"); return; }
+      startSession({ pool: pool, ordered: true, title: tag, results: {} });
+    }).catch(function () {
+      alert("模拟题库加载失败，请检查网络后重试");
+    });
+  }
+
   function saveSession() {
     if (!state.session) return;
     try {
@@ -1538,6 +1712,19 @@
     if (!s) return;
     const now = Date.now();
     s.lastSeenAt = Math.max(Number(s.lastSeenAt) || 0, now);
+  }
+
+  // 本地是否存在未完成的答题草稿（题库加载期间用于显示"恢复中"，避免闪空状态）
+  function hasUnfinishedSession() {
+    try {
+      var raw = localStorage.getItem("gxzsb.session") || localStorage.getItem("gxzsb.dailySession");
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.ids) || !d.ids.length) return false;
+      if (d.results && Object.keys(d.results).length >= d.ids.length) return false;
+      if (d.end && !d.examSubmitted && Date.now() > Number(d.end) + 24 * 3600 * 1000) return false;
+      return true;
+    } catch (e) { return false; }
   }
 
   function restoreSession(onlyDaily) {
@@ -1694,6 +1881,14 @@
     const s = state.session;
     if (!s || !s.q.length) {
       setTitle("练习", true);
+      // 题库尚未加载完但本地有未完成的答题草稿：显示恢复中，不闪"没有可练习的题目"
+      if (hasUnfinishedSession()) {
+        return '<div class="practice-restore"><div class="practice-restore-spin">⟳</div><div class="practice-restore-txt">正在恢复上次答题…</div></div>';
+      }
+      // 题库脚本还在异步加载：显示加载中，而不是误报"没有可练习的题目"
+      if (typeof window !== "undefined" && !window.GXZSB_DATA_READY) {
+        return '<div class="practice-restore"><div class="practice-restore-spin">⟳</div><div class="practice-restore-txt">题库加载中，马上就好…</div></div>';
+      }
       return `<div class="empty">没有可练习的题目<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div></div>`;
     }
     const q = s.q[s.i];
@@ -1704,6 +1899,17 @@
     const done = q.id in s.results;
     const exp = ensureExplain(q);
     const wrongN = (state.wrong[q.id] && state.wrong[q.id].n) || 0;
+    // 本趟即时反馈：已答数 / 答对数 / 正确率 / 末尾连对
+    var answeredN = Object.keys(s.results).length;
+    var okRun = 0;
+    for (var ri = s.q.length - 1; ri >= 0; ri--) {
+      var rid = s.q[ri].id;
+      if (!(rid in s.results)) break;
+      if (s.results[rid]) okRun++; else break;
+    }
+    var accRun = answeredN
+      ? Math.round((Object.keys(s.results).filter(function (k) { return s.results[k]; }).length / answeredN) * 100)
+      : null;
 
     return `
       <div class="q-progress"><i style="width:${((s.i + 1) / s.q.length) * 100}%"></i></div>
@@ -1720,7 +1926,7 @@
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
         <span style="display:inline-flex;gap:4px;align-items:center">
           ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习" : "📝 测试") + "</button>"}
-          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:#8b5cf6;font-weight:600">范文学习</span>' : ""}</span>
+          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${accRun != null ? ' · 本趟正确率 <b style="color:var(--success)">' + accRun + '%</b>' : ""}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:#8b5cf6;font-weight:600">范文学习</span>' : ""}</span>
         </span>
       </div>
 
@@ -1798,8 +2004,8 @@
                   extra = `<div class="ref-answer"><b>参考答案：</b>${mathHtml(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
                 }
                 const bar = showSmart
-                  ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
-                  : `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}</div>`;
+                  ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${ok && okRun >= 3 ? ` · 🔥 连对 ${okRun}` : ""}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
+                  : `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}${ok && okRun >= 3 ? ` · 🔥 连对 ${okRun}` : ""}</div>`;
                 const selfBtns = showSmart
                   ? `<div class="self-assess">
                       <button class="btn btn-primary btn-sm" data-act="self-ok" type="button">我答对了</button>
@@ -1835,8 +2041,8 @@
               <div class="content">
             ${
               (q.steps || []).length
-                ? `<ol>${q.steps.map((t) => `<li>${mathHtml(t)}</li>`).join("")}</ol>`
-                : exp.split("\n").filter(function(l){return l.trim();}).map(function(l){ return /^【/.test(l) ? `<p><strong>${mathHtml(l)}</strong></p>` : `<p>${mathHtml(l)}</p>`; }).join("")
+                ? q.steps.map(fmtExpLine).join("")
+                : exp.split("\n").filter(function(l){return l.trim();}).map(fmtExpLine).join("")
             }
             ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}
             ${q.sample ? `<p><strong>范文/译文：</strong></p><div>${esc(q.sample).replace(/\n/g,"<br/>")}</div>` : ""}
@@ -1870,6 +2076,10 @@
               <textarea class="note-input" id="noteInput">${esc(state.notes[q.id] || "")}</textarea>
               <button class="btn btn-ghost btn-sm" data-act="save-note" data-id="${attr(q.id)}" type="button" style="margin-top:8px">保存笔记</button>
             </div>
+            <div class="explain-block"><h4>题目报错</h4>
+              <p class="muted" style="font-size:12px;margin:0 0 8px">答案有误、解析不清或题目残缺？点下方按钮反馈，存在本地，定期汇总优化题库。</p>
+              <button class="btn btn-ghost btn-sm" data-act="report-question" data-id="${attr(q.id)}" type="button">⚠ 报告此题有问题</button>
+            </div>
           </div>
         </div>
         `}
@@ -1878,20 +2088,22 @@
       <div class="q-actions">
         <div class="q-nav-row">
           <button class="btn btn-ghost" data-act="prev" type="button">上一题</button>
-          <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "已收藏" : "收藏"}</button>
+          <button class="btn btn-ghost" data-act="fav" type="button">${state.fav[q.id] ? "★ 已收藏" : "☆ 收藏"}</button>
           <button class="btn btn-ghost" data-act="next" type="button">${s.i >= s.q.length - 1 ? "完成" : "下一题"}</button>
-          ${s.submitted ? "" : `<button class="btn btn-primary" data-act="submit" type="button">提交</button>`}
+          ${s.exam || s.submitted ? "" : `<button class="btn btn-primary" data-act="submit" type="button">提交</button>`}
         </div>
         ${
           s.exam && !s.examSubmitted
-            ? `<button class="btn btn-accent btn-block" data-act="submit-exam" type="button">交卷并出分</button>`
+            ? `<button class="btn btn-accent btn-block" data-act="submit-exam" type="button" style="margin-top:10px;font-size:16px;padding:14px 0;font-weight:700">
+                 📝 提交试卷${(() => { let n=0; s.q.forEach(q => { if (!(q.id in s.results) && q.type !== "translate" && q.type !== "write") n++; }); return n > 0 ? `（${n}题未答）` : ""; })()}
+               </button>`
             : ""
         }
         ${
           s.exam && !s.examSubmitted
             ? `<div style="display:flex;gap:8px;margin-top:8px">
-                 <button class="btn btn-ghost btn-sm" data-act="pause-exam" type="button" style="flex:1">⏸ 暂停并保存</button>
-                 <button class="btn btn-ghost btn-sm" data-act="exit-exam" type="button" style="flex:1;opacity:.65">放弃本场</button>
+                 <button class="btn btn-ghost btn-sm" data-act="pause-exam" type="button" style="flex:1">⏸ 暂停保存</button>
+                 <button class="btn btn-ghost btn-sm" data-act="exit-exam" type="button" style="flex:1;opacity:.6">放弃本场</button>
                </div>`
             : ""
         }
@@ -2318,6 +2530,57 @@
   }
 
   /* ========== 错题本 ========== */
+  // 当前错题本/收藏页「可见」的题目 ids：跟随科目/错误次数筛选，导出 TXT 与打印 PDF 共用，
+  // 避免「屏幕筛了 C 语言，导出却是全部」的口径不一致。
+  function visibleExportIds() {
+    if (state.wrongTab === "fav") {
+      return Object.keys(state.fav).filter(function (id) { return state.fav[id] && qById(id); });
+    }
+    var subjFilter = state.wrongSubj || "all";
+    var nFilter = state.wrongNFilter || 0;
+    return Object.keys(state.wrong)
+      .map(function (id) { var q = qById(id); var w = state.wrong[id]; return (q && w && !w.mastered) ? { q: q, w: w } : null; })
+      .filter(Boolean)
+      .filter(function (it) { return subjFilter === "all" || it.q.subject === subjFilter; })
+      .filter(function (it) { return !nFilter || (it.w.n || 1) >= nFilter; })
+      .map(function (it) { return it.q.id; });
+  }
+
+  // 生成完整打印稿（题干+选项+答案+解析）并触发浏览器打印，打印后自动移除。
+  // ids 为题目 id 数组，kindLabel 为标题后缀（如「错题本」「收藏题」「本题」）。
+  function doPrintSheet(ids, kindLabel) {
+    ids = (ids || []).filter(function (id) { return qById(id); });
+    if (!ids.length) { toastLite("暂无内容可打印"); return; }
+    var html = '<div class="print-sheet" id="printSheet">' +
+      '<h1>gxzsb ' + esc(kindLabel) + ' · 共 ' + ids.length + ' 题</h1>' +
+      '<p class="p-meta">导出日期 ' + new Date().toLocaleDateString() + ' · 含题干 / 选项 / 答案 / 解析</p>';
+    ids.forEach(function (id, i) {
+      var q = qById(id); if (!q) return;
+      html += '<div class="p-item">';
+      html += '<div class="p-stem"><b>' + (i + 1) + '.</b> ' + mathHtml(String(q.stem || "")) + '</div>';
+      if (q.options && q.options.length) {
+        html += '<div class="p-opts">';
+        q.options.forEach(function (o, idx) {
+          var letter = "ABCD"[idx] || ("#" + (idx + 1));
+          var isCorrect = String(o) === String(q.answer);
+          html += '<div class="p-opt' + (isCorrect ? " p-correct" : "") + '">' + letter + '. ' + mathHtml(String(o)) + (isCorrect ? '  ✓' : '') + '</div>';
+        });
+        html += '</div>';
+      }
+      html += '<div class="p-ans"><b>答案：</b>' + esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || ""))) + '</div>';
+      var exp = ensureExplain(q) || q.analysis || "";
+      html += '<div class="p-exp"><b>解析：</b>' + String(exp).replace(/<[^>]+>/g, "") + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    var oldSheet = document.getElementById("printSheet"); if (oldSheet) oldSheet.remove();
+    document.body.insertAdjacentHTML("beforeend", html);
+    setTimeout(function () { window.print(); }, 60);
+    window.onafterprint = function () {
+      var p = document.getElementById("printSheet"); if (p) p.remove();
+    };
+  }
+
   function viewWrong() {
     setTitle("错题 / 收藏", true);
     const now = Date.now();
@@ -2469,7 +2732,9 @@
           '<button class="btn btn-ghost btn-sm" data-act="export-txt" type="button" style="flex:1">导出 TXT</button>' +
           '<button class="btn btn-ghost btn-sm" data-act="export-print" type="button" style="flex:1">打印 / PDF</button>' +
         '</div>' : "") +
-        (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">清空错题本</button></div>' : "");
+        (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">' +
+          ((subjFilter !== "all" || nFilter) ? ("清空当前筛选的 " + filteredItems.length + " 道错题") : "清空错题本（全部 " + allItems.length + " 道）") +
+          '</button></div>' : "");
     } else if (tab === "fav") {
       body =
         '<div class="section-title">我的收藏</div>' +
@@ -2518,13 +2783,47 @@ function ensureExplain(q) {
   return q.analysis;
 }
 
+  // 学习一刻列表渲染：切章节时只更新 #learnList，不重建导航条
+  function buildLearnListHTML(cur) {
+    const book = (window.STUDY_DATA && window.STUDY_DATA.LEARN_BOOK) || {};
+    const chapters = book[cur] || [];
+    const sc = subjOf(cur);
+    const selCh = (state.learnChapterSel == null || state.learnChapterSel < 0) ? -1 : state.learnChapterSel;
+    const showCh = selCh < 0 ? chapters : [chapters[selCh]].filter(Boolean);
+    return showCh.map(function (ch, ci) {
+      const realCi = selCh < 0 ? ci : selCh;
+      return (
+        '<div class="formula-group">' +
+        '<div class="formula-group-title"><span class="line" style="background:' + (sc.color || "#2563EB") + '"></span>' +
+        esc(ch.chapter) + '<span class="muted">（' + (ch.points || []).length + "）</span></div>" +
+        (ch.outline ? '<p class="muted" style="font-size:12px;margin:-4px 0 8px;line-height:1.6">' + esc(ch.outline) + "</p>" : "") +
+        '<div class="card" style="padding:0;overflow:hidden">' +
+        (ch.points || []).map(function (p, pi) {
+          return (
+            '<button class="kp-card" data-act="learn-open" data-id="' + attr(p.id) + '" type="button">' +
+            '<span class="num" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;flex-shrink:0;background:' +
+            (sc.color || "#2563EB") + ';color:#fff">' + (realCi + 1) + "." + (pi + 1) + "</span>" +
+            '<span style="flex:1;min-width:0"><span class="t" style="display:block;font-weight:700;font-size:15px">' + esc(p.name) + "</span>" +
+            '<span class="s" style="font-size:12px;color:var(--text-sub);display:block;margin-top:2px">' + esc(p.outline || "") + "</span>" +
+            '<span style="font-size:11px;color:var(--text-sub);display:block;margin-top:4px">' + esc(p.level || "") + " · " + (p.minutes || 6) + " 分钟 · " + esc(p.relatedFormula || "") + "</span></span>" +
+            '<span class="kp-badge ' + (p.level === "冲刺" ? "hard" : p.level === "强化" ? "mid" : "") + '">' + esc(p.level || "") + "</span>" +
+            "</button>"
+          );
+        }).join("") +
+        "</div></div>"
+      );
+    }).join("");
+  }
+
   function viewLearn() {
     setTitle("学习一刻", true);
     const book = (window.STUDY_DATA && window.STUDY_DATA.LEARN_BOOK) || {};
     const subjects = Object.keys(book);
     const cur = state.learnSubj && book[state.learnSubj] ? state.learnSubj : subjects[0];
+    if (state.learnSubj !== cur) state.learnSubj = cur;
     const chapters = book[cur] || [];
     const sc = subjOf(cur);
+    const selCh = (state.learnChapterSel == null || state.learnChapterSel < 0) ? -1 : state.learnChapterSel;
     const total = chapters.reduce(function (n, ch) { return n + (ch.points || []).length; }, 0);
     return (
       '<div class="learn-hero"><h2>学习一刻</h2><p>严格按 2027 考纲精讲：高数走步骤，英语讲规则，电工讲定律，C 讲执行，计网讲过程。学完直接去练。</p></div>' +
@@ -2534,28 +2833,13 @@ function ensureExplain(q) {
       }).join("") +
       "</div>" +
       '<div class="subject-banner ' + (sc.cls || "") + '"><span class="swatch"></span><strong>' + esc(cur) + '</strong><span class="muted">' + chapters.length + " 个大纲小节 · " + total + " 个知识点</span></div>" +
-      chapters.map(function (ch, ci) {
-        return (
-          '<div class="formula-group">' +
-          '<div class="formula-group-title"><span class="line" style="background:' + (sc.color || "#2563EB") + '"></span>' +
-          esc(ch.chapter) + '<span class="muted">（' + (ch.points || []).length + "）</span></div>" +
-          (ch.outline ? '<p class="muted" style="font-size:12px;margin:-4px 0 8px;line-height:1.6">' + esc(ch.outline) + "</p>" : "") +
-          '<div class="card" style="padding:0;overflow:hidden">' +
-          (ch.points || []).map(function (p, pi) {
-            return (
-              '<button class="kp-card" data-act="learn-open" data-id="' + attr(p.id) + '" type="button">' +
-              '<span class="num" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;flex-shrink:0;background:' +
-              (sc.color || "#2563EB") + ';color:#fff">' + (ci + 1) + "." + (pi + 1) + "</span>" +
-              '<span style="flex:1;min-width:0"><span class="t" style="display:block;font-weight:700;font-size:15px">' + esc(p.name) + "</span>" +
-              '<span class="s" style="font-size:12px;color:var(--text-sub);display:block;margin-top:2px">' + esc(p.outline || "") + "</span>" +
-              '<span style="font-size:11px;color:var(--text-sub);display:block;margin-top:4px">' + esc(p.level || "") + " · " + (p.minutes || 6) + " 分钟 · " + esc(p.relatedFormula || "") + "</span></span>" +
-              '<span class="kp-badge ' + (p.level === "冲刺" ? "hard" : p.level === "强化" ? "mid" : "") + '">' + esc(p.level || "") + "</span>" +
-              "</button>"
-            );
-          }).join("") +
-          "</div></div>"
-        );
-      }).join("") +
+      '<div class="fnav-row">' +
+        '<button class="chip fnav-chip ' + (selCh < 0 ? "is-active" : "") + '" data-act="learn-chapter" data-ci="-1" type="button">全部</button>' +
+        chapters.map(function (ch, ci) {
+          return '<button class="chip fnav-chip ' + (ci === selCh ? "is-active" : "") + '" data-act="learn-chapter" data-ci="' + ci + '" type="button">' + esc(ch.chapter.length > 6 ? ch.chapter.slice(0, 6) + "…" : ch.chapter) + ' <span class="muted">' + (ch.points || []).length + "</span></button>";
+        }).join("") +
+      "</div>" +
+      '<div id="learnList">' + buildLearnListHTML(cur) + "</div>" +
       '<p class="muted" style="font-size:12px;margin-top:16px;text-align:center">共 ' + total + " 个知识点 · 按 2027 广西专升本考纲编写</p>"
     );
   }
@@ -2618,7 +2902,128 @@ function ensureExplain(q) {
   }
 
 
-    function viewFormula() {
+    // 公式列表渲染：切分组时只更新 #fList，不重建整个页面（导航条不闪）
+  function buildFListHTML(cur) {
+    const book = window.STUDY_DATA.FORMULA_BOOK || {};
+    const groups = book[cur] || [];
+    const sc = subjOf(cur);
+    const isEnLang = cur === "英语";
+    const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
+    const bodyHtml = function (f) {
+      const raw = String(f == null ? "" : f);
+      const parts = raw.split(/[；;]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (parts.length <= 1) return '<div class="f-single">' + ft(raw) + "</div>";
+      return parts.map(function (l) { return '<div class="f-line">' + ft(l) + "</div>"; }).join("");
+    };
+    const selGi = (state.formulaGroupSel == null || state.formulaGroupSel < 0) ? -1 : state.formulaGroupSel;
+    const showGroups = selGi < 0 ? groups : [groups[selGi]].filter(Boolean);
+    return showGroups
+      .map(
+        (grp) => `<div class="formula-group">
+          <div class="formula-group-title">
+            <span class="line" style="background:${sc.color}"></span>
+            <span class="formula-group-name">${esc(grp.key)}</span>
+            <span class="muted">（${grp.items.length}）</span>
+          </div>
+          ${grp.items
+            .map(
+              (it) => `<div class="f-card f-item" style="border-left:3px solid ${sc.color}">
+                <div class="f-head">
+                  <span class="f-name">${esc(it.name)}</span>
+                  ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
+                  <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
+                </div>
+                <div class="f-body">${bodyHtml(it.formula)}</div>
+                ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><div class="f-txt">${ft(it.plain)}</div></div>` : ""}
+                <div class="f-row"><span class="f-tag">怎么用</span><div class="f-txt">${ft(it.use)}</div></div>
+                ${it.work && it.work.length ? `
+                  <div class="f-example">
+                    <div class="f-example-h"><span class="f-example-badge">例题详解</span></div>
+                    <div class="f-example-q">${ft(it.example)}</div>
+                    <ol class="f-example-work">${it.work.map((w) => `<li>${ft(w)}</li>`).join("")}</ol>
+                    ${it.answer ? `<div class="f-example-a"><span>答案</span><b>${ft(it.answer)}</b></div>` : ""}
+                  </div>` : `
+                  ${it.example ? `<div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>` : ""}
+                  ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
+                  ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}`}
+                ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><div class="f-txt">${ft(it.tip)}</div></div>` : ""}
+                <div class="f-row"><span class="f-tag bad">易错</span><div class="f-txt">${ft(it.wrong)}</div></div>
+                <div class="f-actions">
+                  <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>
+                  <button class="btn btn-ghost btn-sm" data-act="copy" data-t="${attr(it.formula)}" type="button">复制公式</button>
+                </div>
+              </div>`
+            )
+            .join("")}
+        </div>`
+      )
+      .join("");
+  }
+
+  function viewResources() {
+    setTitle("学习资料", true);
+    const groups = [
+      {
+        subj: "C 语言",
+        items: [
+          { name: "C语言中文网", desc: "从入门到指针/结构体，中文循序渐进", url: "http://c.biancheng.net/c/" },
+          { name: "菜鸟教程 · C语言", desc: "边学边练，适合打基础语法", url: "https://www.runoob.com/cprogramming/c-tutorial.html" }
+        ]
+      },
+      {
+        subj: "电子电工技术基础",
+        items: [
+          { name: "中国大学MOOC · 电工学（哈工大）", desc: "电路基础+模电+数电，国家级精品课，免费", url: "https://www.icourse163.org/course/HIT-1001998009" },
+          { name: "中国大学MOOC（搜电工电子）", desc: "西安交大等高校公开课，免费注册即看", url: "https://www.icourse163.org/" }
+        ]
+      },
+      {
+        subj: "计算机网络",
+        items: [
+          { name: "中国大学MOOC · 搜计算机网络", desc: "国家精品课免费看，含TCP/IP/HTTP", url: "https://www.icourse163.org/" }
+        ]
+      },
+      {
+        subj: "前端（做毕设用）",
+        items: [
+          { name: "现代 JavaScript 教程", desc: "免费开源中文教程，从基础到 Promise/异步", url: "https://zh.javascript.info/" },
+          { name: "MDN Web Docs", desc: "HTML/CSS/JS 权威参考，官方免费", url: "https://developer.mozilla.org/zh-CN/docs/Web" }
+        ]
+      },
+      {
+        subj: "开源仓库（GitHub）",
+        items: [
+          { name: "TheAlgorithms/C", desc: "C语言算法/数据结构开源练习，边看边写", url: "https://github.com/TheAlgorithms/C" },
+          { name: "huihut/interview", desc: "C/C++/计网知识点开源总结，面试级复习", url: "https://github.com/huihut/interview" }
+        ]
+      },
+      {
+        subj: "广西官方（政策/院校以这里为准）",
+        items: [
+          { name: "广西招生考试院", desc: "专升本政策、报名、成绩官方发布，唯一权威源", url: "https://www.gxeea.cn/" }
+        ]
+      }
+    ];
+    return `
+      <div class="section-title">免费学习资料 <span class="muted" style="font-weight:400;font-size:12px">点开跳官方/正版免费源，本站不存文件</span></div>
+      ${groups.map(function (g) {
+        return `
+        <div class="card" style="padding:14px 16px;margin-bottom:12px">
+          <div style="font-weight:750;margin-bottom:10px">${esc(g.subj)}</div>
+          ${g.items.map(function (it) {
+            return `
+            <a href="${attr(it.url)}" target="_blank" rel="noopener" style="display:block;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;text-decoration:none;color:var(--text)">
+              <div style="font-weight:650">${esc(it.name)} →</div>
+              <div style="font-size:12px;color:var(--text-sub);margin-top:2px">${esc(it.desc)}</div>
+            </a>`;
+          }).join("")}
+        </div>`;
+      }).join("")}
+      <p class="muted" style="font-size:12px;margin-top:8px">注：以上均为官方/公开免费资源，链接失效告诉我。付费教材请用学校正版。</p>
+    `;
+  }
+
+  function viewFormula() {
     setTitle("公式速查", true);
     const book = window.STUDY_DATA.FORMULA_BOOK || {};
     const PUB = ["高等数学", "英语"];
@@ -2627,6 +3032,8 @@ function ensureExplain(q) {
     const list = g === "public" ? PUB : MAJ;
     const cur = list.indexOf(state.formulaTab) >= 0 ? state.formulaTab : list[0];
     const groups = book[cur] || [];
+    const selGi = (state.formulaGroupSel == null || state.formulaGroupSel < 0) ? -1 : state.formulaGroupSel;
+    const showGroups = selGi < 0 ? groups : [groups[selGi]].filter(Boolean);
     const sc = subjOf(cur);
     const isEnLang = cur === "英语";
     const ft = function (s) { return isEnLang ? escKeep(String(s == null ? "" : s)) : mathHtml(s); };
@@ -2664,48 +3071,18 @@ function ensureExplain(q) {
         <span class="muted">${groups.reduce((a, x) => a + x.items.length, 0)} 条公式</span>
       </div>
 
-      <div id="fList">
+      <div class="fnav-row">
+        <button class="chip fnav-chip ${selGi < 0 ? "is-active" : ""}" data-act="fnav" data-gi="-1" type="button">全部</button>
         ${groups
           .map(
-            (grp) => `<div class="formula-group">
-              <div class="formula-group-title">
-                <span class="line" style="background:${sc.color}"></span>
-                <span class="formula-group-name">${esc(grp.key)}</span>
-                <span class="muted">（${grp.items.length}）</span>
-              </div>
-              ${grp.items
-                .map(
-                  (it) => `<div class="f-card f-item" style="border-left:3px solid ${sc.color}">
-                    <div class="f-head">
-                      <span class="f-name">${esc(it.name)}</span>
-                      ${it.out || /超纲|选学|语法拓展/.test(it.name || "") ? `<span class="chip chip-out" title="超出 2027 考纲核心范围">${/语法拓展/.test(it.name || "") ? "语法拓展" : "超纲·选学"}</span>` : ""}
-                      <span class="chip chip-soft" style="background:${sc.color}18;color:${sc.color};border:0">${sc.short}</span>
-                    </div>
-                    <div class="f-body">${bodyHtml(it.formula)}</div>
-                    ${it.plain ? `<div class="f-row"><span class="f-tag plain">说人话</span><div class="f-txt">${ft(it.plain)}</div></div>` : ""}
-                    <div class="f-row"><span class="f-tag">怎么用</span><div class="f-txt">${ft(it.use)}</div></div>
-                    ${it.work && it.work.length ? `
-                      <div class="f-example">
-                        <div class="f-example-h"><span class="f-example-badge">例题详解</span></div>
-                        <div class="f-example-q">${ft(it.example)}</div>
-                        <ol class="f-example-work">${it.work.map((w) => `<li>${ft(w)}</li>`).join("")}</ol>
-                        ${it.answer ? `<div class="f-example-a"><span>答案</span><b>${ft(it.answer)}</b></div>` : ""}
-                      </div>` : `
-                      ${it.example ? `<div class="f-row"><span class="f-tag ex">例题</span><div class="f-txt">${ft(it.example)}</div></div>` : ""}
-                      ${it.steps && it.steps.length ? `<div class="f-row"><span class="f-tag step">步骤</span><div class="f-txt"><ol class="f-steps">${it.steps.map((s) => `<li>${ft(s)}</li>`).join("")}</ol></div></div>` : ""}
-                      ${it.answer ? `<div class="f-row"><span class="f-tag ok">答案</span><div class="f-txt"><b>${ft(it.answer)}</b></div></div>` : ""}`}
-                    ${it.tip ? `<div class="f-row"><span class="f-tag tip">应试口诀</span><div class="f-txt">${ft(it.tip)}</div></div>` : ""}
-                    <div class="f-row"><span class="f-tag bad">易错</span><div class="f-txt">${ft(it.wrong)}</div></div>
-                    <div class="f-actions">
-                      <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(it.name)}" type="button">练相关题</button>
-                      <button class="btn btn-ghost btn-sm" data-act="copy" data-t="${attr(it.formula)}" type="button">复制公式</button>
-                    </div>
-                  </div>`
-                )
-                .join("")}
-            </div>`
+            (grp, gi) =>
+              `<button class="chip fnav-chip ${gi === selGi ? "is-active" : ""}" data-act="fnav" data-gi="${gi}" type="button">${esc(grp.key)} <span class="muted">${grp.items.length}</span></button>`
           )
           .join("")}
+      </div>
+
+      <div id="fList">
+        ${buildFListHTML(cur)}
       </div>
       <div class="empty hidden" id="fEmpty">没有匹配的公式</div>
       </div>
@@ -2727,7 +3104,359 @@ function ensureExplain(q) {
         <strong>考试时间</strong>
         <p class="muted" style="font-size:13px;margin-top:8px">2027 年 4 月 24–25 日</p>
       </div>
+      <button class="btn btn-primary btn-block" data-nav="schools" type="button" style="margin-bottom:12px">🏫 招生院校查询（28所·含51大类对口标记）</button>
       <div class="disclaimer">公共课和专业课分开复习更高效。</div>
+    `;
+  }
+
+  /* ========== 院校查询（P3：广西专升本招生院校，纯前端 JSON） ========== */
+  /* 数据来源：广西招生考试院 2026 年普通高校专升本招生计划（36所，约5.19万人）
+     改革三年趋势：2024=5.2万(首届新政策) / 2025=5.31万 / 2026≈5.19万 */
+  const SCHOOLS_TREND = [
+    { year: "2024", label: "改革首届", total: "5.2万", note: "新政策首年，21所本科" },
+    { year: "2025", label: "扩招稳定", total: "5.31万", note: "公办22+民办11=33所" },
+    { year: "2026", label: "最新计划", total: "5.19万", note: "36所，新增3所公办职业本科" },
+  ];
+  const SCHOOLS_DATA = [
+    /* ---- 公办（15所）—— majors 只列 51 电子与信息大类能报的专业 ---- */
+    { name: "桂林电子科技大学", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1500, itMajor: true, url: "https://www.guet.edu.cn/zs/2023/0131/c2195a26259/pagem.htm", majors: ["电子信息科学与技术", "电信工程及管理", "人工智能", "网络工程", "数据科学与大数据技术"], note: "51大类对口约950人，IT类绝对王牌，6000-7500元/年", majorUrls: { "电子信息科学与技术": "https://www.guet.edu.cn/zs/2023/0131/c2195a26259/pagem.htm", "电信工程及管理": "https://www.guet.edu.cn/zs/2023/0131/c2196a26260/pagem.htm", "人工智能": "https://www.guet.edu.cn/zs/2023/0131/c2191a26253/pagem.htm", "网络工程": "https://www.guet.edu.cn/zs/2023/0131/c2197a26261/pagem.htm", "数据科学与大数据技术": "https://www.guet.edu.cn/zs/2189/listm.htm" } },
+    { name: "桂林理工大学", city: "桂林", tier: "公办本科", plan26: 1000, plan25: 1000, itMajor: true, url: "https://zj.glut.edu.cn/info/1059/1319.htm", majors: ["数据科学与大数据技术(南宁分校)"], note: "51大类对口约137人，10000元/年(南宁扶绥分校)" },
+    { name: "广西民族大学", city: "南宁", tier: "公办本科", plan26: 2000, plan25: 1300, itMajor: true, url: "https://ai.gxmzu.edu.cn/info/1003/37421.htm", majors: ["计算机科学与技术(武鸣校区)"], note: "51大类对口约275人，5520元/年，不录色盲色弱" },
+    { name: "广西科技师范学院", city: "来宾", tier: "公办本科", plan26: 2200, plan25: 2000, itMajor: true, url: "https://sjy.gxstnu.edu.cn/info/1008/12822.htm", majors: ["电子信息工程", "计算机科学与技术", "软件工程", "物联网工程", "数据科学与大数据技术"], note: "51大类对口约750人，公办4600元/年，性价比首选", majorUrls: { "电子信息工程": "https://jdy.gxstnu.edu.cn/info/1042/2726.htm", "软件工程": "https://sjy.gxstnu.edu.cn/zyjs/rjgc.htm", "物联网工程": "https://sjy.gxstnu.edu.cn/zyjs/wlwgc.htm", "数据科学与大数据技术": "https://sjy.gxstnu.edu.cn/zyjs/sjkxydsjjs.htm" } },
+    { name: "北部湾大学", city: "钦州", tier: "公办本科", plan26: 3200, plan25: 695, itMajor: true, url: "https://ceie.bbgu.edu.cn/info/1093/1813.htm", majors: ["电子信息工程", "人工智能", "计算机科学与技术", "物联网工程"], note: "2026大幅扩招(695→3200)，51大类对口约330人，4600元/年", majorUrls: { "电子信息工程": "https://ceie.bbgu.edu.cn/info/1093/1809.htm", "人工智能": "https://ceie.bbgu.edu.cn/info/1160/3490.htm", "物联网工程": "https://ceie.bbgu.edu.cn/info/1121/3313.htm" } },
+    { name: "梧州学院", city: "梧州", tier: "公办本科", plan26: 1000, plan25: 1200, itMajor: true, url: "https://ai.gxuwz.edu.cn/info/1097/4112.htm", majors: ["电子信息工程", "通信工程"], note: "51大类对口约80人，4593元/年", majorUrls: { "通信工程": "https://ai.gxuwz.edu.cn/info/1097/4113.htm" } },
+    { name: "百色学院", city: "百色", tier: "公办本科", plan26: 2300, plan25: 500, itMajor: true, url: "https://zs.bsuc.edu.cn/info/1043/3186.htm", majors: ["数据科学与大数据技术(东合校区)"], note: "2026大幅扩招(500→2300)，51大类对口约50人，4600元/年" },
+    { name: "河池学院", city: "河池", tier: "公办本科", plan26: 1300, plan25: 550, itMajor: true, url: "https://jx.hcnu.edu.cn/info/1127/4702.htm", majors: ["计算机科学与技术"], note: "51大类对口约67人，4600元/年，不招色盲" },
+    { name: "广西民族师范学院", city: "崇左", tier: "公办本科", plan26: 1800, plan25: 1400, itMajor: true, url: "https://zsw.gxnun.edu.cn/info/1164/1180.htm", majors: ["电子信息工程", "通信工程", "计算机科学与技术"], note: "51大类对口约191人，4600元/年", majorUrls: { "电子信息工程": "https://wdxy.gxnun.edu.cn/xygk/xyjj.htm", "通信工程": "https://zsw.gxnun.edu.cn/info/1205/3108.htm", "计算机科学与技术": "https://zsw.gxnun.edu.cn/info/1205/3108.htm" } },
+    { name: "广西财经学院", city: "南宁", tier: "公办本科", plan26: 6200, plan25: 5800, itMajor: true, url: "https://www.gxufe.edu.cn/www/subWebSites/zsxx/detail.html?informationid=1429501", majors: ["人工智能(明秀)", "计算机科学与技术", "数字媒体技术", "数据科学与大数据技术"], note: "51大类对口约684人，4600元/年，南宁市区", majorUrls: { "人工智能(明秀)": "https://www.gxufe.edu.cn/www/subWebSites/dsjxy/detail-2.html?informationid=1018832", "数字媒体技术": "https://www.gxufe.edu.cn/www/subWebSites/zsxx/detail.html?informationid=1429409", "数据科学与大数据技术": "https://www.gxufe.edu.cn/www/subWebSites/zsxx/detail.html?informationid=1429499" } },
+    { name: "桂林航天工业学院", city: "桂林", tier: "公办本科", plan26: 1300, plan25: 0, itMajor: true, url: "https://zsw.guat.edu.cn/info/1030/1208.htm", majors: ["电子信息工程", "通信工程", "软件工程", "数字媒体技术"], note: "2026新增公办，51大类对口约266人，4600-10000元/年", majorUrls: { "通信工程": "https://dept4.guat.edu.cn/info/1158/1019.htm", "软件工程": "https://dept7.guat.edu.cn/info/1175/3064.htm", "数字媒体技术": "https://art.guat.edu.cn/info/1133/1638.htm" } },
+    { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 2500, plan25: 2000, itMajor: true, url: "https://www.gxnzd.edu.cn/xg/zyjs/dzxxgcjs.htm", majors: ["电子信息工程技术", "计算机应用工程", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约316人，7500元/年", majorUrls: { "计算机应用工程": "https://www.gxnzd.edu.cn/xg/info/1044/1722.htm", "网络工程技术": "https://www.gxnzd.edu.cn/xg/info/1044/1722.htm", "数字媒体技术": "https://www.gxnzd.edu.cn/xg/zyjs/szmtjs.htm" } },
+    { name: "南宁职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 500, plan25: 0, itMajor: true, url: "https://zs.nnvtu.edu.cn/info/1125/8000.htm", majors: ["软件工程技术(相思湖校区)"], note: "2026新增公办职业本科，51大类对口约200人，7500元/年" },
+    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://www.lzpu.edu.cn/zsxx/zsbzs/zszc2/zsbzs1/content_102572", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
+    { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://sjxy.gltu.edu.cn/zsjy.htm", majors: ["数据科学与大数据技术"], note: "51大类对口约90人，9999元/年" },
+    /* ---- 民办（9所） ---- */
+    { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan26: 4400, plan25: 6000, itMajor: true, url: "https://www.guit.edu.cn/zs/info/1021/1580.htm", majors: ["计算机科学与技术", "软件工程", "电子信息工程", "电子信息科学与技术", "通信工程", "网络工程", "人工智能", "物联网工程", "医学信息工程", "虚拟现实技术", "数据科学与大数据技术"], note: "原桂电信科，IT类最强民办，51大类对口约880人，24500元/年", majorUrls: { "通信工程": "https://www.guit.edu.cn/zs/info/1021/1581.htm", "网络工程": "https://www.guit.edu.cn/zs/info/1021/1583.htm", "电子信息工程": "https://www.guit.edu.cn/zs/info/1022/1330.htm", "电子信息科学与技术": "https://www.guit.edu.cn/zs/info/1022/1329.htm", "软件工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "人工智能": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "物联网工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "医学信息工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "虚拟现实技术": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "数据科学与大数据技术": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm" } },
+    { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan26: 4900, plan25: 6500, itMajor: true, url: "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053232.htm", majors: ["人工智能", "计算机科学与技术", "电子信息工程", "数据科学与大数据技术"], note: "招生大校，51大类对口约330人，24800元/年", majorUrls: { "计算机科学与技术": "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053251.htm", "数据科学与大数据技术": "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053227.htm" } },
+    { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", plan26: 2000, plan25: 4030, itMajor: true, url: "https://www.gxcvuedu.com/rgznydsjxy/zyjj/zsb/content_9725", majors: ["计算机应用工程", "大数据工程技术", "信息安全与管理"], note: "职业本科，51大类对口约165人，26000元/年" },
+    { name: "广西外国语学院", city: "南宁", tier: "民办本科", plan26: 3015, plan25: 4500, itMajor: true, url: "https://sie.gxufl.edu.cn/info/110458", majors: ["人工智能", "计算机科学与技术", "软件工程", "网络工程", "数据科学与大数据技术"], note: "51大类对口约195人，25200元/年", majorUrls: { "人工智能": "https://zs.gxufl.edu.cn/info/103415", "软件工程": "https://sie.gxufl.edu.cn/info/2453", "网络工程": "https://zs.gxufl.edu.cn/info/58144", "数据科学与大数据技术": "https://sie.gxufl.edu.cn/info/110458" } },
+    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://jsj.unn.edu.cn/zyjs1/zsbzy.htm", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
+    { name: "广西民族大学相思湖学院", city: "南宁", tier: "民办本科", plan26: 2000, plan25: 2800, itMajor: true, url: "https://www.gxxshxy.edu.cn/info/1201/26441.htm", majors: ["计算机科学与技术", "软件工程", "网络工程"], note: "民大独立学院，51大类对口约460人，20000元/年" },
+    { name: "南宁师范大学师园学院", city: "南宁", tier: "民办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://www.gxsy.edu.cn/Item/10100.aspx", majors: ["计算机科学与技术"], note: "南师独立学院，51大类对口100人，15000元/年" },
+    { name: "柳州工学院", city: "柳州", tier: "民办本科", plan26: 725, plan25: 725, itMajor: true, url: "https://www.lzhit.edu.cn/xxkxygcxy2026/zyjs/dzxxgc.htm", majors: ["电子信息工程"], note: "原鹿山学院，51大类对口65人，22500元/年" },
+    { name: "桂林学院", city: "桂林", tier: "民办本科", plan26: 500, plan25: 1500, itMajor: true, url: "http://www.glc.edu.cn/xgx/xygk/zyjs.htm", majors: ["软件工程", "数据科学与大数据技术"], note: "原漓江学院，51大类对口100人，19000元/年" },
+  ];
+
+  /* 2026 专业级详情（从广西招考院 PDF 逐专业抄录，单位：人；学费元/学年） */
+  const MAJOR_DETAIL = {
+    "桂林电子科技大学": [
+      { name: "电子信息科学与技术", plan: 186, fee: 7500, campus: "本校区(金鸡路1号)", category: "电子信息类·51大类", note: "两年制，不招色盲" },
+      { name: "电信工程及管理", plan: 138, fee: 7500, campus: "本校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "人工智能", plan: 138, fee: 6000, campus: "本校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "机器人工程", plan: 138, fee: 6000, campus: "本校区", category: "自动化类·46装备制造", note: "两年制" },
+      { name: "网络工程", plan: 216, fee: 7500, campus: "本校区", category: "计算机类·51大类", note: "两年制，名额最多" },
+      { name: "数据科学与大数据技术", plan: 138, fee: 6000, campus: "本校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "工业设计", plan: 62, fee: 7500, campus: "本校区", category: "机械类·44/46大类", note: "两年制，含土木建筑+装备制造两个方向" },
+      { name: "物流管理", plan: 234, fee: 7000, campus: "本校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "公共艺术", plan: 45, fee: 12000, campus: "本校区", category: "设计学类·55文化艺术", note: "两年制，不招色盲" },
+      { name: "工艺美术", plan: 45, fee: 12000, campus: "本校区", category: "设计学类·55文化艺术", note: "两年制，不招色盲" },
+      { name: "数字媒体艺术", plan: 60, fee: 12000, campus: "本校区", category: "设计学类·55文化艺术", note: "两年制，不招色盲" },
+    ],
+    "桂林理工大学": [
+      { name: "智能制造工程", plan: 247, fee: 6000, campus: "南宁分校(扶绥空港大道21号)", category: "机械类·46装备制造", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 137, fee: 10000, campus: "南宁分校", category: "计算机类·51大类", note: "两年制，学费高于其他公办" },
+      { name: "土木、水利与交通工程", plan: 146, fee: 6000, campus: "南宁分校", category: "土木类·44土木建筑", note: "两年制" },
+      { name: "地理空间信息工程", plan: 37, fee: 6000, campus: "南宁分校", category: "测绘类·44土木建筑", note: "两年制" },
+      { name: "资源循环科学与工程", plan: 73, fee: 6000, campus: "南宁分校", category: "化工与制药类·47生物化工", note: "两年制" },
+      { name: "财务管理", plan: 183, fee: 6000, campus: "南宁分校", category: "工商管理类·53财经商贸", note: "两年制" },
+      { name: "会展经济与管理", plan: 91, fee: 6000, campus: "南宁分校", category: "旅游管理类·54旅游(文科)", note: "两年制" },
+    ],
+    "广西科技师范学院": [
+      { name: "电子信息工程", plan: 91, fee: 4600, campus: "来宾校区(铁北大道966号)", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 140, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "软件工程", plan: 141, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "物联网工程", plan: 191, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制，名额多" },
+      { name: "数据科学与大数据技术", plan: 192, fee: 4600, campus: "来宾校区", category: "计算机类·51大类", note: "两年制，名额最多" },
+      { name: "电气工程及其自动化", plan: 116, fee: 4600, campus: "来宾校区", category: "电气类·43/46大类", note: "两年制，含多个大类方向" },
+      { name: "学前教育", plan: 187, fee: 4200, campus: "来宾校区", category: "教育学类·57教育体育", note: "两年制，文/理科均招" },
+      { name: "小学教育", plan: 41, fee: 4200, campus: "来宾校区", category: "教育学类·57教育体育", note: "两年制" },
+      { name: "英语", plan: 108, fee: 4200, campus: "来宾校区", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "商务英语", plan: 108, fee: 4200, campus: "来宾校区", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "网络与新媒体", plan: 60, fee: 4200, campus: "来宾校区", category: "新闻传播学类·56大类", note: "两年制" },
+      { name: "应用化学", plan: 91, fee: 4600, campus: "来宾校区", category: "化学类·42资源环境", note: "两年制，不招色盲色弱" },
+    ],
+    "广西财经学院": [
+      { name: "人工智能", plan: 120, fee: 4600, campus: "明秀校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 394, fee: 4600, campus: "明秀校区", category: "计算机类·51大类", note: "两年制，名额最多" },
+      { name: "数字媒体技术", plan: 60, fee: 4600, campus: "明秀校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 110, fee: 4600, campus: "明秀校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "税收学", plan: 180, fee: 4600, campus: "相思湖校区", category: "财政学类·53大类", note: "两年制" },
+      { name: "金融学", plan: 295, fee: 4600, campus: "相思湖校区", category: "金融学类·53大类", note: "两年制" },
+      { name: "保险学", plan: 165, fee: 4600, campus: "相思湖校区", category: "金融学类·53大类", note: "两年制" },
+      { name: "投资学", plan: 180, fee: 4600, campus: "相思湖校区", category: "金融学类·53大类", note: "两年制" },
+      { name: "国际经济与贸易", plan: 215, fee: 4600, campus: "相思湖校区", category: "经济与贸易类·53大类", note: "两年制" },
+      { name: "商务英语", plan: 280, fee: 6999, campus: "明秀校区", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "会计学", plan: 620, fee: 4600, campus: "明秀校区", category: "工商管理类·53大类", note: "两年制，全校名额最多" },
+      { name: "财务管理", plan: 300, fee: 4600, campus: "明秀校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "国际商务", plan: 240, fee: 4600, campus: "相思湖校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "市场营销", plan: 220, fee: 4600, campus: "相思湖校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "劳动与社会保障", plan: 165, fee: 4600, campus: "相思湖校区", category: "公共管理类·59大类", note: "两年制" },
+      { name: "土地资源管理", plan: 120, fee: 4600, campus: "相思湖校区", category: "公共管理类·59大类", note: "两年制" },
+      { name: "物流管理", plan: 300, fee: 4600, campus: "相思湖校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "电子商务", plan: 228, fee: 4600, campus: "明秀校区", category: "电子商务类·53大类", note: "两年制" },
+    ],
+    "北部湾大学": [
+      { name: "电子信息工程", plan: 85, fee: 4600, campus: "钦州滨海校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "人工智能", plan: 100, fee: 4600, campus: "钦州滨海校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 95, fee: 4600, campus: "钦州滨海校区", category: "计算机类·51大类", note: "两年制，不招色盲色弱" },
+      { name: "物联网工程", plan: 50, fee: 4600, campus: "钦州滨海校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "自动化", plan: 50, fee: 4600, campus: "钦州滨海校区", category: "自动化类·46大类", note: "两年制" },
+      { name: "机械设计制造及其自动化", plan: 52, fee: 4600, campus: "钦州滨海校区", category: "机械类·46大类", note: "两年制" },
+      { name: "港口航道与海岸工程", plan: 90, fee: 4600, campus: "钦州滨海校区", category: "水利类·45水利", note: "两年制" },
+      { name: "测绘工程", plan: 75, fee: 4600, campus: "钦州滨海校区", category: "测绘类·44土木建筑", note: "两年制" },
+      { name: "化学工程与工艺", plan: 80, fee: 4600, campus: "钦州滨海校区", category: "化工与制药类·47生物化工", note: "两年制，不招色盲色弱" },
+      { name: "航海技术", plan: 30, fee: 4600, campus: "钦州滨海校区", category: "交通运输类·50大类", note: "两年制，要求身高1.60米以上，辨色正常" },
+      { name: "水产养殖学", plan: 170, fee: 3800, campus: "钦州滨海校区", category: "水产类·41农林牧渔", note: "两年制，不招色盲色弱" },
+      { name: "舞蹈表演", plan: 200, fee: 12000, campus: "钦州滨海校区", category: "音乐与舞蹈学类·55大类", note: "两年制" },
+    ],
+    "桂林航天工业学院": [
+      { name: "电子信息工程", plan: 61, fee: 4600, campus: "桂林金鸡路2号", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 57, fee: 7500, campus: "桂林金鸡路2号", category: "电子信息类·51大类", note: "两年制，学费偏高" },
+      { name: "软件工程", plan: 73, fee: 10000, campus: "桂林金鸡路2号", category: "计算机类·51大类", note: "两年制，IT方向但学费高" },
+      { name: "数字媒体技术", plan: 75, fee: 4600, campus: "桂林金鸡路2号", category: "计算机类·51大类", note: "两年制" },
+      { name: "自动化", plan: 62, fee: 4600, campus: "桂林金鸡路2号", category: "自动化类·46大类", note: "两年制" },
+      { name: "机械电子工程", plan: 56, fee: 4600, campus: "桂林金鸡路2号", category: "机械类·44/46大类", note: "两年制" },
+      { name: "汽车服务工程", plan: 61, fee: 7500, campus: "桂林金鸡路2号", category: "机械类·46大类", note: "两年制" },
+      { name: "商务英语", plan: 80, fee: 4200, campus: "桂林金鸡路2号", category: "外国语言文学类·57大类", note: "两年制" },
+      { name: "市场营销", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "工商管理类·53大类", note: "两年制" },
+      { name: "国际商务", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "工商管理类·44/53大类", note: "两年制" },
+      { name: "物流管理", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "酒店管理", plan: 80, fee: 4600, campus: "桂林金鸡路2号", category: "旅游管理类·54大类", note: "两年制，公共基础课须选语文" },
+    ],
+    "南宁职业技术大学": [
+      { name: "软件工程技术", plan: 200, fee: 7500, campus: "相思湖校区", category: "计算机类·51大类", note: "职业本科两年制，51大类对口主力" },
+      { name: "自动化技术与应用", plan: 50, fee: 7500, campus: "相思湖校区", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "建筑装饰工程", plan: 47, fee: 7500, campus: "相思湖校区", category: "建筑设计类·44大类", note: "职业本科两年制，无色盲色弱" },
+      { name: "建筑工程", plan: 57, fee: 7500, campus: "相思湖校区", category: "土建施工类·44大类", note: "职业本科两年制" },
+      { name: "现代物流管理", plan: 160, fee: 6500, campus: "相思湖校区", category: "物流类·53大类", note: "职业本科两年制" },
+    ],
+    "柳州职业技术大学": [
+      { name: "工业互联网技术", plan: 50, fee: 7494, campus: "柳州官塘校区(社湾路28号)", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "装备智能化技术", plan: 50, fee: 7494, campus: "官塘校区", category: "机电设备类·46大类", note: "职业本科两年制" },
+      { name: "机械电子工程技术", plan: 50, fee: 7494, campus: "官塘校区", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "汽车工程技术", plan: 50, fee: 7494, campus: "官塘校区", category: "汽车制造类·46大类", note: "职业本科两年制" },
+      { name: "现代物流管理", plan: 50, fee: 7477, campus: "官塘校区", category: "物流类·53大类", note: "职业本科两年制" },
+    ],
+    "广西民族师范学院": [
+      { name: "电子信息工程", plan: 77, fee: 4600, campus: "崇左校区(佛子路23号)", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 34, fee: 4600, campus: "崇左校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 80, fee: 4600, campus: "崇左校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "学前教育", plan: 96, fee: 4200, campus: "崇左校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "小学教育", plan: 92, fee: 4200, campus: "崇左校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "汉语言文学", plan: 86, fee: 4200, campus: "崇左校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "秘书学", plan: 92, fee: 4200, campus: "崇左校区", category: "中国语言文学类·59大类", note: "两年制" },
+      { name: "英语", plan: 44, fee: 4200, campus: "崇左校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "越南语", plan: 44, fee: 4200, campus: "崇左校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "网络与新媒体", plan: 41, fee: 4200, campus: "崇左校区", category: "新闻传播学类·56大类", note: "两年制" },
+    ],
+    "百色学院": [
+      { name: "数据科学与大数据技术", plan: 50, fee: 4600, campus: "东合校区", category: "计算机类·51大类", note: "两年制，2026扩招明显" },
+      { name: "国际经济与贸易", plan: 200, fee: 4600, campus: "澄碧校区", category: "经济与贸易类·53大类", note: "两年制" },
+      { name: "学前教育", plan: 100, fee: 4200, campus: "澄碧校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "小学教育", plan: 90, fee: 4200, campus: "澄碧校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "体育教育", plan: 50, fee: 4200, campus: "澄碧校区", category: "体育学类·57大类(文科)", note: "两年制，需加试" },
+      { name: "市场营销", plan: 290, fee: 4600, campus: "澄碧校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "财务管理", plan: 295, fee: 4600, campus: "澄碧校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "电子商务", plan: 176, fee: 4600, campus: "澄碧校区", category: "电子商务类·53大类", note: "两年制" },
+    ],
+    "梧州学院": [
+      { name: "电子信息工程", plan: 40, fee: 4593, campus: "本校(富民三路82号)", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 40, fee: 4593, campus: "本校", category: "电子信息类·51大类", note: "两年制" },
+      { name: "金融科技", plan: 25, fee: 4600, campus: "本校", category: "金融学类·53大类", note: "两年制" },
+      { name: "汉语言文学", plan: 55, fee: 4200, campus: "本校", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "商务英语", plan: 100, fee: 4195, campus: "本校", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "机械设计制造及其自动化", plan: 55, fee: 4593, campus: "本校", category: "机械类·46大类", note: "两年制" },
+      { name: "机械电子工程", plan: 25, fee: 4593, campus: "本校", category: "机械类·46大类", note: "两年制" },
+      { name: "环境设计", plan: 30, fee: 10800, campus: "本校", category: "设计学类·55大类", note: "两年制，不招色盲色弱" },
+    ],
+    "河池学院": [
+      { name: "计算机科学与技术", plan: 67, fee: 4600, campus: "龙江校区(宜州)", category: "计算机类·51大类", note: "两年制，不招色盲" },
+      { name: "电气工程及其自动化", plan: 34, fee: 4600, campus: "龙江校区", category: "电气类·43/46大类", note: "两年制" },
+      { name: "应用统计学", plan: 90, fee: 4600, campus: "龙江校区", category: "统计学类·53大类", note: "两年制" },
+      { name: "社会工作", plan: 49, fee: 4200, campus: "金山湖校区", category: "社会学类·59大类", note: "两年制" },
+      { name: "学前教育", plan: 40, fee: 4200, campus: "龙江校区", category: "教育学类·57大类(文科)", note: "两年制，不招色盲色弱" },
+      { name: "小学教育", plan: 32, fee: 4200, campus: "龙江校区", category: "教育学类·57大类", note: "两年制，文/理科均招" },
+      { name: "汉语言文学", plan: 36, fee: 4200, campus: "龙江校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "英语", plan: 41, fee: 4200, campus: "金山湖校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "环境设计", plan: 41, fee: 12000, campus: "龙江校区", category: "设计学类·55大类", note: "两年制，不招色盲" },
+    ],
+    "广西民族大学": [
+      { name: "计算机科学与技术", plan: 275, fee: 5520, campus: "武鸣校区", category: "计算机类·51大类", note: "两年制，名额多" },
+      { name: "自动化", plan: 275, fee: 5520, campus: "武鸣校区", category: "自动化类·46大类", note: "两年制" },
+      { name: "环境工程", plan: 100, fee: 5520, campus: "武鸣校区", category: "环境科学与工程类·42大类", note: "两年制，不招色盲色弱" },
+      { name: "工商管理", plan: 150, fee: 5520, campus: "武鸣校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "会计学", plan: 375, fee: 5520, campus: "武鸣校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "物流管理", plan: 225, fee: 5520, campus: "武鸣校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "旅游管理", plan: 100, fee: 5520, campus: "武鸣校区", category: "旅游管理类·54大类(文科)", note: "两年制" },
+      { name: "广播电视编导", plan: 150, fee: 12000, campus: "思源湖校区", category: "戏剧与影视学类·55大类", note: "两年制" },
+      { name: "视觉传达设计", plan: 70, fee: 12000, campus: "思源湖校区", category: "设计学类·55大类", note: "两年制，不招色盲" },
+      { name: "环境设计", plan: 70, fee: 12000, campus: "思源湖校区", category: "设计学类·55大类", note: "两年制，不招色盲" },
+      { name: "体育教育", plan: 120, fee: 5040, campus: "思源湖校区", category: "体育学类·57大类(文科)", note: "两年制" },
+    ],
+    "南宁师范大学": [
+      { name: "自动化", plan: 47, fee: 7499, campus: "武鸣校区", category: "自动化类·46大类", note: "两年制" },
+      { name: "测绘工程", plan: 37, fee: 4595, campus: "武鸣校区", category: "测绘类·44土木建筑", note: "两年制" },
+      { name: "学前教育", plan: 26, fee: 4195, campus: "五合校区", category: "教育学类·57大类(文科)", note: "两年制，不招色盲色弱" },
+      { name: "小学教育", plan: 37, fee: 4189, campus: "五合校区", category: "教育学类·57大类(文科)", note: "两年制" },
+      { name: "汉语言文学", plan: 53, fee: 4191, campus: "五合校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "汉语国际教育", plan: 47, fee: 4195, campus: "明秀校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "商务英语", plan: 36, fee: 6999, campus: "武鸣校区", category: "外国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "新闻学", plan: 47, fee: 4195, campus: "五合校区", category: "新闻传播学类·56大类", note: "两年制" },
+      { name: "广告学", plan: 47, fee: 4195, campus: "五合校区", category: "新闻传播学类·56大类", note: "两年制" },
+      { name: "市场营销", plan: 58, fee: 4598, campus: "五合校区", category: "工商管理类·53大类", note: "两年制" },
+      { name: "物流管理", plan: 58, fee: 4598, campus: "武鸣校区", category: "物流管理与工程类·53大类", note: "两年制" },
+      { name: "旅游管理", plan: 45, fee: 4598, campus: "武鸣校区", category: "旅游管理类·54大类(文科)", note: "两年制" },
+    ],
+    "桂林信息科技学院": [
+      { name: "计算机科学与技术", plan: 240, fee: 24500, campus: "桂林临桂校区", category: "计算机类·51大类", note: "两年制，民办IT主力" },
+      { name: "电子信息工程", plan: 100, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "电子信息科学与技术", plan: 40, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "通信工程", plan: 30, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "人工智能", plan: 50, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "医学信息工程", plan: 20, fee: 24500, campus: "临桂校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "软件工程", plan: 60, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "网络工程", plan: 50, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "物联网工程", plan: 20, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "虚拟现实技术", plan: 40, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 30, fee: 24500, campus: "临桂校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "电气工程及其自动化", plan: 780, fee: 24500, campus: "临桂校区", category: "电气类·44/46大类", note: "两年制，全校名额最多" },
+      { name: "机械设计制造及其自动化", plan: 580, fee: 24500, campus: "临桂校区", category: "机械类·44/46大类", note: "两年制" },
+      { name: "机械电子工程", plan: 300, fee: 24500, campus: "临桂校区", category: "机械类·44/46大类", note: "两年制" },
+      { name: "智能制造工程", plan: 240, fee: 24500, campus: "临桂校区", category: "机械类·44/46大类", note: "两年制" },
+      { name: "自动化", plan: 520, fee: 24500, campus: "临桂校区", category: "自动化类·44/46大类", note: "两年制" },
+      { name: "机器人工程", plan: 140, fee: 24500, campus: "临桂校区", category: "自动化类·44/46大类", note: "两年制" },
+    ],
+    "南宁理工学院": [
+      { name: "人工智能", plan: 100, fee: 24800, campus: "南宁/桂林校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "计算机科学与技术", plan: 80, fee: 24800, campus: "桂林校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "数据科学与大数据技术", plan: 100, fee: 24800, campus: "桂林校区", category: "计算机类·51大类", note: "两年制" },
+      { name: "电气工程及其自动化", plan: 1280, fee: 24800, campus: "桂林校区", category: "电气类·43/44/45/46大类", note: "两年制，全校名额最多" },
+      { name: "电子信息工程", plan: 50, fee: 24800, campus: "桂林校区", category: "电子信息类·51大类", note: "两年制" },
+      { name: "机器人工程", plan: 205, fee: 24800, campus: "南宁/桂林校区", category: "自动化类·44/46大类", note: "两年制" },
+      { name: "土木工程", plan: 400, fee: 24800, campus: "南宁/桂林校区", category: "土木类·44大类", note: "两年制" },
+      { name: "工程管理", plan: 545, fee: 24800, campus: "桂林校区", category: "管理科学与工程类·44/50大类", note: "两年制" },
+      { name: "工程造价", plan: 650, fee: 24800, campus: "桂林校区", category: "管理科学与工程类·44/50大类", note: "两年制" },
+      { name: "汉语言文学", plan: 540, fee: 24800, campus: "南宁校区", category: "中国语言文学类·57大类(文科)", note: "两年制" },
+      { name: "地理信息科学", plan: 400, fee: 24800, campus: "桂林校区", category: "地理科学类·42大类", note: "两年制" },
+    ],
+    "广西农业职业技术大学": [
+      { name: "电子信息工程技术", plan: 69, fee: 7500, campus: "南宁本校(大学东路176号)", category: "电子信息类·51大类", note: "职业本科两年制" },
+      { name: "计算机应用工程", plan: 69, fee: 7500, campus: "本校", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "网络工程技术", plan: 89, fee: 7500, campus: "本校", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "数字媒体技术", plan: 89, fee: 7500, campus: "本校", category: "计算机类·51大类", note: "职业本科两年制" },
+      { name: "电气工程及自动化", plan: 168, fee: 7500, campus: "本校", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "智能控制技术", plan: 123, fee: 7500, campus: "本校", category: "自动化类·46大类", note: "职业本科两年制" },
+      { name: "建筑工程", plan: 180, fee: 7500, campus: "本校", category: "土建施工类·44大类", note: "职业本科两年制" },
+      { name: "园林景观工程", plan: 125, fee: 7500, campus: "本校", category: "建筑设计类·44大类", note: "职业本科两年制" },
+      { name: "动物医学", plan: 131, fee: 7000, campus: "本校", category: "畜牧业类·41大类", note: "职业本科两年制" },
+      { name: "作物生产与品质改良", plan: 83, fee: 7000, campus: "本校", category: "农业类·41农林牧渔", note: "职业本科两年制" },
+    ],
+  };
+
+  function viewSchools() {
+    setTitle("院校查询", true);
+    const kw = (state.schoolQ || "").trim().toLowerCase();
+    const cityFilter = state.schoolCity || "all";
+    const cities = ["all", ...Array.from(new Set(SCHOOLS_DATA.map((s) => s.city)))];
+    let list = SCHOOLS_DATA;
+    if (cityFilter !== "all") list = list.filter((s) => s.city === cityFilter);
+    if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw));
+
+    const total26 = SCHOOLS_DATA.reduce((a, s) => a + (s.plan26 || 0), 0);
+    const itCount = SCHOOLS_DATA.filter((s) => s.itMajor).length;
+
+    return `
+      <div class="card" style="margin-bottom:12px">
+        <input class="input" id="schoolSearch" placeholder="搜院校名 / 专业（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" />
+      </div>
+
+      <!-- 改革三年趋势 -->
+      <div class="card" style="margin-bottom:12px;padding:14px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">📈 改革三年招生趋势（广西专升本）</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${SCHOOLS_TREND.map((t) => `
+            <div style="flex:1;min-width:100px;padding:10px;border-radius:10px;background:color-mix(in srgb, var(--text) 5%, transparent);text-align:center">
+              <div style="font-size:18px;font-weight:800;color:${t.year === "2026" ? "var(--primary)" : "var(--text)"}">${t.year}</div>
+              <div style="font-size:12px;color:var(--text-sub)">${t.label}</div>
+              <div style="font-size:15px;font-weight:700;margin-top:4px">${t.total}</div>
+              <div style="font-size:10px;color:var(--text-sub);margin-top:2px">${t.note}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">
+        ${cities.map((c) => `<button class="chip ${cityFilter === c ? "is-active" : ""}" data-act="school-city" data-v="${attr(c)}" type="button">${c === "all" ? "全部城市" : esc(c)}</button>`).join("")}
+      </div>
+      <div class="stat-grid" style="margin-bottom:12px">
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">51大类可报院校</div></div>
+        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length}</div><div class="l">公办</div></div>
+        <div class="stat-box"><div class="n">${(total26 / 10000).toFixed(2)}万</div><div class="l">2026对口总计划</div></div>
+      </div>
+      ${list.length ? list.map((s) => {
+        const delta = s.plan26 - s.plan25;
+        const deltaTxt = s.plan25 === 0 ? '<span class="pill" style="background:#dcfce7;color:#166534">🆕 2026新增</span>'
+          : (delta > 0 ? `<span class="pill" style="background:#dcfce7;color:#166534">↑扩招${delta}</span>`
+            : (delta < 0 ? `<span class="pill" style="background:#fee2e2;color:#991b1b">↓缩招${-delta}</span>` : ""));
+        const detail = MAJOR_DETAIL[s.name] || [];
+        const expanded = (state.schoolMajor && state.schoolMajor.school === s.name) ? state.schoolMajor.major : null;
+        return `
+        <div class="card" style="margin-bottom:10px;padding:14px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <strong style="font-size:16px">${esc(s.name)}</strong>
+            <span class="pill" style="background:${s.tier.indexOf("公办") >= 0 ? "#dcfce7;color:#166534" : "#fef3c7;color:#92400e"}">${esc(s.tier)}</span>
+            ${s.itMajor ? '<span class="pill" style="background:#dbeafe;color:#1e40af">💻 51大类对口</span>' : ""}
+            <span class="pill">📍 ${esc(s.city)}</span>
+            ${deltaTxt}
+            <span class="pill" style="margin-left:auto;font-weight:700">2026招 ${s.plan26} 人</span>
+            ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener" style="font-size:11px;color:var(--primary);text-decoration:none;margin-left:4px">官网↗</a>` : ""}
+          </div>
+          <div style="margin-top:8px;font-size:13px;line-height:1.7">
+            <div><b>招生专业（点 chip 看详情）：</b></div>
+            <div style="margin-top:6px">
+              ${s.majors.map((m) => {
+                const hasDetail = detail.some((d) => d.name === m || m.indexOf(d.name) >= 0 || d.name.indexOf(m) >= 0);
+                const isOpen = expanded === m;
+                return `<button type="button" data-act="school-major" data-school="${attr(s.name)}" data-major="${attr(m)}" class="pill" style="margin-right:6px;margin-top:6px;cursor:pointer;border:1px solid ${isOpen ? "var(--primary)" : "transparent"};background:${isOpen ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "color-mix(in srgb, var(--text) 6%, transparent)"}">${esc(m)}${hasDetail ? " ▸" : ""}</button>`;
+              }).join("")}
+            </div>
+            ${expanded ? (() => {
+              const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
+              // 按当前展开的专业 chip 动态取专业介绍页 URL；没有配置则 fallback 到学校默认 url
+              const majorUrlMap = s.majorUrls || {};
+              const officialUrl = majorUrlMap[expanded] || s.url || "https://www.guet.edu.cn/";
+              const pdfUrl = "https://www.gxeea.cn/view/content_1215_32740.htm";
+              const officialLink = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                <a href="${officialUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🏫 ${esc(s.name)}官网 ↗</a>
+                <a href="${pdfUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:#fff;color:var(--primary);border:1px solid var(--primary);border-radius:8px;font-size:12px;text-decoration:none">📄 广西招考院2026计划PDF(公开) ↗</a>
+              </div>`;
+              if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">${officialLink}</div>`;
+              return `
+              <div style="margin-top:10px;padding:12px;border-radius:10px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-left:3px solid var(--primary)">
+                <div style="font-weight:700;font-size:14px;margin-bottom:6px">${esc(d.name)}<span class="pill" style="margin-left:8px;background:#dbeafe;color:#1e40af">招 ${d.plan} 人</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                  <div><span class="muted">💰 学费：</span>${d.fee} 元/学年</div>
+                  <div><span class="muted">📚 类别：</span>${esc(d.category)}</div>
+                  <div style="grid-column:1/-1"><span class="muted">📍 校区：</span>${esc(d.campus)}</div>
+                  <div style="grid-column:1/-1" class="muted">📝 ${esc(d.note || "")}</div>
+                </div>
+                ${officialLink}
+              </div>`;
+            })() : ""}
+            <div class="muted" style="font-size:12px;margin-top:6px">📝 ${esc(s.note)}</div>
+          </div>
+        </div>`;
+      }).join("") : '<div class="empty">没有匹配的院校，换个关键词试试</div>'}
+      <div class="disclaimer">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向"51 电子与信息大类"招生的院校共约 4.5 万对口名额；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年总数。2027 年招生计划与分数线以当年公布为准。</div>
     `;
   }
 
@@ -2745,7 +3474,7 @@ function ensureExplain(q) {
           <button type="button" data-act="switch-login" data-mode="login" class="${mode==='login'?'is-on':''}" role="tab" aria-selected="${mode==='login'}">登录</button>
           <button type="button" data-act="switch-login" data-mode="register" class="${mode==='register'?'is-on':''}" role="tab" aria-selected="${mode==='register'}">注册</button>
         </div>
-        <div class="card" style="padding:24px">
+        <form class="card" style="padding:24px" onsubmit="var b=this.querySelector('[data-act^=do-]');if(b)b.click();return false">
           <div class="login-field">
             <label for="loginEmail">邮箱</label>
             <input id="loginEmail" type="email" placeholder="your@email.com" autocomplete="email" />
@@ -2765,46 +3494,88 @@ function ensureExplain(q) {
               <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="loginPwd2" aria-label="显示密码">显示</button>
             </div>
           </div>`:''}
-          <button type="button" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
+          <button type="submit" class="login-submit" data-act="${mode==='login'?'do-login':'do-register'}">${mode==='login'?'登录':'注册'}</button>
           <div id="loginMsg" class="login-msg"></div>
-          ${mode==='login'?`<button type="button" class="login-forgot" data-act="forgot-pwd">忘记密码？</button>`:""}
-        </div>
+        </form>
         <button type="button" class="login-guest" data-act="guest">先逛逛，稍后登录</button>
       </div>
     `;
   }
 
-  // 忘记密码 → 邮件链接校验成功后落地：设置新密码
-  function viewReset() {
-    setTitle("重置密码", false);
-    return `
-      <div class="login-wrap">
-        <div class="login-hero">
-          <div class="logo">🔑</div>
-          <div class="name">设置新密码</div>
-          <div class="sub">已通过邮件链接验证，请输入新密码</div>
-        </div>
-        <div class="card" style="padding:24px">
-          <div class="login-field">
-            <label for="resetPwd1">新密码</label>
-            <div class="pwd-wrap">
-              <input id="resetPwd1" type="password" placeholder="至少 6 位" autocomplete="new-password" />
-              <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="resetPwd1" aria-label="显示密码">显示</button>
-            </div>
-          </div>
-          <div class="login-field">
-            <label for="resetPwd2">确认新密码</label>
-            <div class="pwd-wrap">
-              <input id="resetPwd2" type="password" placeholder="再输入一次新密码" autocomplete="new-password" />
-              <button type="button" class="pwd-toggle" data-act="toggle-pwd" data-target="resetPwd2" aria-label="显示密码">显示</button>
-            </div>
-          </div>
-          <button type="button" class="login-submit" data-act="do-reset">确认重置</button>
-          <div id="loginMsg" class="login-msg"></div>
-        </div>
-        <button type="button" class="login-guest" data-nav="login">返回登录</button>
-      </div>
-    `;
+  // 云同步状态卡片（登录用户可见；游客提示数据仅存本机）
+  function syncStatusHtml() {
+    const isGuest = !activeUser();
+    const hasQueue = !!load("gxzsb.syncQueue", null);
+    if (isGuest) {
+      return '<div class="card sync-card sync-guest" style="margin-bottom:12px"><span class="sync-dot">👤</span>' +
+        '<span class="sync-msg">游客模式：进度只保存在本机，登录后可云端同步</span>' +
+        '<button class="btn btn-ghost btn-sm" data-nav="login" type="button" style="white-space:nowrap">去登录同步</button></div>';
+    }
+    let ico, cls, msg, extra = "";
+    if (syncUI.status === "syncing") {
+      ico = '<span class="sync-dot sync-spin">⟳</span>'; cls = "sync-syncing"; msg = "正在同步到云端…";
+    } else if (syncUI.status === "ok") {
+      ico = '<span class="sync-dot">✓</span>'; cls = "sync-ok";
+      const t = new Date(syncUI.at);
+      const hh = String(t.getHours()).padStart(2, "0"), mm = String(t.getMinutes()).padStart(2, "0");
+      msg = "已同步到云端（" + hh + ":" + mm + "）";
+    } else if (syncUI.status === "error" || hasQueue) {
+      ico = '<span class="sync-dot">⚠</span>'; cls = "sync-err";
+      msg = "同步失败，进度已暂存本地";
+      extra = '<button class="btn btn-ghost btn-sm" data-act="sync-now" type="button">立即重试</button>';
+    } else {
+      ico = '<span class="sync-dot">☁️</span>'; cls = "sync-idle"; msg = "登录后学习进度自动云端同步";
+    }
+    return '<div class="card sync-card ' + cls + '" style="margin-bottom:12px">' + ico +
+      '<span class="sync-msg">' + msg + '</span>' + extra + '</div>';
+  }
+
+  // 薄弱考点：按错题知识点统计错误次数，取前 3
+  function buildWeakPoints() {
+    var counts = {};
+    Object.keys(state.wrong || {}).forEach(function (id) {
+      var q = qById(id); var w = state.wrong[id];
+      if (!q || !w || w.mastered) return;
+      var kp = q.knowledgePoint || q.subject || "未分类";
+      counts[kp] = (counts[kp] || 0) + (w.n || 1);
+    });
+    var arr = Object.keys(counts).map(function (k) { return { kp: k, n: counts[k] }; })
+      .sort(function (a, b) { return b.n - a.n; }).slice(0, 3);
+    if (!arr.length) return "";
+    var html = '<div class="card" style="margin:12px 0"><div style="font-size:13px;font-weight:700;margin-bottom:4px">⚡ 你的薄弱考点 <span style="font-weight:400;color:var(--text-sub);font-size:11px">错最多的知识点，点进去专练</span></div>';
+    arr.forEach(function (it) {
+      html += '<button class="list-row" data-act="weak-practice" data-p="' + attr(it.kp) + '" type="button">' +
+        '<span class="main"><span class="t">' + esc(it.kp) + '</span></span>' +
+        '<span class="end" style="color:var(--error)">错 ' + it.n + ' 次 ›</span></button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function buildWeekChart() {
+    var days = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(Date.now() - i * 86400000);
+      days.push({ key: localDayKey(d), label: (d.getMonth() + 1) + "/" + d.getDate(), t: 0, c: 0 });
+    }
+    var map = {}; days.forEach(function (x) { map[x.key] = x; });
+    (state.attempts || []).forEach(function (a) {
+      if (!a || !a.at) return;
+      var k = localDayKey(new Date(a.at));
+      if (map[k]) { map[k].t++; if (a.correct) map[k].c++; }
+    });
+    var max = 1; days.forEach(function (x) { if (x.t > max) max = x.t; });
+    var total = days.reduce(function (s, x) { return s + x.t; }, 0);
+    var bars = days.map(function (x) {
+      var h = x.t ? Math.max(6, Math.round(x.t / max * 100)) : 2;
+      var rate = x.t ? Math.round(x.c / x.t * 100) : null;
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:118px">' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t + (rate != null ? '·' + rate + '%' : '') : "") + '</div>' +
+        '<div style="width:70%;border-radius:4px 4px 0 0;background:var(--primary);opacity:' + (0.35 + 0.65 * x.t / max) + ';height:' + h + '%"></div>' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-top:3px">' + x.label + '</div></div>';
+    }).join("");
+    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题 <span style="font-weight:400;color:var(--text-sub);font-size:11px">柱=做题量 · 数字后=正确率 · 共 ' + total + ' 题</span></div>' +
+      '<div style="display:flex;align-items:flex-end;gap:4px;height:118px">' + bars + '</div></div>';
   }
 
   function viewMe() {
@@ -2824,16 +3595,29 @@ function ensureExplain(q) {
         <div style="font-size:16px;font-weight:bold">${esc(nick)}</div>
       </div>
 
-      <div class="section-title">账号与数据</div>
+      ${buildWeekChart()}
+      ${syncStatusHtml()}
+
+      <!-- P0-3：离线题库管理卡片 -->
+      <div class="card" style="margin-bottom:16px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:18px">📡</span>
+          <strong style="font-size:14px">离线题库管理</strong>
+          <span class="mono muted" style="font-size:11px;margin-left:auto" id="offlineCacheStat">检测中…</span>
+        </div>
+        <p class="muted" style="font-size:12px;margin:0 0 10px;line-height:1.6">缓存题库到本机后，没网也能正常刷题。已缓存资源由浏览器自动管理。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" data-act="preload-offline" id="offlineBtn" type="button">一键缓存全部题库</button>
+          <button class="btn btn-ghost btn-sm" data-act="clear-offline-cache" type="button">清除离线缓存</button>
+        </div>
+        <div class="muted" id="offlineBarTxt" style="font-size:12px;margin-top:8px"></div>
+      </div>
+
       <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
+        <button class="list-row" data-nav="resources" type="button"><span class="main"><span class="t">学习资料（C语言 / 计网 / 电工）</span></span><span class="end">›</span></button>
         <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
-      </div>
-
-      <div class="section-title">设置</div>
-      <div class="card" style="padding:0;margin-bottom:16px">
         <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
         <div class="list-row" style="display:flex;align-items:center;gap:8px;padding:12px 16px">
           <span class="main" style="flex:1"><span class="t">字号大小</span></span>
@@ -2845,14 +3629,8 @@ function ensureExplain(q) {
           </div>
         </div>
         <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="clear" type="button"><span class="main"><span class="t" style="color:var(--error)">清除本机数据</span></span><span class="end">›</span></button>
-      </div>
-
-      <div class="disclaimer">
-        本站为个人整理的广西专升本备考工具，非官方平台，内容仅供参考。
-        ${activeUser() ? "已登录，进度同步云端。" : "游客模式，数据仅存本机。"}
-        <br/>版本 v3.0 · 五科1500+题
-      </div>
+        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
+        <div style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-sub)">版本 v${window.V || "2.2.0"}</div>
       </div>
     `;
   }
@@ -2932,8 +3710,25 @@ function formulaFilter() {
   function fracSpan(num, den) {
     return '<span class="frac"><span class="num">' + mathHtml(num) + '</span><span class="den">' + mathHtml(den) + "</span></span>";
   }
+  // 解析行渲染：去掉外层 1.2.3. 编号；一行里的 ①②③ 拆成多行、②③ 缩进
+  function fmtExpLine(l) {
+    var parts = String(l).split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])/).filter(function (p) { return p.trim(); });
+    if (parts.length > 1) {
+      return parts.map(function (p) {
+        var isHead = /^【/.test(p);
+        return '<p style="margin-left:' + (isHead ? '0' : '16px') + ';margin:4px 0">' + (isHead ? '<strong>' : '') + mathHtml(p) + (isHead ? '</strong>' : '') + '</p>';
+      }).join("");
+    }
+    return '<p style="margin:4px 0">' + (/^【/.test(l) ? '<strong>' : '') + mathHtml(l) + (/^【/.test(l) ? '</strong>' : '') + '</p>';
+  }
+
   function mathHtml(expr) {
-    const raw = String(expr == null ? "" : expr);
+    let raw = String(expr == null ? "" : expr);
+    // 横排简单分数 a/b → frac{a}{b}，统一渲染成上下堆叠（分子上/分母下）
+    // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
+    // 横排分数 a/b → frac{a}{b}：支持数字、单/双字母短变量(x/R1/Rf/ui)、括号表达式
+    // 3 字母以上英文单词(DNS/int/because)与 URL 不转
+    raw = raw.replace(/(?<![a-zA-Z])(\([^()]*\)|[0-9.]+|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9.]+|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
     let out = "";
     let i = 0;
     while (i < raw.length) {
@@ -3153,6 +3948,13 @@ function formulaFilter() {
 
   function viewWords() {
     setTitle("英语核心词汇", false);
+    if (!window.WORDS || !window.WORDS.getStats) {
+      var s = document.createElement("script");
+      s.src = "wordbook.js?v=" + (window.V || Date.now());
+      s.onload = function(){ render(); };
+      document.head.appendChild(s);
+      return '<div class="card" style="padding:40px 16px;text-align:center;color:var(--text-sub)">正在加载词库…</div>';
+    }
     var S = window.WORDS.getStats();
     var goal = window.WORDS.getDailyGoal();
     var dueReview = window.WORDS.getDueReview();
@@ -3251,13 +4053,13 @@ function formulaFilter() {
           <div class="wb-card-front">
             <div class="wb-word">${esc(w.w)}</div>
             <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button" onclick="event.stopPropagation()">🔊 发音</button>
+            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
             <div class="wb-hint">点击卡片查看释义</div>
           </div>
           <div class="wb-card-back">
             <div class="wb-word">${esc(w.w)}</div>
             <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button" onclick="event.stopPropagation()">🔊 发音</button>
+            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
             <div class="wb-pos">${esc(w.pos)}</div>
             <div class="wb-meaning">${esc(w.m)}</div>
           </div>
@@ -3483,14 +4285,14 @@ function formulaFilter() {
     );
   }
   function viewExtraHome() {
-    setTimeout(function () { location.hash = "#words"; }, 0);
+    setTimeout(function () { location.hash = "#/words"; }, 0);
     return "";
   }
   function openExtra(key) {
     if (!window.loadEnglishExtra) { toast("加载器未就绪"); return; }
     if (!window.isEnglishExtraLoaded()) toast("正在加载拓展资料…", 2500);
     window.loadEnglishExtra().then(function () {
-      location.hash = "#extra/" + key;
+      location.hash = "#/extra/" + key;
     }).catch(function () { toast("拓展资料加载失败，请刷新重试"); });
   }
   function viewExtra(key, sub) {
@@ -3868,38 +4670,32 @@ function formulaFilter() {
   function render() {
     const { route, params } = parseHash();
     state.route = route;
+    // 进入主界面（已登录或游客）后，才启动题库数据后台加载（幂等）：
+    // 未登录停留登录页时不下载数据，弱网下也不与登录认证请求抢占带宽
+    if (state.user && window.gxzsbEnsureData) {
+      try { window.gxzsbEnsureData(); } catch (e) {}
+    }
     // 仅在「路由切换」时回到顶部；同一页面的数据加载/状态刷新保持滚动位置，
     // 避免用户正在浏览时异步加载完成被强制拉回顶部
     var routeKey = route + "|" + params.join("/");
+    var savedScrollY = (routeKey === _lastRouteKey) ? window.scrollY : 0;
     if (routeKey !== _lastRouteKey) {
       window.scrollTo(0, 0);
       _lastRouteKey = routeKey;
     }
     const app = $("#app");
-    // 重置链接回调（URL 带 token/error）：无论是否已登录/游客，一律先进入“验证中/链接失效”页，
-    // 不能把 #access_token=... 当路由解析成首页/登录页
-    if (RECOVERY_URL && !state.recovery && sb) {
-      if (RECOVERY_ERROR) {
-        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">重置链接无效或已过期</div><div class="sub">请返回登录页重新点「忘记密码」获取新链接</div></div><div class="card" style="padding:24px"><button type="button" class="login-submit" data-nav="login">返回登录</button></div></div>';
-      } else {
-        app.innerHTML = '<div class="login-wrap"><div class="login-hero"><div class="logo">🔑</div><div class="name">正在验证重置链接…</div><div class="sub">链接有效即可设置新密码</div></div></div>';
-      }
-      hideNav();
-      bindEvents();
-      return;
-    }
-    // login / reset 为公开页，未登录也可访问
-    if (route === "login" || route === "reset") {
-      app.innerHTML = route === "reset" ? viewReset() : viewLogin();
+    // login 为公开页，未登录也可访问
+    if (route === "login") {
+      app.innerHTML = viewLogin();
       hideNav(); bindEvents(); return;
     }
     // 数据未就绪也直接渲染首页（空数据），后台加载完自动刷新
     // 不再卡住转圈
-    if (sb && !state.user) {
-      app.innerHTML = viewLogin();
-      hideNav();
-      bindEvents();
-      return;
+    // P0-1：免登为默认逻辑 —— 未登录不再强制登录墙，直接以游客身份进首页；
+    // 登录入口收敛为首页「登录同步」按钮/弹窗，进度本地保存、登录仅做云端备份
+    if (sb && !state.user && route !== "login") {
+      state.user = { isGuest: true };
+      try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
     }
     if (route === "bank") app.innerHTML = viewBank();
     else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
@@ -3910,10 +4706,12 @@ function formulaFilter() {
     else if (route === "stats") app.innerHTML = viewStats();
     else if (route === "wrong") app.innerHTML = viewWrong();
     else if (route === "formula") app.innerHTML = viewFormula();
+    else if (route === "resources") app.innerHTML = viewResources();
     else if (route === "learn") app.innerHTML = viewLearn();
     else if (route === "learn-point") app.innerHTML = viewLearnDetail(params[0] || "");
     else if (route === "syllabus") app.innerHTML = viewSyllabus(params[0] ? decodeURIComponent(params[0]) : "");
     else if (route === "exam-info") app.innerHTML = viewExamInfo();
+    else if (route === "schools") app.innerHTML = viewSchools();
     else if (route === "me") app.innerHTML = viewMe();
     else if (route === "search") app.innerHTML = viewSearch();
     else if (route === "words") app.innerHTML = viewWords();
@@ -3928,6 +4726,13 @@ function formulaFilter() {
       app.innerHTML = viewHome();
     }
     renderNav();
+    // 同路由刷新时恢复滚动位置（避免点击专业 chip 等操作被拉回顶部）
+    if (savedScrollY > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollY);
+        setTimeout(() => window.scrollTo(0, savedScrollY), 50);
+      });
+    }
     // 防呆：非登录页底部导航被误清空时自动补回
     if (state.route !== "login" && state.user && $("#tabbar") && !$("#tabbar").innerHTML) {
       renderNav();
@@ -3965,6 +4770,26 @@ function formulaFilter() {
         };
       }
     }
+    if (route === "me") refreshOfflineStat();
+    if (route === "schools") {
+      var si = document.getElementById("schoolSearch");
+      if (si) {
+        // 只在用户主动聚焦过搜索框后才保持焦点；不再每次 render 自动 focus（避免点筛选/专业 chip 时键盘反复弹出导致页面跳动）
+        var _searchTimer = null;
+        si.oninput = function() {
+          state.schoolQ = si.value;
+          clearTimeout(_searchTimer);
+          _searchTimer = setTimeout(function() {
+            var _sy = window.scrollY;
+            render();
+            var _si2 = document.getElementById("schoolSearch");
+            if (_si2) { _si2.focus(); _si2.setSelectionRange(_si2.value.length, _si2.value.length); }
+            window.scrollTo(0, _sy);
+            requestAnimationFrame(() => window.scrollTo(0, _sy));
+          }, 300);
+        };
+      }
+    }
     if (route === "word-quiz") {
       var spellInp = document.getElementById("wbSpellInput");
       if (spellInp && !state.wbQuiz.showAnswer) {
@@ -3989,22 +4814,135 @@ function formulaFilter() {
         });
       });
     }
+    updateSyncBar();
+  }
+
+  /* 离线缓存状态：显示已缓存资源数与估算大小 */
+  function refreshOfflineStat() {
+    var el = document.getElementById("offlineCacheStat");
+    if (!el) return;
+    if (!window.caches) { el.textContent = "浏览器不支持缓存"; return; }
+    try {
+      caches.keys().then(function (keys) {
+        var gxzKeys = keys.filter(function (k) { return k.indexOf("gxzsb-") === 0; });
+        if (!gxzKeys.length) { el.textContent = "未缓存"; return; }
+        var totalSize = 0, totalCount = 0;
+        Promise.all(gxzKeys.map(function (k) {
+          return caches.open(k).then(function (c) {
+            return c.keys().then(function (reqs) {
+              totalCount += reqs.length;
+              return Promise.all(reqs.map(function (r) {
+                return c.match(r).then(function (res) {
+                  if (res && res.headers.get("content-length")) totalSize += parseInt(res.headers.get("content-length"), 10) || 0;
+                  else if (res) totalSize += 50000; // 估算
+                });
+              }));
+            });
+          });
+        })).then(function () {
+          var mb = (totalSize / 1048576).toFixed(1);
+          el.textContent = totalCount + " 个资源 · 约 " + mb + " MB";
+        });
+      });
+    } catch (e) { el.textContent = "统计失败"; }
+  }
+
+  /* 全局同步状态条：游客/已登录/同步中/同步失败 四态可视 */
+  function updateSyncBar() {
+    var bar = document.getElementById("syncBar");
+    if (!bar) return;
+    var txt = document.getElementById("syncBarText");
+    bar.classList.remove("is-cloud", "is-syncing", "is-error");
+    var u = activeUser();
+    if (!u) {
+      txt.textContent = "📱 本地模式 · 进度保存在本机";
+      return;
+    }
+    if (syncUI.status === "syncing") {
+      bar.classList.add("is-syncing");
+      txt.textContent = "☁️ 正在同步到云端…";
+    } else if (syncUI.status === "error" || load("gxzsb.syncQueue", null)) {
+      bar.classList.add("is-error");
+      txt.textContent = "⚠ 同步失败，进度暂存本地";
+    } else {
+      bar.classList.add("is-cloud");
+      var t = syncUI.at ? new Date(syncUI.at) : new Date();
+      var hh = String(t.getHours()).padStart(2, "0"), mm = String(t.getMinutes()).padStart(2, "0");
+      txt.textContent = "☁️ 已同步云端（" + hh + ":" + mm + "）· 多设备备份";
+    }
   }
 
   /* ========== events ========== */
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     const t = e.target.closest("[data-act],[data-nav]");
     if (!t) return;
     const nav = t.getAttribute("data-nav");
     const act = t.getAttribute("data-act");
     if (!act && nav) return go(nav);
 
+    if (act === "preload-offline") {
+      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js"];
+      const btn = document.getElementById("offlineBtn");
+      const txt = document.getElementById("offlineBarTxt");
+      if (btn) btn.disabled = true;
+      let done = 0;
+      for (const f of files) {
+        try {
+          if (txt) txt.textContent = "正在下载 " + f + "（" + done + "/" + files.length + "）…";
+          await fetch(f + "?v=offline", { cache: "force-cache" }).then(function(r){ return r.ok ? r.blob() : null; });
+        } catch (e) {}
+        done++;
+        if (txt) txt.textContent = "已下载 " + done + "/" + files.length + "（没网也能刷题）";
+      }
+      if (txt) txt.textContent = "✅ 全部题库已离线可用，断网也能刷";
+      if (btn) { btn.textContent = "已完成"; btn.disabled = true; }
+      refreshOfflineStat();
+      return;
+    }
+
+    if (act === "clear-offline-cache") {
+      if (!confirm("清除离线题库缓存？\n\n下次刷题需重新联网加载题库，但本地学习进度不受影响。")) return;
+      try {
+        if (window.caches) {
+          const keys = await caches.keys();
+          await Promise.all(keys.filter(k => k.indexOf("gxzsb-") === 0).map(k => caches.delete(k)));
+        }
+        toastLite("离线缓存已清除");
+      } catch (e) { toastLite("清除失败：" + (e.message || e)); }
+      refreshOfflineStat();
+      return;
+    }
+
+    if (act === "report-question") {
+      const qid = t.getAttribute("data-id");
+      const q = qById(qid);
+      if (!q) { toastLite("题目未找到"); return; }
+      var reason = prompt("请简要说明这道题的问题（如：答案错误/解析不清/题目残缺）：", "");
+      if (reason && reason.trim()) {
+        var reports = load("gxzsb.qreports", []);
+        if (!Array.isArray(reports)) reports = [];
+        reports.push({ id: qid, subj: q.subject, stem: String(q.stem).slice(0, 80), reason: reason.trim(), at: Date.now() });
+        save("gxzsb.qreports", reports);
+        toastLite("已记录反馈，感谢！共 " + reports.length + " 条待汇总");
+      }
+      return;
+    }
+
     if (act === "learn-open") {
       go("learn-point/" + t.getAttribute("data-id"));
       render();
     } else if (act === "learn-subj") {
       state.learnSubj = t.getAttribute("data-v");
+      state.learnChapterSel = -1;
       render();
+    } else if (act === "learn-chapter") {
+      state.learnChapterSel = parseInt(t.getAttribute("data-ci"), 10);
+      document.querySelectorAll(".fnav-chip").forEach(function (c) {
+        c.classList.toggle("is-active", parseInt(c.getAttribute("data-ci"), 10) === state.learnChapterSel);
+      });
+      var ll = document.getElementById("learnList");
+      if (ll) ll.innerHTML = buildLearnListHTML(state.learnSubj);
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else if (act === "learn-back-list") {
       go("learn");
       render();
@@ -4132,7 +5070,20 @@ function formulaFilter() {
       if (!state.attempts || !state.attempts.length) { alert("还没有练习记录，先做几道题再来找薄弱考点"); return; }
       startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
     }
-    else if (act === "subject") go("subject/" + encodeURIComponent(t.getAttribute("data-name")));
+    else if (act === "subject") {
+      var sn = t.getAttribute("data-name");
+      go("subject/" + encodeURIComponent(sn));
+      ensureSubjectBank(sn);
+    }
+    else if (act === "subject-retry") {
+      var rn = t.getAttribute("data-name");
+      state._bankError = state._bankError || {};
+      state._bankLoading = state._bankLoading || {};
+      state._bankError[rn] = false;
+      state._bankLoading[rn] = false;
+      ensureSubjectBank(rn);
+    }
+    else if (act === "mock-practice") startMockPractice(t.getAttribute("data-name"));
     else if (act === "extra-go") openExtra(t.getAttribute("data-name"));
     else if (act === "essay-mode") {
       state.extra = state.extra || {};
@@ -4461,15 +5412,30 @@ function formulaFilter() {
       setWrongReason(id, r);
       render();
     } else if (act === "clear-wrong") {
-      const n = Object.keys(state.wrong).length;
-      if (!n) { toastLite("错题本是空的"); return; }
-      confirmModal("清空错题本", "确定清空全部 " + n + " 道错题？此操作不可撤销。", function () {
-        state.wrong = {};
-        save(LS.wrong, state.wrong);
-        scheduleSync();
-        toastLite("错题已清空");
-        render();
+      // 按当前筛选（科目/错误次数）清空；无筛选时清空全部
+      const subjFilter = state.wrongSubj || "all";
+      const nFilter = state.wrongNFilter || 0;
+      const ids = Object.keys(state.wrong).filter(function (id) {
+        const q = qById(id);
+        if (!q) return false;
+        if (state.wrong[id].mastered) return false; // 已掌握的不随筛选删除
+        if (subjFilter !== "all" && q.subject !== subjFilter) return false;
+        if (nFilter && (state.wrong[id].n || 1) < nFilter) return false;
+        return true;
       });
+      const scoped = subjFilter !== "all" || nFilter;
+      if (!ids.length) { toastLite(scoped ? "当前筛选下没有错题" : "错题本是空的"); return; }
+      confirmModal(
+        scoped ? "清空筛选错题" : "清空错题本",
+        (scoped ? "确定清空当前筛选的 " + ids.length + " 道错题？" : "确定清空全部 " + ids.length + " 道错题？") + "此操作不可撤销。",
+        function () {
+          ids.forEach(function (id) { delete state.wrong[id]; });
+          save(LS.wrong, state.wrong);
+          scheduleSync();
+          toastLite("已清空 " + ids.length + " 道错题");
+          render();
+        }
+      );
     } else if (act === "show-shortcuts") {
       openModal({
         title: "答题快捷键",
@@ -4530,6 +5496,28 @@ function formulaFilter() {
     } else if (act === "wrong-more") {
       state.wrongPage = (state.wrongPage || 1) + 1;
       render();
+    } else if (act === "school-city") {
+      state.schoolCity = t.getAttribute("data-v");
+      var _sy = window.scrollY;
+      render();
+      window.scrollTo(0, _sy);
+      requestAnimationFrame(() => window.scrollTo(0, _sy));
+      setTimeout(() => window.scrollTo(0, _sy), 80);
+    } else if (act === "school-major") {
+      const sn = t.getAttribute("data-school");
+      const mj = t.getAttribute("data-major");
+      // 再次点同一个 = 收起
+      if (state.schoolMajor && state.schoolMajor.school === sn && state.schoolMajor.major === mj) {
+        state.schoolMajor = null;
+      } else {
+        state.schoolMajor = { school: sn, major: mj };
+      }
+      // 同步保存滚动位置，render 后立即恢复（不用 overflow:hidden，那会阻止 scrollTo）
+      var _sy = window.scrollY;
+      render();
+      window.scrollTo(0, _sy);
+      requestAnimationFrame(() => window.scrollTo(0, _sy));
+      setTimeout(() => window.scrollTo(0, _sy), 80);
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
       state.wrongPage = 1;
@@ -4579,10 +5567,8 @@ function formulaFilter() {
       applyFontSize();
       render();
     } else if (act === "export-txt") {
-      // P2-1：导出 TXT（题目+答案+解析），错题本/收藏通用
-      var ids = state.wrongTab === "fav"
-        ? Object.keys(state.fav).filter(function(id){ return state.fav[id] && qById(id); })
-        : Object.keys(state.wrong).filter(function(id){ return qById(id); });
+      // P2-1：导出 TXT（题目+答案+解析），错题本/收藏通用；跟随当前科目/次数筛选
+      var ids = visibleExportIds();
       if (!ids.length) { toastLite("暂无内容可导出"); return; }
       var lines = ["# gxzsb 导出 · " + (state.wrongTab === "fav" ? "收藏题" : "错题本") + " · 共 " + ids.length + " 题", ""];
       ids.forEach(function(id, i){
@@ -4603,8 +5589,11 @@ function formulaFilter() {
       document.body.appendChild(a); a.click(); a.remove();
       toastLite("已导出 TXT");
     } else if (act === "export-print") {
-      // P2-1：调浏览器打印，可另存为 PDF
-      window.print();
+      // 打印完整题稿（跟随当前筛选）：题干+选项(正确答案✓)+答案+解析
+      doPrintSheet(visibleExportIds(), state.wrongTab === "fav" ? "收藏题" : "错题本");
+    } else if (act === "print-q") {
+      var sNow = state.session;
+      if (sNow && sNow.q && sNow.q[sNow.i]) doPrintSheet([sNow.q[sNow.i].id], "本题");
     } else if (act === "toggle-pwd") {
       var tp = document.getElementById(t.getAttribute("data-target"));
       if (tp) {
@@ -4637,7 +5626,16 @@ function formulaFilter() {
         try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
         stopRealtime();
         go("home"); render();
-        pullAndMerge().then(subscribeRealtime);
+        // P0-2：首次登录且本机有刷题进度时，提示将合并到云端（mergeProgress 以本地为基准，不会覆盖）
+        var localAttempts = (state.attempts || []).length;
+        if (localAttempts > 0) {
+          setTimeout(function () {
+            toastLite("已检测到本机 " + localAttempts + " 次刷题记录，正在合并到云端…", 3200);
+            pullAndMerge().then(subscribeRealtime);
+          }, 300);
+        } else {
+          pullAndMerge().then(subscribeRealtime);
+        }
       }).catch(function (err) {
         if (err && err.message === "timeout") {
           msg.textContent = "登录超时（15s），请检查网络后重试";
@@ -4687,70 +5685,16 @@ function formulaFilter() {
           msg2.textContent = "注册失败：" + (err && err.message ? err.message : "网络异常") + "，可重试";
         }
       });
-    } else if (act === "forgot-pwd") {
-      var emf = "";
-      var emEl = document.getElementById("loginEmail");
-      if (emEl) emf = String(emEl.value || "").trim();
-      var msgf = document.getElementById("loginMsg");
-      if (!emf) {
-        if (msgf) msgf.textContent = "请先填写邮箱，再点「忘记密码」";
-        return;
-      }
-      if (sb && sb.auth && typeof sb.auth.resetPasswordForEmail === "function") {
-        if (msgf) msgf.textContent = "正在发送重置邮件...";
-        // 重定向回应用根地址（与 Supabase 配置的 Site URL 完全一致，最稳妥）；
-        // 邮件链接校验成功后会带回 recovery token，由应用自动进入“设置新密码”页
-        var resetUrl = location.origin + location.pathname;
-        withTimeout(sb.auth.resetPasswordForEmail(emf, { redirectTo: resetUrl }), 15000).then(function (r) {
-          if (r && r.error) {
-            if (msgf) msgf.textContent = "";
-            alert("发送失败：" + r.error.message + "\n可联系管理员重置，或先用游客模式体验。");
-          } else {
-            if (msgf) msgf.textContent = "重置邮件已发送，请查收（若未收到可联系管理员）";
-            alert("重置邮件已发送。若邮箱服务未配置可能收不到，可联系管理员重置，或使用游客模式。");
-          }
-        }).catch(function () {
-          if (msgf) msgf.textContent = "";
-          alert("发送失败（网络异常）。请联系管理员重置密码，或使用游客模式。");
-        });
-      } else {
-        if (msgf) msgf.textContent = "当前环境不支持邮件找回";
-        alert("当前未配置邮箱找回服务。请联系管理员重置密码，或使用游客模式。");
-      }
-    } else if (act === "do-reset") {
-      var rp1 = document.getElementById("resetPwd1");
-      var rp2 = document.getElementById("resetPwd2");
-      var rmsg = document.getElementById("loginMsg");
-      var rbtn = document.querySelector("#app .login-submit");
-      var v1 = rp1 ? String(rp1.value || "") : "";
-      var v2 = rp2 ? String(rp2.value || "") : "";
-      if (rmsg) rmsg.textContent = "";
-      if (v1.length < 6) { if (rmsg) rmsg.textContent = "密码至少 6 位"; return; }
-      if (v1 !== v2) { if (rmsg) rmsg.textContent = "两次输入的密码不一致"; return; }
-      if (!sb || !sb.auth || typeof sb.auth.updateUser !== "function") {
-        alert("当前环境不支持重置，请联系管理员。"); return;
-      }
-      if (rbtn) { rbtn.disabled = true; rbtn.textContent = "提交中…"; }
-      withTimeout(sb.auth.updateUser({ password: v1 }), 15000).then(function (r) {
-        if (r && r.error) {
-          if (rbtn) { rbtn.disabled = false; rbtn.textContent = "确认重置"; }
-          alert("重置失败：" + r.error.message);
-        } else {
-          state.recovery = false;
-          // 重置后退出临时会话，引导用户用新密码登录
-          try { sb.auth.signOut(); } catch (e) {}
-          state.user = null;
-          alert("密码已重置成功，请用新密码登录。");
-          go("login");
-        }
-      }).catch(function () {
-        if (rbtn) { rbtn.disabled = false; rbtn.textContent = "确认重置"; }
-        alert("重置失败（网络异常或链接已过期）。请重新申请重置邮件。");
-      });
     } else if (act === "guest") {
       state.user = { isGuest: true };
       try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
       go("home"); render();
+    } else if (act === "sync-now") {
+      if (!activeUser()) { toastLite("请先登录"); return; }
+      pullAndMerge().then(function () {
+        if (syncUI.status !== "ok") setSyncStatus("ok");
+        toastLite("已同步");
+      });
     } else if (act === "set-nick") {
       const cur = load("gxzsb.nick", "专升本备考人");
       const n = prompt("输入昵称：", cur);
@@ -4864,13 +5808,28 @@ function formulaFilter() {
       render();
     } else if (act === "prac-point") {
       startSession({ point: t.getAttribute("data-p"), limit: 10, title: "考点专练" });
+    } else if (act === "weak-practice") {
+      startSession({ point: t.getAttribute("data-p"), limit: 10, title: "薄弱点专练" });
     } else if (act === "fgroup") {
       state.formulaGroup = t.getAttribute("data-v") || "public";
       state.formulaTab = state.formulaGroup === "major" ? "电工电子技术基础" : "高等数学";
+      state.formulaGroupSel = -1;
       render();
     } else if (act === "ftab") {
       state.formulaTab = t.getAttribute("data-v");
+      state.formulaGroupSel = -1;
       render();
+    } else if (act === "fnav") {
+      state.formulaGroupSel = parseInt(t.getAttribute("data-gi"), 10);
+      // 只换列表内容，导航条不重建不闪；高亮当前 chip
+      document.querySelectorAll(".fnav-chip").forEach(function (c) {
+        c.classList.toggle("is-active", parseInt(c.getAttribute("data-gi"), 10) === state.formulaGroupSel);
+      });
+      var fl = document.getElementById("fList");
+      if (fl) fl.innerHTML = buildFListHTML(state.formulaTab);
+      var fq = document.getElementById("fq");
+      if (fq && fq.value) fq.dispatchEvent(new Event("input"));
+      window.scrollTo({ top: 0, behavior: "auto" });
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
       go("word-learn");
@@ -4900,12 +5859,11 @@ function formulaFilter() {
       render();
     } else if (act === "wb-speak") {
       var word = t.getAttribute("data-word");
-      if (window.speechSynthesis) {
-        var utter = new SpeechSynthesisUtterance(word);
-        utter.lang = "en-US";
-        utter.rate = 0.9;
-        window.speechSynthesis.speak(utter);
-      }
+      try {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        var au = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(word) + "&type=2");
+        au.play().catch(function(){});
+      } catch(e) {}
     } else if (act === "wb-start-quiz") {
       var mode = t.getAttribute("data-mode");
       var goal3 = window.WORDS.getDailyGoal();
@@ -5037,7 +5995,17 @@ function formulaFilter() {
     // 聚焦时主动触发一次
     document.addEventListener("focusin", function (e) {
       if (/input|textarea/i.test(e.target.tagName)) {
-        setTimeout(onViewportChange, 200); // iOS 键盘弹出时机晚于 focus
+        // 软键盘弹出后把输入框滚到可视区中央，避免被键盘遮挡
+        setTimeout(function () {
+          onViewportChange();
+          try {
+            var el = e.target;
+            var r = el.getBoundingClientRect();
+            if (r.bottom > window.innerHeight - 80 || r.top < 60) {
+              el.scrollIntoView({ block: "center", behavior: "smooth" });
+            }
+          } catch (err) {}
+        }, 300); // iOS 键盘弹出时机晚于 focus
       }
     });
   })();
@@ -5130,7 +6098,7 @@ function formulaFilter() {
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
     var el = e.target;
-    if (el && el.id && /^(login(Email|Pwd|Pwd2)|resetPwd(1|2))$/.test(el.id)) {
+    if (el && el.id && /^login(Email|Pwd|Pwd2)$/.test(el.id)) {
       var btn = document.querySelector(".login-submit");
       if (btn) { e.preventDefault(); btn.click(); }
     }
@@ -5141,32 +6109,6 @@ function formulaFilter() {
   if (_guestFlag) state.user = { isGuest: true };
   // 恢复Supabase session
   if (sb) {
-    // 密码重置：邮件链接校验成功后，Supabase 会以 PASSWORD_RECOVERY 事件带回一个临时会话
-    try {
-      sb.auth.onAuthStateChange(function (event, session) {
-        if (event === "PASSWORD_RECOVERY" && session) {
-          state.recovery = true;
-          state.user = session.user;
-          // 进入重置流程时清除游客标记，避免后续刷新又恢复游客态干扰
-          try { localStorage.removeItem("gxzsb.guest"); } catch (e) {}
-          // 清掉 URL 中的 token / query，落到干净的 #/reset
-          try { history.replaceState(null, "", location.pathname + "#/reset"); } catch (e) { location.hash = "#/reset"; }
-          parseHash();
-          render();
-        }
-      });
-    } catch (e) {}
-    // 兜底：若 8 秒内未进入重置页（token 过期 / 链接被 Supabase 拦截 / 未配置重定向），明确提示。
-    // error 形式（链接已失效）页面已直接显示提示，不需要再弹 alert
-    if (RECOVERY_URL && !RECOVERY_ERROR) {
-      setTimeout(function () {
-        if (!state.recovery) {
-          alert("重置链接无效或已过期，无法打开重置页面。\n请重新点「忘记密码」获取新链接；若仍失败，可能需要管理员在 Supabase 配置站点地址。");
-          try { history.replaceState(null, "", location.pathname + "#/login"); } catch (e) { location.hash = "#/login"; }
-          parseHash(); render();
-        }
-      }, 8000);
-    }
     sb.auth.getSession().then(function(res) {
       state.authLoading = false;
       if (res.data.session) {

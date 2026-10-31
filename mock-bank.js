@@ -9,7 +9,7 @@ window.MOCK_BANK = window.MOCK_BANK || {
   meta: {
     name: "模拟题试卷题库",
     version: 1,
-    totalQuestions: 546,
+    totalQuestions: 808,
     categories: {
       "模拟卷": {
         "数学模拟卷": 0,
@@ -19,7 +19,7 @@ window.MOCK_BANK = window.MOCK_BANK || {
         "计网模拟卷": 0
       },
       "专项练习": {
-        "数学专项": 99,
+        "数学专项": 361,
         "英语专项": 400,
         "电工专项": 0,
         "C语言专项": 0,

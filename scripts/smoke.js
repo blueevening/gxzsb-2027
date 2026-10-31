@@ -13,8 +13,8 @@ function ok(cond, msg) {
   }
 }
 
-console.log("[1] 语法检查");
-["app.js", "all-bank.js", "all-learn.js", "learn-book-2027.js", "formula-book.js", "wordbook.js", "exam-plans-v2.js", "sb-config.js", "syllabus.js"].forEach((f) => {
+console.log("[1] 语法检查（运行时全部脚本；科目题库语法错误会静默整科丢题，必须覆盖）");
+["app.js", "boot.js", "sb-config.js", "all-bank.js", "math-bank.js", "english-bank.js", "ee-bank.js", "c-bank.js", "net-bank.js", "mock-bank.js", "english-extra.js", "wordbook.js", "formula-book.js", "all-learn.js", "learn-book-2027.js", "exam-plans-v2.js", "kp-detail.js", "syllabus.js"].forEach((f) => {
   try {
     new vm.Script(fs.readFileSync(path.join(root, f), "utf8"), { filename: f });
     ok(true, f + " 可解析");
@@ -23,13 +23,15 @@ console.log("[1] 语法检查");
   }
 });
 
-console.log("[2] 公开 API window.STUDY_DATA");
+console.log("[2] 公开 API window.STUDY_DATA（all-bank 概览 + 五个科目题库合并）");
 const ctx = { window: {}, console: { log() {}, warn() {}, error() {} } };
 vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(root, "all-bank.js"), "utf8"), ctx, { timeout: 60000 });
+["all-bank.js", "math-bank.js", "english-bank.js", "ee-bank.js", "c-bank.js", "net-bank.js"].forEach((f) => {
+  vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), ctx, { filename: f, timeout: 60000 });
+});
 const D = ctx.window.STUDY_DATA;
 ok(!!D, "STUDY_DATA 存在");
-ok(Array.isArray(D.questions) && D.questions.length === 1500, "questions 精选1500 (" + (D.questions || []).length + ")");
+ok(Array.isArray(D.questions) && D.questions.length === 1500, "五科合并共 1500 题 (" + (D.questions || []).length + ")");
 {
   const by = {};
   (D.questions || []).forEach((q) => { by[q.subject] = (by[q.subject] || 0) + 1; });
@@ -131,7 +133,7 @@ ok(/const load = \(k, fb\)[\s\S]{0,220}catch/.test(appSrc), "load 捕获 JSON �
 console.log("[8] T3 模拟考倒计时 / 交卷 / end 持久化");
 ok(/formatMMSS/.test(appSrc) && /examTimer/.test(appSrc), "存在 mm:ss 倒计时 UI");
 ok(/submitExam/.test(appSrc) && /data-act="submit-exam"/.test(appSrc), "存在交卷按钮与 submitExam");
-ok(/未作答题目将按错误计分/.test(appSrc), "交卷确认文案：未答按错");
+ok(/未答题将按错误计分/.test(appSrc), "交卷确认文案：未答按错");
 ok(/lastSeenAt/.test(appSrc) && /Math\.max\(Date\.now\(\),\s*Number\(s\.lastSeenAt\)/.test(appSrc), "系统时间回拨用 lastSeenAt 保护");
 ok(/end:\s*opts\.minutes/.test(appSrc), "startSession 按 minutes 写 end");
 ok(/end:\s*d\.end\s*\|\|\s*null/.test(appSrc), "restoreSession 恢复 end");
@@ -186,8 +188,8 @@ ok(/注册超时（15s）/.test(appSrc), "注册 15s 超时提示");
 ok(/注册成功/.test(appSrc), "注册成功提示");
 ok(/注册失败/.test(appSrc), "注册失败提示");
 ok(/scrubPasswords/.test(appSrc), "存在密码清扫 scrubPasswords");
-ok(/resetPasswordForEmail/.test(appSrc), "忘记密码走 resetPasswordForEmail");
-ok(/联系管理员/.test(appSrc), "无邮箱服务提示联系管理员/游客");
+ok(!/resetPasswordForEmail/.test(appSrc), "忘记密码功能已彻底移除（无 resetPasswordForEmail）");
+ok(!/忘记密码/.test(appSrc), "登录页无忘记密码入口");
 ok(/IDLE_LOGOUT_MS/.test(appSrc) && /2 \* 60 \* 60 \* 1000/.test(appSrc), "闲置 2h 自动登出");
 ok(/loginLocked/.test(appSrc) && /noteLoginFail/.test(appSrc), "登录失败锁定计数");
 ok(/Date\.now\(\) \+ 60000/.test(appSrc), "锁定 60s");
@@ -298,7 +300,7 @@ ok(/一键复制解析|copy-exp/.test(appSrc), "解析一键复制");
 ok(/clear-wrong/.test(appSrc) && /清空错题/.test(appSrc), "错题清空入口");
 ok(/confirmModal\(/.test(appSrc), "清空/退出用确认弹窗");
 ok(/show-shortcuts|答题快捷键/.test(appSrc), "答题快捷键说明");
-ok(/exit-exam/.test(appSrc) && /退出模拟考|退出考试/.test(appSrc), "模拟考退出二次确认");
+ok(/exit-exam/.test(appSrc) && /放弃本场/.test(appSrc), "模拟考退出二次确认");
 const typeless = (appSrc.match(/<button(?![^>]*type=)[^>]*>/g) || []).length;
 ok(typeless === 0, "无 typeless button (got " + typeless + ")");
 
@@ -345,7 +347,7 @@ ok(/p\.outline/.test(appSrc), "列表/详情渲染 outline 考纲标签");
 ok(/ch\.chapter/.test(appSrc), "列表按大纲章节分组");
 ok(/isEnLang \? escKeep/.test(appSrc), "英语不用 frac（escKeep）");
 ok(/mathHtml\(/.test(appSrc), "数理用 mathHtml/frac");
-ok(/learn-book-2027\.js/.test(fs.readFileSync(path.join(root, "index.html"), "utf8")), "index.html 引用 learn-book-2027.js");
+ok(/learn-book-2027\.js/.test(fs.readFileSync(path.join(root, "boot.js"), "utf8")), "boot.js 动态加载 learn-book-2027.js");
 
 console.log("[20] QA 移动端回归：主按钮 / 未答计数 / 非法科目 / 窄屏");
 ok(/\.btn-accent\s*\{[^}]*background/.test(cssSrc), "CSS 定义 .btn-accent 背景（今日30题/交卷按钮可见）");
@@ -357,9 +359,9 @@ ok(/safe-area-inset-top/.test(cssSrc), "移动端顶部刘海安全区");
 ok(/font-size:\s*16px/.test(cssSrc) && /避免 iOS Safari 聚焦时自动放大/.test(cssSrc), "移动端输入框 16px 防 iOS 聚焦放大");
 
 console.log("[21] 移除真题库：入口/路由/页面/事件已清除，题库保留");
-ok(!/viewSchool|data-act="school"|school-practice|start-exam-paper|route === "school"|真题库/.test(appSrc), "app.js 已无真题库功能");
-ok(/\.quick-3\.quick-2\s*\{[^}]*repeat\(2,\s*1fr\)/.test(cssSrc), "资料组两列网格");
-ok(/quick-3 quick-2/.test(appSrc), "首页资料组改为两列");
+ok(!/viewSchool(?![s])|data-act="school"|school-practice|start-exam-paper|route === "school"|真题库/.test(appSrc), "app.js 已无真题库功能（院校查询 viewSchools 保留）");
+ok(/\.quick-3\s*\{[^}]*repeat\(3,\s*1fr\)/.test(cssSrc), "首页快捷入口三列网格");
+ok(/class="quick-3"/.test(appSrc) && /data-nav="words"/.test(appSrc) && /data-nav="mock"/.test(appSrc), "首页快捷入口含背单词/模拟考");
 // 题库本身不受影响：题目总数与五科分布不变
 (function () {
   const qs = D.questions || [];

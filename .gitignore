@@ -15,3 +15,4 @@ _*.json
 .worktrees/
 net-analysis-batches/
 
+.github/workflows/ci.yml
