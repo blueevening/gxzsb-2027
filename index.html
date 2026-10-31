@@ -99,11 +99,25 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
 if ('serviceWorker' in navigator &&
     (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () {});
+    // v2.9.0：先清掉旧SW和旧缓存，确保拿到最新版
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      regs.forEach(function (r) { r.unregister(); });
+      if (window.caches) {
+        caches.keys().then(function (keys) {
+          keys.forEach(function (k) { caches.delete(k); });
+        });
+      }
+      // 清完后重新注册新SW
+      setTimeout(function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      }, 500);
+    }).catch(function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
     // 后台静默预载题库（进 app 后自动缓存，不打扰用户）
     setTimeout(function () {
       ['math-bank.js','english-bank.js','ee-bank.js','c-bank.js','net-bank.js','wordbook.js','formula-book.js','learn-book-2027.js','english-extra.js','exam-plans-v2.js','kp-detail.js','syllabus.js'].forEach(function (f) {
-        fetch(f + '?v=auto', { cache: 'force-cache' }).catch(function () {});
+        fetch(f + '?v=2.9.0', { cache: 'no-store' }).catch(function () {});
       });
     }, 3000);
   });
