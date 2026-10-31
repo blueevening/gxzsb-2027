@@ -102,7 +102,7 @@ if ('serviceWorker' in navigator &&
     navigator.serviceWorker.register('sw.js').catch(function () {});
     // 后台静默预载题库（进 app 后自动缓存，不打扰用户）
     setTimeout(function () {
-      ['math-bank.js','english-bank.js','ee-bank.js','c-bank.js','net-bank.js','wordbook.js','formula-book.js'].forEach(function (f) {
+      ['math-bank.js','english-bank.js','ee-bank.js','c-bank.js','net-bank.js','wordbook.js','formula-book.js','learn-book-2027.js','english-extra.js','exam-plans-v2.js','kp-detail.js','syllabus.js'].forEach(function (f) {
         fetch(f + '?v=auto', { cache: 'force-cache' }).catch(function () {});
       });
     }, 3000);
