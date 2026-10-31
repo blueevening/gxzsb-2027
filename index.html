@@ -73,13 +73,14 @@ if ('serviceWorker' in navigator &&
     navigator.serviceWorker.register('sw.js').catch(function () {});
     // 后台静默预载题库（进 app 后自动缓存，不打扰用户）
     setTimeout(function () {
-      ['math-bank.js','english-bank.js','ee-bank.js','c-bank.js','net-bank.js','wordbook.js','formula-book.js'].forEach(function (f) {
+      ['math-bank.js','english-bank.js','ee-bank.js','c-bank.js','net-bank.js','wordbook.js','formula-book.js','math-bank-integral.js'].forEach(function (f) {
         fetch(f + '?v=auto', { cache: 'force-cache' }).catch(function () {});
       });
     }, 3000);
   });
 }
 </script>
+<script defer src="math-bank-integral.js"></script>
 <script defer src="boot.js?v=2.5.3"></script>
 </body>
 </html>
