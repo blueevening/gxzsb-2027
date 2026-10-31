@@ -2565,3 +2565,74 @@ button, .btn { min-height: 44px; }
 [data-theme="dark"] .tabbar {
   background: rgba(26,29,36,0.85);
 }
+
+/* ============================================================
+ * v2.8.0 桌面端内页全布局：所有页面利用宽屏，不再挤窄列
+ * ============================================================ */
+@media (min-width: 1200px) {
+  /* 内页shell拉满，不再居中窄列 */
+  .shell { max-width: 100% !important; padding: 24px 32px !important; }
+  .app-frame { max-width: 1280px; }
+
+  /* --- 单词本页面 --- */
+  .wb-hero { max-width: 100% !important; padding: 28px 32px !important; }
+  .wb-hero-title { font-size: 28px; }
+  .wb-stats-row { gap: 32px; }
+  .wb-stat-num { font-size: 28px; }
+  /* 今日任务卡片 + 练习模式 双列布局 */
+  .wb-today-card { max-width: 100% !important; padding: 24px 28px !important; }
+  .wb-today-num { font-size: 42px; }
+  .wb-actions { max-width: 100% !important; }
+  /* 练习模式按钮网格：桌面端4列 */
+  .wb-mode-grid, .practice-wrap {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  /* --- 题库页面：章节卡片多列 --- */
+  .chapter-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 14px !important;
+  }
+  .exam-stack {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  /* --- 学习一刻：章节卡片3列 --- */
+  .learn-chapter-grid, .subject-banner + .chapter-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  /* --- 错题本/收藏：列表卡片双列 --- */
+  .wrong-list, .fav-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  /* --- 公式书：已经是220px侧栏+主区，保持但拉宽 --- */
+  .formula-wrap { gap: 28px !important; }
+
+  /* 首页快捷入口已经是6列，保持 */
+
+  /* 卡片统一在桌面端加大内边距 */
+  .outline-card, .today-card, .wb-today-card { padding: 20px 24px; }
+
+  /* 做题页面保持居中窄列（阅读体验） */
+  .app-frame.nav-hidden .shell { max-width: 800px !important; margin: 0 auto; }
+}
+
+/* 1200-1440 中等桌面：3列 */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .wb-mode-grid, .practice-wrap {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .chapter-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .exam-stack { grid-template-columns: 1fr !important; }
+}
