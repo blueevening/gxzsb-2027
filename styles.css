@@ -2304,3 +2304,92 @@ sup.math-sup .frac .den { padding-top: 1px; }
   .today-side .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; padding-left: 8px; padding-right: 8px; font-size: 13px; }
   .today-card { align-items: center; }
 }
+
+/* ============================================================
+ * v2.6.0 UI 双端优化补丁（移动端+桌面端统一）
+ * 1. 无横向滚动  2. 按钮统一规格/触摸区  3. 深色模式补齐
+ * 4. 桌面端容器居中  5. 首屏 CLS 抑制  6. 安全区/动效降级
+ * ============================================================ */
+
+/* 1) 无横向滚动：360px / 1440px 都不出现横向滚动条 */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+img, svg, video, canvas { max-width: 100%; }
+pre, code { max-width: 100%; overflow-x: auto; }
+
+/* 2) 按钮统一规格：移动端触摸区 ≥44px，桌面端 ≥36px，去除点击高亮延迟 */
+button, .btn, .chip, .tab-item, .task-row, .syllabus-banner, .quick-3 .qi,
+.icon-btn, .back, .landing-cta, .landing-login-link, .login-submit, .boot-retry {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button, .btn { min-height: 44px; }
+.btn-sm { min-height: 36px; }
+@media (min-width: 1200px) {
+  button, .btn { min-height: 36px; }
+  .btn-sm { min-height: 32px; }
+}
+
+/* 3) 深色模式补齐：学科色在深色下不发灰，文字对比达标 */
+[data-theme="dark"] {
+  --math: #6B8AFF;
+  --english: #A78BFA;
+  --ee: #FB923C;
+  --c: #34D399;
+  --network: #22D3EE;
+}
+[data-theme="dark"] .chip { background: var(--card); }
+[data-theme="dark"] .chip.is-active { background: var(--text); color: var(--card); }
+[data-theme="dark"] .btn-ghost { background: var(--card); color: var(--text); }
+[data-theme="dark"] .sync-bar { background: rgba(91,127,255,.14); color: #9DB4FF; }
+[data-theme="dark"] .sync-bar-dot { background: #9DB4FF; }
+
+/* 4) 桌面端容器：内容居中、横向留白、字号不拉伸失真 */
+@media (min-width: 768px) {
+  .shell { max-width: var(--content-max, 860px); margin: 0 auto; }
+}
+@media (min-width: 1200px) {
+  .shell { max-width: 100%; }
+  .app-frame { max-width: 1320px; margin: 0 auto; }
+  body { font-size: 16px; }  /* 大屏字号不随 viewport 拉伸 */
+}
+
+/* 5) 首屏 CLS 抑制：骨架元素固定尺寸，下方内容 content-visibility 跳过渲染 */
+.skeleton, .boot-track, .hero-count { content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.card + .card, .section-gap { content-visibility: auto; contain-intrinsic-size: auto 200px; }
+@media (max-width: 1199px) {
+  .side-nav { display: none !important; }  /* 移动端彻底隐藏侧栏，避免占位 */
+}
+
+/* 6) 安全区：刘海屏/底部横条 padding-bottom 已在 body/tabbar/q-actions 处理；
+      这里补 topbar 横向 padding 与桌面端安全区无关项 */
+.topbar { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.tabbar { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+
+/* 7) 键盘可访问性：focus-visible 统一外圈高亮 */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+:focus:not(:focus-visible) { outline: none; }
+
+/* 8) 动效降级：用户偏好减少动效时关闭脉冲/缩放 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 9) 打印时隐藏内联骨架屏 */
+@media print { .skeleton { display: none !important; } }
+
+/* 登录落地页安全区：刘海屏底部横条避让 */
+.landing-wrap { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 1200px) {
+  .landing-wrap { padding-top: 12vh; }
+}

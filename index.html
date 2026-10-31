@@ -1,27 +1,56 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>广西专升本练习 · gxzsb</title>
-<link rel="manifest" href="manifest.webmanifest" />
-<meta name="theme-color" content="#2563eb" />
-<link rel="apple-touch-icon" href="icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="专升本" />
-<link rel="icon" href="data:," />
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2D5BFF">
+<meta name="description" content="2027 广西专升本刷题站：高等数学、英语、电工电子、C语言、计算机网络，错题本、单词本、公式书、考纲全覆盖。">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="专升本">
+<link rel="icon" href="data:,">
 <script>
 /* 首帧即应用持久化主题，避免深色用户加载页闪白 */
 (function () {
   try { if (localStorage.getItem("gxzsb.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="styles.css?v=2.5.3" />
+<style>
+/* 关键路径内联：首屏骨架样式，避免 styles.css 加载前的布局跳动（CLS） */
+html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-adjust:100%;overflow-x:hidden}
+[data-theme="dark"] body{background:#0F1115;color:#E8EAF0}
+#offlineBar{display:none;position:fixed;top:0;left:0;right:0;z-index:999;background:#DC2626;color:#fff;font-size:12px;text-align:center;padding:6px 12px}
+#offlineBar[hidden]{display:none}
+.sync-bar{position:fixed;top:0;left:0;right:0;z-index:49;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(45,91,255,.08);color:#2D5BFF;font-size:11px;padding:4px 12px}
+.sync-bar-dot{width:8px;height:8px;border-radius:50%;background:#2D5BFF;display:inline-block}
+.topbar{position:sticky;top:0;z-index:50;height:56px;display:flex;align-items:center;gap:8px;padding:0 16px;background:#F7F8FA;border-bottom:1px solid #E8EAEE}
+[data-theme="dark"] .topbar{background:#0F1115;border-color:#2A2D38}
+.topbar .title{flex:1;min-width:0;font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar button{width:44px;height:44px;border-radius:10px;border:1px solid #E8EAEE;background:#fff;color:inherit;font-size:18px;display:grid;place-items:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+[data-theme="dark"] .topbar button{background:#1A1D24;border-color:#2A2D38}
+.app-frame{min-height:calc(100vh - 56px)}
+.shell{padding:16px;max-width:860px;margin:0 auto}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;height:60px;background:#fff;border-top:1px solid #E8EAEE;display:grid;grid-template-columns:repeat(5,1fr)}
+[data-theme="dark"] .tabbar{background:#1A1D24;border-color:#2A2D38}
+.skeleton{height:120px;border-radius:14px;background:#E8EAEE;animation:gxzsbPulse 1.2s infinite}
+.skeleton.sm{height:60px}
+[data-theme="dark"] .skeleton{background:#2A2D38}
+@keyframes gxzsbPulse{0%,100%{opacity:1}50%{opacity:.5}}
+@media(min-width:1200px){
+  .shell{padding:24px 32px}
+  .tabbar{display:none}
+}
+</style>
+<link rel="stylesheet" href="styles.css?v=2.6.0">
 </head>
 <body>
   <div id="offlineBar" hidden>📡 离线模式 · 数据存本地，联网后自动同步</div>
-  <div id="syncBar" class="sync-bar"><span class="sync-bar-dot" id="syncBarDot"></span><span id="syncBarText">📱 本地模式 · 进度保存在本机</span></div>
+  <div class="sync-bar" id="syncBar"><span class="sync-bar-dot" id="syncBarDot"></span><span id="syncBarText">📱 本地模式 · 进度保存在本机</span></div>
   <header class="topbar">
     <button class="back" id="btnBack" type="button" aria-label="返回">←</button>
     <span class="title" id="pageTitle">广西专升本练习</span>
@@ -34,10 +63,10 @@
     <main class="shell">
       <div id="app">
         <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
-          <div style="height:120px;border-radius:12px;background:var(--border,#e2e8f0);animation:pulse 1.2s infinite"></div>
-          <div style="height:60px;border-radius:12px;background:var(--border,#e2e8f0);animation:pulse 1.2s infinite"></div>
-          <div style="height:60px;border-radius:12px;background:var(--border,#e2e8f0);animation:pulse 1.2s infinite"></div>
-          <p style="text-align:center;color:var(--text-sub,#94a3b8);font-size:12px;margin-top:8px">正在加载…</p>
+          <div class="skeleton"></div>
+          <div class="skeleton sm"></div>
+          <div class="skeleton sm"></div>
+          <p style="text-align:center;color:#6B7280;font-size:12px;margin-top:8px">正在加载…</p>
         </div>
       </div>
     </main>
@@ -80,6 +109,6 @@ if ('serviceWorker' in navigator &&
   });
 }
 </script>
-<script defer src="boot.js?v=2.5.3"></script>
+<script defer src="boot.js?v=2.6.0"></script>
 </body>
 </html>

@@ -2,6 +2,26 @@
 (function () {
   "use strict";
 
+  /* ===== v2.6.0 UI 防抖工具：导航/滚动/resize 统一入口 ===== */
+  function _debounce(fn, wait) {
+    var t = null;
+    return function () {
+      var ctx = this, args = arguments;
+      if (t) clearTimeout(t);
+      t = setTimeout(function () { t = null; fn.apply(ctx, args); }, wait);
+    };
+  }
+  /* 导航连点守卫：220ms 内同一路由的重复 go() 调用合并为一次，
+     避免移动端快速双击 tabbar 触发两次 render、闪烁或状态错乱。 */
+  var _lastGoAt = 0, _lastGoPath = "";
+  function _guardedGo(path) {
+    var now = Date.now();
+    var key = String(path || "home");
+    if (key === _lastGoPath && (now - _lastGoAt) < 220) return;
+    _lastGoAt = now; _lastGoPath = key;
+    location.hash = "#/" + key.replace(/^\/+/, "");
+  }
+
   var sb = null;
   if (window.supabase && window.SB_CONFIG) {
     try {
@@ -1030,7 +1050,7 @@
   }
 
   function go(path) {
-    location.hash = "#/" + String(path || "home").replace(/^\/+/, "");
+    _guardedGo(path);
   }
 
   const NAV = [
@@ -5923,8 +5943,8 @@ function formulaFilter() {
         }, 120);
       }
     }
-    vv.addEventListener("resize", onViewportChange);
-    vv.addEventListener("scroll", onViewportChange);
+    vv.addEventListener("resize", _debounce(onViewportChange, 120));
+    vv.addEventListener("scroll", _debounce(onViewportChange, 120));
     // 聚焦时主动触发一次
     document.addEventListener("focusin", function (e) {
       if (/input|textarea/i.test(e.target.tagName)) {
@@ -6007,7 +6027,7 @@ function formulaFilter() {
     });
   })();
 
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", _debounce(function () { render(); }, 150));
   // 数据后台静默加载完成：重建题库快照并重新渲染（app.js 先于数据就绪注入）
   window.addEventListener("gxzsb:data-ready", function () {
     D = window.STUDY_DATA || {};
