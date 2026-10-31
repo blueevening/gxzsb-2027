@@ -1,5 +1,6 @@
 node_modules/
 *.bak
+*.bak_*
 *.working
 .DS_Store
 Thumbs.db
@@ -14,5 +15,10 @@ _batch*.json
 _*.json
 .worktrees/
 net-analysis-batches/
+
+# 导出/分析产物
+scripts/*-export.json
+scripts/major-questions.json
+scripts/major-index.tsv
 
 .github/workflows/ci.yml
