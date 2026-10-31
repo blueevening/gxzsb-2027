@@ -3539,7 +3539,7 @@ function ensureExplain(q) {
       var h = x.t ? Math.max(6, Math.round(x.t / max * 100)) : 2;
       var rate = x.t ? Math.round(x.c / x.t * 100) : null;
       return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:118px">' +
-        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t + (rate != null ? '·' + rate + '%' : '') : "") + '</div>' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t + '题·' + rate + '%' : "") + '</div>' +
         '<div style="width:70%;border-radius:4px 4px 0 0;background:var(--primary);opacity:' + (0.35 + 0.65 * x.t / max) + ';height:' + h + '%"></div>' +
         '<div style="font-size:10px;color:var(--text-sub);margin-top:3px">' + x.label + '</div></div>';
     }).join("");
