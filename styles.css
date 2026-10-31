@@ -2393,3 +2393,175 @@ button, .btn { min-height: 44px; }
 @media (min-width: 1200px) {
   .landing-wrap { padding-top: 12vh; }
 }
+
+/* ============================================================
+ * v2.7.0 视觉升级：hero装饰、彩色快捷入口、卡片质感、桌面宽屏
+ * ============================================================ */
+
+/* --- Hero：丰富渐变+装饰圆斑 --- */
+.home-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1E3A8A 0%, #2D5BFF 50%, #3B82F6 100%);
+  box-shadow: 0 8px 32px rgba(45,91,255,0.25);
+}
+.home-hero::before,
+.home-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.home-hero::before {
+  width: 200px; height: 200px;
+  right: -60px; top: -80px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+}
+.home-hero::after {
+  width: 150px; height: 150px;
+  left: -40px; bottom: -60px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+}
+.home-hero > * { position: relative; z-index: 1; }
+.hh-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
+.ring-in { background: rgba(0,0,0,0.25); backdrop-filter: blur(4px); }
+.hh-pdfs a { backdrop-filter: blur(4px); transition: all 0.2s; }
+.hh-pdfs a:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+
+/* --- 快捷入口：每个带彩色图标底 --- */
+.quick-3 .qi {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.quick-3 .qi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-color: var(--primary);
+}
+.quick-3 .qi:active { transform: translateY(0); }
+.quick-3 .qi .ico {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.quick-3 .qi:hover .ico { transform: scale(1.08); }
+/* 6个快捷入口分别配色 */
+.quick-3 .qi:nth-child(1) .ico { background: #EEF2FF; color: #2D5BFF; }
+.quick-3 .qi:nth-child(2) .ico { background: #FFF7ED; color: #EA580C; }
+.quick-3 .qi:nth-child(3) .ico { background: #F5F3FF; color: #7C3AED; }
+.quick-3 .qi:nth-child(4) .ico { background: #FEF2F2; color: #DC2626; }
+.quick-3 .qi:nth-child(5) .ico { background: #ECFDF5; color: #059669; }
+.quick-3 .qi:nth-child(6) .ico { background: #ECFEFF; color: #0891B2; }
+[data-theme="dark"] .quick-3 .qi:nth-child(1) .ico { background: rgba(45,91,255,0.2); color: #8DA9FF; }
+[data-theme="dark"] .quick-3 .qi:nth-child(2) .ico { background: rgba(234,88,12,0.2); color: #FB923C; }
+[data-theme="dark"] .quick-3 .qi:nth-child(3) .ico { background: rgba(124,58,237,0.2); color: #A78BFA; }
+[data-theme="dark"] .quick-3 .qi:nth-child(4) .ico { background: rgba(220,38,38,0.2); color: #F87171; }
+[data-theme="dark"] .quick-3 .qi:nth-child(5) .ico { background: rgba(5,150,105,0.2); color: #34D399; }
+[data-theme="dark"] .quick-3 .qi:nth-child(6) .ico { background: rgba(8,145,178,0.2); color: #22D3EE; }
+
+/* --- 今日任务卡片：更有层次感 --- */
+.today-card {
+  transition: box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.today-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #2D5BFF, #7C3AED);
+}
+.today-num { letter-spacing: -0.02em; }
+.bar.light { border-radius: 999px; overflow: hidden; }
+.bar.light i { border-radius: 999px; transition: width 0.6s ease; }
+
+/* --- 大纲卡片：悬浮提升+学科色左边条 --- */
+.outline-card {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.outline-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+}
+.outline-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.outline-card:nth-of-type(1)::before { background: var(--math, #2D5BFF); }
+.outline-card:nth-of-type(2)::before { background: var(--english, #7C3AED); }
+.outline-card:nth-of-type(3)::before { background: linear-gradient(90deg, var(--ee, #EA580C), var(--c, #059669), var(--network, #0891B2)); }
+.oc-score b { letter-spacing: -0.02em; }
+.type-pill {
+  transition: all 0.15s;
+}
+.type-pill:hover {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+}
+
+/* --- 按钮质感 --- */
+.btn { transition: all 0.15s ease; }
+.btn-accent {
+  background: linear-gradient(135deg, #F59E0B, #EA580C);
+  box-shadow: 0 2px 8px rgba(234,88,12,0.3);
+  font-weight: 700;
+}
+.btn-accent:hover { box-shadow: 0 4px 12px rgba(234,88,12,0.4); transform: translateY(-1px); }
+.btn-accent:active { transform: translateY(0); }
+.btn-primary {
+  box-shadow: 0 2px 8px rgba(45,91,255,0.25);
+}
+.btn-primary:hover { box-shadow: 0 4px 12px rgba(45,91,255,0.35); }
+
+/* --- 桌面宽屏：内容区加宽到1100px，大纲卡片双列 --- */
+@media (min-width: 1200px) {
+  .app-frame { max-width: 1200px; }
+  .shell { max-width: 100% !important; }
+  /* 大纲卡片桌面端双列 */
+  .home-hero { margin-bottom: 20px; }
+  /* 快捷入口桌面端6个一排已经在v2.6处理 */
+  /* 本周统计更醒目 */
+  .week-stat { font-size: 14px; padding: 12px 4px 4px; }
+}
+@media (min-width: 900px) and (max-width: 1199px) {
+  .shell { max-width: 960px; }
+}
+
+/* --- 深色模式hero调整 --- */
+[data-theme="dark"] .home-hero {
+  background: linear-gradient(135deg, #172554 0%, #1E40AF 50%, #1D4ED8 100%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .today-card::before {
+  background: linear-gradient(180deg, #5B7FFF, #A78BFA);
+}
+[data-theme="dark"] .btn-accent {
+  box-shadow: 0 2px 8px rgba(234,88,12,0.2);
+}
+
+/* --- 顶部导航更精致 --- */
+.topbar {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="dark"] .topbar {
+  background: rgba(15,17,21,0.8);
+}
+
+/* --- 底部tabbar精致化 --- */
+.tabbar {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.85);
+}
+[data-theme="dark"] .tabbar {
+  background: rgba(26,29,36,0.85);
+}
