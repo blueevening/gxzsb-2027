@@ -20,7 +20,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "联立解不等式组，注意边界开闭。",
             "写成区间或集合；实际问题再按题意限非负、整数等。"
           ],
-          example: "求 f(x)=frac{1}{x−2}+√x 的定义域。",
+          example: "求 f(x)=frac{1}{x-2}+√x 的定义域。",
           answer: "[0,2)∪(2,+∞)",
           warn: "只写一半条件；漏掉开闭区间括号；定义域写成 x≥0 且 x≠2 时忘了写「且」的集合形式。",
           examTip: "口诀：分母不为零，根号非负，真数为正，先列后解。",
@@ -57,7 +57,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "复合分解：y=f(u)，u=g(x)，从外到里标层，便于链式求导。"
           ],
           example: "求 y=2x+3 的反函数。",
-          answer: "y=frac{x−3}{2}。由 y=2x+3 得 x=frac{y−3}{2}，对调字母。",
+          answer: "y=frac{x-3}{2}。由 y=2x+3 得 x=frac{y-3}{2}，对调字母得反函数 y=frac{x-3}{2}。",
           warn: "反函数忘对调 x/y；单调函数才有反函数（严格单调）；复合函数拆层漏层。",
           examTip: "口诀：解出再对调；值域变定义域。图像关于直线 y=x 对称。",
           relatedFormula: "反函数与复合分解",
@@ -74,8 +74,8 @@ window.STUDY_DATA.LEARN_BOOK = {
             "若是 0/0：因式分解、有理化、等价无穷小。",
             "若是 ∞/∞：分子分母同除最高次幂，看系数比。"
           ],
-          example: "求 lim(x→∞) frac{2x²+1}{x²−3}。",
-          answer: "2。同除 x²：lim frac{2+frac{1}{x²}}{1−frac{3}{x²}} = frac{2}{1}=2。",
+          example: "求 lim(x→∞) frac{2x²+1}{x²-3}。",
+          answer: "2。同除 x²：lim (2+1/x²)/1−3/x² = 2/1=2。",
           warn: "∞/∞ 不要直接写 0 或 ∞；四则运算法则要求每个极限都存在；加减法不能乱用等价无穷小。",
           examTip: "口诀：未定式先变形；∞/∞ 看最高次系数比；0/0 先分解约分。",
           relatedFormula: "常用等价无穷小",
@@ -89,12 +89,12 @@ window.STUDY_DATA.LEARN_BOOK = {
           plain: "两个万能钥匙：三角比极限等于 1；(1+小量)^{大数} 趋向 e。考试几乎每年都变形考。",
           steps: [
             "看到 sin□/□ 且 □→0，写成 1，系数跟着角走。",
-            "看到 (1+a/x)^x，结果是 e^a；(1+x)^{frac{1}{x}}→e。",
+            "看到 (1+a/x)^x，结果是 e^a；(1+x)^{1/x}→e。",
             "综合题先变形成标准形再套，不要直接硬代。"
           ],
-          example: "求 lim(x→0) frac{sin 3x}{x}。",
-          answer: "3。写成 3·frac{sin 3x}{3x}→3×1=3。",
-          warn: "frac{0}{0} 不能直接写 1；角是 3x 就要除 3x；(1−frac{1}{x})^x→frac{1}{e} 不是 e。",
+          example: "求 lim(x→0) sin 3x/x。",
+          answer: "3。写成 3·sin 3x/3x→3×1=3。",
+          warn: "0/0 不能直接写 1；角是 3x 就要除 3x；(1−1/x)^x→1/e 不是 e。",
           examTip: "口诀：三角比同角相除是 1，系数跟角走；底 1 加小量，指数倒数凑。",
           relatedFormula: "重要极限（sin 型）",
           level: "基础",
@@ -106,12 +106,12 @@ window.STUDY_DATA.LEARN_BOOK = {
           outline: "无穷小阶的比较与等价代换",
           plain: "等价无穷小=「个头几乎一样小」，乘除里可以直接换。比较阶就是看谁趋于 0 更快。",
           steps: [
-            "背熟：x→0 时 sinx~x，tanx~x，1−cosx~frac{x²}{2}，eˣ−1~x，ln(1+x)~x。",
+            "背熟：x→0 时 sinx~x，tanx~x，1−cosx~x²/2，eˣ−1~x，ln(1+x)~x。",
             "乘除因式中直接替换；加减先通分或提取公因子。",
-            "比较：算 lim frac{α}{β}，得 0 则 α 高阶，∞ 则 α 低阶，非 0 常数则同阶。"
+            "比较：算 lim α/β，得 0 则 α 高阶，∞ 则 α 低阶，非 0 常数则同阶。"
           ],
-          example: "求 lim(x→0) frac{1−cos 2x}{x²}。",
-          answer: "2。1−cos2x~frac{(2x)²}{2}=2x²，故极限为 2。",
+          example: "求 lim(x→0) 1−cos 2x/x²。",
+          answer: "2。1−cos2x~(2x)²/2=2x²，故极限为 2。",
           warn: "加减式乱替换；把 1−cosx 记成 ~x；等价只在 x→0 附近成立。",
           examTip: "口诀：乘除随便换，加减先变形；1−cos 要带平方一半。",
           relatedFormula: "常用等价无穷小",
@@ -128,7 +128,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "算 lim(x→a) f(x) 是否存在（左右是否相等）。",
             "比较极限与函数值：相等则连续；否则间断，再按类型分类。"
           ],
-          example: "讨论 f(x)=frac{x²−1}{x−1} 在 x=1 处的连续性。",
+          example: "讨论 f(x)=x²−1/x−1 在 x=1 处的连续性。",
           answer: "可去间断点。极限为 2，但 f(1) 无定义；补上 f(1)=2 即连续。",
           warn: "把可去间断说成连续；分母为 0 就断定第二类；忽略左右极限。",
           examTip: "口诀：一有、二存、三相等才连续。可去=极限在；跳跃=左右不等；无穷/振荡=第二类。",
@@ -166,9 +166,9 @@ window.STUDY_DATA.LEARN_BOOK = {
           outline: "导数定义与可导连续关系；切线与法线方程",
           plain: "导数就是瞬时变化率，几何上是切线斜率。可导必连续，连续不一定可导（如 y=|x| 在 0 处）。",
           steps: [
-            "用定义：f′(x₀)=lim(Δx→0) frac{f(x₀+Δx)−f(x₀)}{Δx}。",
+            "用定义：f′(x₀)=lim(Δx→0) (f(x₀+Δx)−f(x₀))/Δx。",
             "切线方程：y−y₀=f′(x₀)(x−x₀)。",
-            "法线斜率是 −frac{1}{f′(x₀)}（f′≠0），再写点斜式。"
+            "法线斜率是 −1/f′(x₀)（f′≠0），再写点斜式。"
           ],
           example: "求 y=x² 在点 (1,1) 处的切线方程。",
           answer: "y′=2x，k=2。切线：y−1=2(x−1)，即 y=2x−1。",
@@ -184,9 +184,9 @@ window.STUDY_DATA.LEARN_BOOK = {
           outline: "基本求导公式、四则运算",
           plain: "先背公式表，再套加减乘除法则。乘积不是各导相乘，商的分母要平方。",
           steps: [
-            "背熟：(xⁿ)′=nxⁿ⁻¹，(sinx)′=cosx，(cosx)′=−sinx，(eˣ)′=eˣ，(lnx)′=frac{1}{x}。",
+            "背熟：(xⁿ)′=nxⁿ⁻¹，(sinx)′=cosx，(cosx)′=−sinx，(eˣ)′=eˣ，(lnx)′=1/x。",
             "乘积：(uv)′=u′v+uv′。",
-            "商：(frac{u}{v})′=frac{u′v−uv′}{v²}。"
+            "商：(u/v)′=u′v−uv′/v²。"
           ],
           example: "求 y=x²·sin x 的导数。",
           answer: "y′=2x sin x + x² cos x。",
@@ -225,8 +225,8 @@ window.STUDY_DATA.LEARN_BOOK = {
             "对数求导：两边 ln，再求导，适合 y=u(x)^{v(x)}。"
           ],
           example: "由 x²+y²=25 求 y′。",
-          answer: "两边求导：2x+2y y′=0 ⇒ y′=−frac{x}{y}。",
-          warn: "对 y 求导时忘记链出 y′；对数求导忘掉定义域 x>0；参数方程漏乘 frac{dy}{dx}=frac{y′(t)}{x′(t)}。",
+          answer: "两边求导：2x+2y y′=0 ⇒ y′=−x/y。",
+          warn: "对 y 求导时忘记链出 y′；对数求导忘掉定义域 x>0；参数方程漏乘 dy/dx=y′(t)/x′(t)。",
           examTip: "口诀：隐函数两边导，y′ 当未知数解；幂指函数先取 ln。",
           relatedFormula: "隐函数求导",
           level: "强化",
@@ -264,10 +264,10 @@ window.STUDY_DATA.LEARN_BOOK = {
           steps: [
             "洛必达：判型为 0/0 或 ∞/∞，分子分母分别求导再取极限。",
             "罗尔：闭连、开可、端点相等 ⇒ 存在 f′(ξ)=0。",
-            "拉格朗日：f′(ξ)=frac{f(b)−f(a)}{b−a}，证明不等式常用。"
+            "拉格朗日：f′(ξ)=f(b)−f(a)/b−a，证明不等式常用。"
           ],
-          example: "求 lim(x→0) frac{eˣ−1}{sin x}。",
-          answer: "0/0 型，洛必达：lim frac{eˣ}{cos x}=frac{1}{1}=1。",
+          example: "求 lim(x→0) eˣ−1/sin x。",
+          answer: "0/0 型，洛必达：lim eˣ/cos x=1/1=1。",
           warn: "不是未定式就乱用洛必达；用后更复杂要换法；忽略中值定理条件（连续可导）。",
           examTip: "口诀：0/0、∞/∞ 才洛必达；用一次判一次。罗尔证零点，拉氏证不等式。",
           relatedFormula: "洛必达法则",
@@ -340,8 +340,8 @@ window.STUDY_DATA.LEARN_BOOK = {
           outline: "原函数与不定积分概念；基本积分公式",
           plain: "积分是求导的逆运算。不定积分是一族原函数，结果必须加 +C。",
           steps: [
-            "对照导数公式反写：∫xⁿdx=frac{xⁿ⁺¹}{n+1}+C（n≠−1）。",
-            "∫frac{1}{x}dx=ln|x|+C；∫eˣdx=eˣ+C。",
+            "对照导数公式反写：∫xⁿdx=xⁿ⁺¹/(n+1)+C（n≠−1）。",
+            "∫1/xdx=ln|x|+C；∫eˣdx=eˣ+C。",
             "∫cosx dx=sinx+C；∫sinx dx=−cosx+C。"
           ],
           example: "求 ∫(3x²+2x)dx。",
@@ -378,10 +378,10 @@ window.STUDY_DATA.LEARN_BOOK = {
           steps: [
             "先求原函数 F(x)。",
             "代入：∫ₐᵇf(x)dx=F(b)−F(a)。",
-            "变上限：frac{d}{dx}∫ₐˣf(t)dt=f(x)；若上限是 g(x)，则等于 f(g(x))·g′(x)。"
+            "变上限：d/dx∫ₐˣf(t)dt=f(x)；若上限是 g(x)，则等于 f(g(x))·g′(x)。"
           ],
           example: "求 ∫₀² x²dx。",
-          answer: "F=frac{x³}{3}，∫₀²x²dx=frac{8}{3}−0=frac{8}{3}。",
+          answer: "F=x³/3，∫₀²x²dx=8/3−0=8/3。",
           warn: "忘减 F(a)；被积含 x 时未提出；广义积分忘写极限过程。",
           examTip: "口诀：牛顿-莱布尼茨，先原后代再相减；变上限求导，代上限乘上限′。",
           relatedFormula: "牛顿—莱布尼茨公式",
@@ -400,7 +400,7 @@ window.STUDY_DATA.LEARN_BOOK = {
             "弧长：y=f(x) 时 s=∫ₐᵇ √(1+[f′(x)]²)dx；参数方程 s=∫√(φ′²+ψ′²)dt。"
           ],
           example: "求 y=x² 与 y=0、x=1 围成面积。",
-          answer: "A=∫₀¹ x²dx=frac{1}{3}。",
+          answer: "A=∫₀¹ x²dx=1/3。",
           warn: "上下线搞反导致负面积；忘了平方配 π；限是交点不是随便取 0、1；弧长根号里别漏 1。",
           examTip: "口诀：面积上减下，体积 πy²，弧长根号下 1 加 y′²。两曲线围成时先解交点。",
           relatedFormula: "定积分求面积与弧长",
@@ -441,8 +441,8 @@ window.STUDY_DATA.LEARN_BOOK = {
             "两边积分，只写一个 +C。",
             "必要时解出 y，或由初值定 C。"
           ],
-          example: "解 frac{dy}{dx}=2xy。",
-          answer: "分离：frac{dy}{y}=2x dx。积分 ln|y|=x²+C₁，y=C e^{x²}。",
+          example: "解 dy/dx=2xy。",
+          answer: "分离：dy/y=2x dx。积分 ln|y|=x²+C₁，y=C e^{x²}。",
           warn: "分离时漏掉符号/系数；两边积分写两个 C；除 y 时忽略 y=0 特解。",
           examTip: "口诀：先分离后积分；y 与 x 各居一边。能乘开就先乘开再分。",
           relatedFormula: "一阶线性微分方程",
@@ -995,14 +995,14 @@ window.STUDY_DATA.LEARN_BOOK = {
           id: "LB-EE-05",
           name: "欧姆定律与全电路",
           outline: "直流电路基本定律",
-          plain: "部分电路 U=IR；全电路 I=frac{E}{R+r}。电源内阻会分压。",
+          plain: "部分电路 U=IR；全电路 I=E/(R+r)。电源内阻会分压。",
           steps: [
             "标出 U、I、R 及方向。",
-            "部分电路直接 I=U/R；含内阻用 I=frac{E}{R+r}。",
+            "部分电路直接 I=U/R；含内阻用 I=E/(R+r)。",
             "检查单位与符号，必要时分段计算再叠加。"
           ],
           example: "E=12V，r=1Ω，R=5Ω，求电流。",
-          answer: "I=frac{E}{R+r}=frac{12}{6}=2A。",
+          answer: "I=E/(R+r)=12/6=2A。",
           warn: "忽略内阻；U=IR 中 U 是电阻两端电压不是电动势；开路时 I=0 但 U=E。",
           examTip: "口诀：U=IR；全电路除以 R+r。开路压等于 E，短路流等于 E/r。",
           relatedFormula: "全电路欧姆定律",
@@ -1033,12 +1033,12 @@ window.STUDY_DATA.LEARN_BOOK = {
           outline: "电阻串并联分析",
           plain: "串联分压：电压与电阻成正比；并联分流：电流与电导成正比。",
           steps: [
-            "串联 R=R₁+R₂，U₁=frac{R₁}{R₁+R₂}U。",
-            "并联 frac{1}{R}=frac{1}{R₁}+frac{1}{R₂}，I₁=frac{R₂}{R₁+R₂}I。",
+            "串联 R=R₁+R₂，U₁=R₁/(R₁+R₂)U。",
+            "并联 1/R=1/R₁+1/R₂，I₁=R₂/(R₁+R₂)I。",
             "混联先局部等效，逐步化简。"
           ],
           example: "R₁=2Ω 与 R₂=3Ω 串联接 10V，求 R₁ 电压。",
-          answer: "U₁=frac{2}{5}×10=4V。",
+          answer: "U₁=2/5×10=4V。",
           warn: "并联公式误写成 R=R₁+R₂；分压分流公式分子写反；忽略电流相等。",
           examTip: "口诀：串分压比分阻，并分流比分导。",
           relatedFormula: "串联电阻与分压",
@@ -1071,10 +1071,10 @@ window.STUDY_DATA.LEARN_BOOK = {
           steps: [
             "断开负载，求开路电压 U_oc。",
             "独立源置零（压短流开），求等效内阻 R_eq。",
-            "接回负载：I=frac{U_oc}{R_eq+R_L}。"
+            "接回负载：I=U_oc/(R_eq+R_L)。"
           ],
           example: "开路 12V，内阻 4Ω，接 8Ω 负载，求 I。",
-          answer: "I=frac{12}{4+8}=1A。",
+          answer: "I=12/(4+8)=1A。",
           warn: "求 R_eq 时忘记置零独立源；开路电压方向反；受控源处理错误。",
           examTip: "口诀：先开路电压，后等效电阻，再接负载。负载匹配 R_L=R_eq 时功率最大。",
           relatedFormula: "戴维南定理",
@@ -1094,8 +1094,8 @@ window.STUDY_DATA.LEARN_BOOK = {
           plain: "最大值、角频率、初相位合称三要素。有效值=最大值/√2。",
           steps: [
             "由波形或表达式读出 U_m、ω、φ。",
-            "有效值 U=frac{U_m}{√2}≈0.707 U_m。",
-            "频率 f=frac{ω}{2π}，周期 T=1/f。"
+            "有效值 U=U_m/√2≈0.707 U_m。",
+            "频率 f=ω/2π，周期 T=1/f。"
           ],
           example: "u=311 sin(314t+30°) V，求有效值与频率。",
           answer: "U=311/√2≈220V；ω=314=2πf ⇒ f=50Hz。",
@@ -1109,14 +1109,14 @@ window.STUDY_DATA.LEARN_BOOK = {
           id: "LB-EE-11",
           name: "电容电感与容抗感抗",
           outline: "电容/电感伏安关系；容抗感抗概念",
-          plain: "电容通交隔直，X_C=frac{1}{ωC}；电感通直阻交，X_L=ωL。频率越高容抗越小、感抗越大。",
+          plain: "电容通交隔直，X_C=1/ωC；电感通直阻交，X_L=ωL。频率越高容抗越小、感抗越大。",
           steps: [
-            "写出 X_L=2πfL，X_C=frac{1}{2πfC}。",
+            "写出 X_L=2πfL，X_C=1/2πfC。",
             "纯电容：电压滞后电流 90°；纯电感：电压超前电流 90°。",
             "计算 I=U/X，注意用有效值。"
           ],
           example: "f=50Hz，C=100μF，求 X_C。",
-          answer: "X_C=frac{1}{2π×50×100×10^{−6}}≈31.8Ω。",
+          answer: "X_C=1/(2π×50×100×10^{-6})≈31.8Ω。",
           warn: "μF 忘换算；电容电感相位关系记反；直流稳态电容开路、电感短路。",
           examTip: "口诀：感超容滞；直流稳态电容断、电感通。",
           relatedFormula: "电容与电感基本特性",
@@ -1130,8 +1130,8 @@ window.STUDY_DATA.LEARN_BOOK = {
           plain: "阻抗 Z=R+jX，把电阻电抗合成一个复数「电阻」。U=IZ 仍成立（相量意义下）。",
           steps: [
             "写 Z=R+j(X_L−X_C)。",
-            "阻抗模 |Z|=√(R²+X²)，相角 φ=arctan(frac{X}{R})。",
-            "I=frac{U}{|Z|}，功率因数 cos φ=frac{R}{|Z|}。"
+            "阻抗模 |Z|=√(R²+X²)，相角 φ=arctan(X/R)。",
+            "I=U/|Z|，功率因数 cos φ=R/|Z|。"
           ],
           example: "R=3Ω，X_L=4Ω，X_C=0，求 |Z|。",
           answer: "|Z|=√(3²+4²)=5Ω。",
@@ -1172,7 +1172,7 @@ window.STUDY_DATA.LEARN_BOOK = {
           plain: "电感电流不能突变。换路瞬间 i_L 连续，u_L 可突变。τ=L/R。",
           steps: [
             "换路定律：i_L(0⁺)=i_L(0⁻)。",
-            "时间常数 τ=frac{L}{R}。",
+            "时间常数 τ=L/R。",
             "电流按指数变化：i=I(1−e^{−t/τ})（接通）或 i=I_0 e^{−t/τ}（断开）。"
           ],
           example: "L=2H，R=10Ω，求 τ。",
@@ -1255,7 +1255,7 @@ window.STUDY_DATA.LEARN_BOOK = {
           outline: "共发射极/共集电极放大电路分析",
           plain: "共射：电压放大倍数大、输出反相；共集（射极输出器）：电压放大倍数约 1，输入电阻大，带负载强。",
           steps: [
-            "共射：A_u≈−frac{β R_C}{r_{be}}，输出与输入反相。",
+            "共射：A_u≈−(β·R_C)/r_be，输出与输入反相。",
             "共集：A_u≈1，同相，常作输入/输出级。",
             "静态工作点 Q 要合适，避免饱和截止失真。"
           ],
@@ -1280,11 +1280,11 @@ window.STUDY_DATA.LEARN_BOOK = {
           plain: "理想运放：虚短（U₊=U₋）、虚断（输入电流为 0）。反相放大有负号，同相没有。",
           steps: [
             "用虚短虚断列方程。",
-            "反相：u_o=−frac{R_f}{R_1}u_i；同相：u_o=(1+frac{R_f}{R_1})u_i。",
+            "反相：u_o=−R_f/R_1u_i；同相：u_o=(1+R_f/R_1)u_i。",
             "加法/减法按叠加原理写输出表达式。"
           ],
           example: "反相放大 R1=2kΩ，Rf=10kΩ，求电压放大倍数。",
-          answer: "A_u=−frac{R_f}{R_1}=−5。",
+          answer: "A_u=−R_f/R_1=−5。",
           warn: "反相漏负号；同相多写了负号；虚短条件（线性区）不成立仍用。",
           examTip: "口诀：反相带负号，同相加一；虚短虚断先写上。",
           relatedFormula: "运算放大器（反相放大）",
@@ -1323,7 +1323,7 @@ window.STUDY_DATA.LEARN_BOOK = {
           steps: [
             "写真值表验证基本公式。",
             "化简：A+AB=A；A+ĀB=A+B；(A+B)(A+C)=A+BC。",
-            "德摩根：overline{A+B}=Ā·B̄，overline{A·B}=Ā+B̄。"
+            "德摩根：¬(A+B)=Ā·B̄，¬(A·B)=Ā+B̄。"
           ],
           example: "化简 A+ĀB。",
           answer: "A+B。因为 A+ĀB=(A+Ā)(A+B)=A+B。",
