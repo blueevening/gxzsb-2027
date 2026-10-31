@@ -1491,24 +1491,37 @@
     const chip = (kind, val, label) =>
       `<button class="chip ${f[kind].includes(val) ? "is-active" : ""}" data-act="filter" data-kind="${kind}" data-val="${attr(val)}" type="button">${label}</button>`;
 
+    // 筛选分组
+    const diffChips = ["基础", "强化", "冲刺"].filter((d) => qOf.some((q) => q.difficultyLabel === d)).map((d) => chip("diff", d, d)).join("");
+    const typeChips = (name === "英语" ? ["单选", "判断", "阅读", "阅读填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("");
+    const statusChips = ["未做", "做错", "收藏"].map((s) => chip("status", s, s)).join("");
+    const kindChips = ["客观题", "主观题"].map((k) => chip("kind", k, k)).join("");
+
     return `
-      <div class="card">
-        <div class="row-between">
-          <strong>${esc(name)} · ${m.score}分</strong>
-          <span class="muted" style="font-size:12px">${p.total} 题 · 已练 ${p.done} · ${p.acc == null ? "—" : p.acc + "%"}</span>
+      <div class="card" style="padding:16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:20px;font-weight:700">${esc(name)}</div>
+          <div class="muted" style="font-size:12px;margin-top:2px">${m.score}分 · ${p.total}题</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:24px;font-weight:700;color:var(--primary)">${p.done}<span style="font-size:12px;color:var(--text-sub)">/${p.total}</span></div>
+          <div class="muted" style="font-size:11px">已练 · ${p.acc == null ? "—" : p.acc + "%"}正确率</div>
         </div>
       </div>
 
-      <div class="section-title">筛选</div>
-      <div class="chip-row">
-        ${["基础", "强化", "冲刺"].filter((d) => qOf.some((q) => q.difficultyLabel === d)).map((d) => chip("diff", d, d)).join("")}
-        ${(name === "英语" ? ["单选", "判断", "阅读", "阅读填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("")}
-        ${["未做", "做错", "收藏"].map((s) => chip("status", s, s)).join("")}
-        ${["客观题", "主观题"].map((k) => chip("kind", k, k)).join("")}
+      <div class="card" style="padding:12px 16px">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">难度</div>
+        <div class="chip-row" style="margin-bottom:12px">${diffChips}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">题型</div>
+        <div class="chip-row" style="margin-bottom:12px">${typeChips}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">状态</div>
+        <div class="chip-row" style="margin-bottom:12px">${statusChips}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">类型</div>
+        <div class="chip-row">${kindChips}</div>
+        <p class="muted" style="font-size:12px;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--border)">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → <b>${filtered.length}</b> 题</p>
       </div>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → ${filtered.length} 题</p>
 
-      <div class="section-title">章节</div>
+      <div class="section-title">章节练习</div>
       ${
         qOf.length === 0
           ? (bankError
@@ -1527,13 +1540,14 @@
           chs.length
             ? chs
                 .map(
-                  (c) => `<button class="list-row" data-act="chapter" data-id="${attr(c.id)}" type="button">
-                    <span class="dot" style="background:${m.color}"></span>
+                  (c) => `<button class="list-row" data-act="chapter" data-id="${attr(c.id)}" type="button" style="padding:14px 16px">
+                    <span class="dot" style="background:${m.color};flex-shrink:0"></span>
                     <span class="main">
-                      <span class="t">${esc(c.title)}</span>
-                      <span class="s">${c.count} 题 · ${c.done}/${c.count} · 正确率 ${c.acc == null ? "—" : c.acc + "%"}</span>
+                      <span class="t" style="font-size:14px;font-weight:600">${esc(c.title)}</span>
+                      <span class="s" style="font-size:11px;margin-top:4px;display:block">${c.count}题 · 已练${c.done}/${c.count} · ${c.acc == null ? "—" : c.acc + "%"}</span>
+                      <span style="display:block;height:3px;background:var(--panel);border-radius:2px;margin-top:6px;overflow:hidden"><span style="display:block;height:100%;width:${c.count ? (c.done/c.count*100) : 0}%;background:${m.color};border-radius:2px"></span></span>
                     </span>
-                    <span class="end">›</span>
+                    <span class="end" style="flex-shrink:0">›</span>
                   </button>`
                 )
                 .join("")
@@ -1542,15 +1556,15 @@
       </div>`
       }
 
-      <div style="margin-top:16px">
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
         ${
           qOf.length === 0
             ? '<div class="muted" style="font-size:12px;text-align:center;padding:8px 0">题库加载完成后即可开始练习</div>'
-            : `<div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-primary btn-block" data-act="seq-practice" data-name="${attr(name)}" type="button">开始顺序练习</button>
-        <button class="btn btn-ghost btn-block" data-act="seq-obj" data-name="${attr(name)}" type="button">只练客观题</button>
-        <button class="btn btn-ghost btn-block" data-act="seq-subj" data-name="${attr(name)}" type="button">只练主观题</button>
-      </div>`
+            : `<button class="btn btn-primary btn-block" data-act="seq-practice" data-name="${attr(name)}" type="button" style="height:48px;font-size:15px;font-weight:600">▶ 开始顺序练习（${filtered.length}题）</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" data-act="seq-obj" data-name="${attr(name)}" type="button" style="flex:1">客观题</button>
+          <button class="btn btn-ghost" data-act="seq-subj" data-name="${attr(name)}" type="button" style="flex:1">主观题</button>
+        </div>`
         }
       </div>
 
