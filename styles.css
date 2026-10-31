@@ -2606,3 +2606,19 @@ button, .btn { min-height: 44px; }
 @media (min-width: 900px) and (max-width: 1199px) {
   .wb-mode-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* SVG 深色模式适配：带图题在深色模式下线条变浅 */
+[data-theme="dark"] svg line,
+[data-theme="dark"] svg path,
+[data-theme="dark"] svg polyline,
+[data-theme="dark"] svg polygon {
+  stroke: #C8CCE0 !important;
+}
+[data-theme="dark"] svg text {
+  fill: #C8CCE0 !important;
+}
+[data-theme="dark"] svg rect,
+[data-theme="dark"] svg circle,
+[data-theme="dark"] svg ellipse {
+  stroke: #C8CCE0 !important;
+}

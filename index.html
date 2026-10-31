@@ -15,18 +15,26 @@
 <meta name="apple-mobile-web-app-title" content="专升本">
 <link rel="icon" href="data:,">
 <script>
-/* v2.9.1：立即清除所有旧SW和旧缓存，防止旧SW拦截新文件 */
+/* v2.10.0：清旧SW缓存后重新注册新SW，支持离线刷题 */
 (function () {
   try {
     if ('serviceWorker' in navigator) {
+      // 先清旧SW和旧缓存
       navigator.serviceWorker.getRegistrations().then(function (regs) {
+        var needClean = regs.length > 0;
         regs.forEach(function (r) { r.unregister(); });
-      }).catch(function () {});
-    }
-    if (window.caches) {
-      caches.keys().then(function (keys) {
-        keys.forEach(function (k) { caches.delete(k); });
-      }).catch(function () {});
+        if (window.caches) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (k) { caches.delete(k); });
+          });
+        }
+        // 清完后延迟注册新SW
+        setTimeout(function () {
+          navigator.serviceWorker.register('sw.js').catch(function () {});
+        }, 800);
+      }).catch(function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
     }
   } catch (e) {}
   /* 应用主题 */
