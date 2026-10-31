@@ -1235,7 +1235,7 @@
 
       <!-- 今日任务 -->
       <section class="home-today">
-        <div class="section-title">今日任务 <span class="muted" style="font-weight:400;font-size:12px">锁定 30 题 · 只计这 30 题</span></div>
+        <div class="section-title">今日任务</div>
         <div class="today-card">
           <div class="today-main">
             <div class="today-label">今日已完成</div>
@@ -3543,7 +3543,7 @@ function ensureExplain(q) {
         '<div style="width:70%;border-radius:4px 4px 0 0;background:var(--primary);opacity:' + (0.35 + 0.65 * x.t / max) + ';height:' + h + '%"></div>' +
         '<div style="font-size:10px;color:var(--text-sub);margin-top:3px">' + x.label + '</div></div>';
     }).join("");
-    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题 <span style="font-weight:400;color:var(--text-sub);font-size:11px">柱=做题量 · 数字后=正确率 · 共 ' + total + ' 题</span></div>' +
+    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题</div>' +
       '<div style="display:flex;align-items:flex-end;gap:4px;height:118px">' + bars + '</div></div>';
   }
 
