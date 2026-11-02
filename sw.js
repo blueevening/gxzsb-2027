@@ -1,6 +1,7 @@
-/* gxzsb sw v65 — 双缓存策略：静态资源永久缓存(秒开、更新不重下)，index.html 网络优先拿最新版 */
-const CACHE = "gxzsb-appshell-2.5.3";   // 版本化：只存 index.html，版本一变才换
-const STATIC = "gxzsb-static-v1";        // 固定名：题库/JS/CSS 永久缓存，更新版本不清空它
+/* gxzsb sw v2.11.0 — 双缓存策略：静态资源按版本缓存(秒开、版本更新自动换)，index.html 网络优先拿最新版 */
+const VERSION = "2.11.0";
+const CACHE = "gxzsb-appshell-" + VERSION;   // 版本化：只存 index.html
+const STATIC = "gxzsb-static-" + VERSION;    // 版本化：题库/JS/CSS，版本一变自动清旧
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {
@@ -8,9 +9,10 @@ self.addEventListener("activate", (e) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((k) => {
-          // 只删旧版本的 appshell 缓存，保留 static 永久缓存
+          // 清掉所有旧版本缓存（appshell + static），只保留当前版本
           if (k === CACHE || k === STATIC) return null;
           if (k.indexOf("gxzsb-appshell-") === 0) return caches.delete(k);
+          if (k.indexOf("gxzsb-static-") === 0) return caches.delete(k);
           return null;
         })
       )

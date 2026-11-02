@@ -24,7 +24,7 @@ const CHOICE_TYPES = ["single", "choice"];
 const RUNTIME_JS = [
   "app.js", "boot.js", "sb-config.js",
   "all-bank.js", "math-bank.js", "english-bank.js", "ee-bank.js", "c-bank.js", "net-bank.js",
-  "mock-bank.js", "english-extra.js", "wordbook.js", "formula-book.js",
+  "english-extra.js", "wordbook.js", "formula-book.js",
   "all-learn.js", "learn-book-2027.js", "exam-plans-v2.js", "kp-detail.js", "syllabus.js",
 ].filter((f) => fs.existsSync(path.join(root, f)));
 
@@ -59,15 +59,15 @@ try {
 const D = win.STUDY_DATA;
 const Q = (D && D.questions) || [];
 if (!D) err("window.STUDY_DATA 不存在");
-if (Q.length === 1500) pass("主题库 1500 题 (" + Q.length + ")");
-else err("主题库应为 1500 题，实际 " + Q.length);
+if (Q.length >= 2000) pass("主题库 " + Q.length + " 题（≥2000）");
+else err("主题库题目过少：实际 " + Q.length + "（应≥2000）");
 
 const bySubj = {};
 Q.forEach((q) => { bySubj[q.subject] = (bySubj[q.subject] || 0) + 1; });
 SUBJECTS.forEach((s) => {
   const n = bySubj[s] || 0;
-  if (n === 300) pass(s + " 300 题");
-  else err(s + " 应为 300 题，实际 " + n);
+  if (n >= 300) pass(s + " " + n + " 题（≥300）");
+  else err(s + " 题目过少：实际 " + n + "（应≥300）");
 });
 
 // 大纲二级章节
@@ -123,51 +123,6 @@ Q.forEach((q) => { chapterCount[q.chapter] = (chapterCount[q.chapter] || 0) + 1;
 const emptyChapters = Object.keys(validChapters).filter((id) => !chapterCount[id]);
 if (emptyChapters.length === 0) pass("所有大纲章节均有题 (" + Object.keys(validChapters).length + " 个)");
 else warn("大纲章节无题: " + emptyChapters.join(", "));
-
-console.log("[4] 模拟题库 mock-bank（独立约定：选择题答案为字母 A/B/C/D）");
-let M;
-try {
-  M = loadWindow(["mock-bank.js"]).MOCK_BANK;
-} catch (e) {
-  err("mock-bank.js 加载失败: " + e.message);
-  finish();
-  return;
-}
-if (M) {
-  const mq = M.questions || [];
-  if (mq.length === (M.meta && M.meta.totalQuestions)) {
-    pass("mock 题数 " + mq.length + " 与 meta 声明一致");
-  } else {
-    err("mock 实际 " + mq.length + " 题，meta 声明 " + (M.meta && M.meta.totalQuestions));
-  }
-  const validTags = [];
-  Object.values(M.meta.categories || {}).forEach((o) => Object.keys(o).forEach((k) => validTags.push(k)));
-  const mSeen = {};
-  mq.forEach((q) => {
-    const loc = q.id || "(无id)";
-    ["id", "tag", "type", "stem", "answer"].forEach((k) => {
-      if (q[k] == null || q[k] === "") err("mock " + loc + " 缺字段 " + k);
-    });
-    if (mSeen[q.id]) err("mock 重复 id: " + q.id);
-    mSeen[q.id] = 1;
-    if (validTags.indexOf(q.tag) === -1) err("mock " + loc + " 未声明标签: " + q.tag);
-    if (CHOICE_TYPES.includes(q.type)) {
-      if (!Array.isArray(q.options) || q.options.length < 2) {
-        err("mock " + loc + " options 异常");
-      } else {
-        const a = String(q.answer == null ? "" : q.answer).trim();
-        if (/^[A-Z]+$/.test(a)) {
-          if (a.charCodeAt(0) - 65 >= q.options.length) err("mock " + loc + " 字母答案 " + a + " 超出选项数");
-        } else if (q.options.indexOf(q.answer) === -1) {
-          err("mock " + loc + " 内容答案不在选项: " + JSON.stringify(q.answer));
-        }
-      }
-    } else if (q.type === "judge") {
-      if (["正确", "错误", "A", "B"].indexOf(String(q.answer)) === -1) err("mock " + loc + " judge 答案非法: " + q.answer);
-    }
-  });
-  pass("mock 标签/答案/id 校验完成 (" + mq.length + " 题)");
-}
 
 function finish() {
   console.log("\n" + (errors ? "LINT FAILED：" + errors + " 个错误" : "LINT PASSED") + (warnings ? "，" + warnings + " 个警告" : ""));

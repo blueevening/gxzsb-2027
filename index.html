@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>广西专升本练习 · gxzsb</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -15,8 +15,14 @@
 <meta name="apple-mobile-web-app-title" content="专升本">
 <link rel="icon" href="data:,">
 <script>
-/* 首帧即应用持久化主题，避免深色用户加载页闪白 */
+/* v2.11.0：正常注册 SW，版本由 sw.js 内部管理（activate 时自动清旧缓存） */
 (function () {
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+  } catch (e) {}
+  /* 应用主题 */
   try { if (localStorage.getItem("gxzsb.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
 })();
 </script>
@@ -42,11 +48,11 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
 [data-theme="dark"] .skeleton{background:#2A2D38}
 @keyframes gxzsbPulse{0%,100%{opacity:1}50%{opacity:.5}}
 @media(min-width:1200px){
-  .shell{padding:24px 32px}
+  .shell{padding:24px 32px;max-width:100%;margin:0}
   .tabbar{display:none}
 }
 </style>
-<link rel="stylesheet" href="styles.css?v=2.8.1">
+<link rel="stylesheet" href="styles.css?v=2.10.0">
 </head>
 <body>
   <div id="offlineBar" hidden>📡 离线模式 · 数据存本地，联网后自动同步</div>
@@ -95,20 +101,7 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
   window.addEventListener('offline', sync);
   sync();
 })();
-/* SW：仅在 http(s) 下注册（file:// 双击打开时跳过，不影响使用） */
-if ('serviceWorker' in navigator &&
-    (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () {});
-    // 后台静默预载题库（进 app 后自动缓存，不打扰用户）
-    setTimeout(function () {
-      ['math-bank.js','english-bank.js','ee-bank.js','c-bank.js','net-bank.js','wordbook.js','formula-book.js'].forEach(function (f) {
-        fetch(f + '?v=auto', { cache: 'force-cache' }).catch(function () {});
-      });
-    }, 3000);
-  });
-}
 </script>
-<script defer src="boot.js?v=2.8.1"></script>
+<script defer src="boot.js?v=2.10.0"></script>
 </body>
 </html>

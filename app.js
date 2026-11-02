@@ -23,11 +23,17 @@
   }
 
   var sb = null;
-  if (window.supabase && window.SB_CONFIG) {
-    try {
-      sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key);
-    } catch(e) {}
+  function initSb() {
+    if (window.supabase && window.SB_CONFIG) {
+      try {
+        sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key);
+      } catch(e) {}
+    }
   }
+  initSb();
+  /* supabase SDK 后台异步加载完成后重建 sb（boot.js 先注入 app.js，后加载 SDK） */
+  window.addEventListener("gxzsb:sb-ready", function () { initSb(); });
+  window.addEventListener("gxzsb:sb-unavailable", function () { /* 静默降级为本地模式 */ });
 
   /* 题库快照：app.js 先于数据就绪注入（登录页不依赖数据），
      数据后台静默加载完成后由 gxzsb:data-ready 重建 */
@@ -237,6 +243,12 @@
     const i = s.lastIndexOf(".");
     return i >= 0 && i < s.length - 1 ? s.slice(i + 1).toLowerCase() : "";
   }
+  /* 答案归一化：trim + 折叠全角空格 + 统一半角，避免因空格差异误判 */
+  function normAns(s) {
+    if (s == null) return "";
+    return String(s).replace(/　/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function ansEqual(a, b) { return normAns(a) === normAns(b); }
   /* __QA_PURE_END__ */
 
   /* 主题持久化：主 key 异常时读备份 key */
@@ -1082,7 +1094,7 @@
         `<button class="tab-item ${state.route === n.id || (n.id === "bank" && state.route === "subject") || (n.id === "words" && (state.route === "word-learn" || state.route === "word-review" || state.route === "word-list")) ? "is-active" : ""}" data-nav="${n.id}" type="button"><span class="ico">${n.ico}</span><span>${n.label}</span></button>`
     ).join("");
     $("#tabbar").innerHTML = tabHtml;
-    $("#sideNav").innerHTML = html;
+    $("#sideNav").innerHTML = tabHtml;  /* 桌面侧边栏也用和手机底部一致的核心按钮 */
     document.querySelectorAll("[data-nav]").forEach((b) =>
       b.addEventListener("click", () => go(b.getAttribute("data-nav")))
     );
@@ -1235,7 +1247,7 @@
 
       <!-- 今日任务 -->
       <section class="home-today">
-        <div class="section-title">今日任务 <span class="muted" style="font-weight:400;font-size:12px">锁定 30 题 · 只计这 30 题</span></div>
+        <div class="section-title">今日任务</div>
         <div class="today-card">
           <div class="today-main">
             <div class="today-label">今日已完成</div>
@@ -1404,9 +1416,9 @@
     ];
     return (
       '<div class="card" style="display:flex;text-align:center;padding:16px;margin-bottom:16px">' +
-      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
-      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">已练习</div></div>' +
-      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">正确率</div></div>' +
+      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">📚 总题数</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">✅ 已练习</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">🎯 正确率</div></div>' +
       '</div>' +
       groups.map(function (g) {
         return (
@@ -1415,14 +1427,17 @@
             const p = subjStat(n);
             const m = subjOf(n);
             return (
-              '<button class="bank-subject ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%">' +
+              '<button class="bank-subject hoverable ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%;background:var(--card);border:1px solid var(--border);transition:all .2s ease">' +
               '<div style="width:40px;height:40px;border-radius:10px;background:' + (m.color || "#2563EB") + '20;color:' + (m.color || "#2563EB") + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">' + esc(m.short[0]) + '</div>' +
               '<div style="flex:1;min-width:0">' +
               '<div style="font-size:15px;font-weight:600">' + esc(m.short) + '</div>' +
               '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + p.total + " 题 · 已练 " + p.done + "</div>" +
               '<div class="bar" style="margin-top:6px;height:4px"><i style="width:' + (p.pct || 0) + '%;background:' + (m.color || "#2563EB") + ';border-radius:2px"></i></div>' +
               '</div>' +
-              '<div style="font-size:18px;font-weight:700;color:' + (m.color || "#2563EB") + '">' + (p.pct || 0) + '%</div>' +
+              '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">' +
+              '<span style="font-size:12px;color:var(--text-sub)">' + (p.pct || 0) + '%</span>' +
+              '<span style="font-size:12px;color:' + (m.color || "#2563EB") + ';font-weight:600">开始刷题 ›</span>' +
+              '</div>' +
               '</button>'
             );
           }).join("")
@@ -1491,24 +1506,37 @@
     const chip = (kind, val, label) =>
       `<button class="chip ${f[kind].includes(val) ? "is-active" : ""}" data-act="filter" data-kind="${kind}" data-val="${attr(val)}" type="button">${label}</button>`;
 
+    // 筛选分组
+    const diffChips = ["基础", "强化", "冲刺"].filter((d) => qOf.some((q) => q.difficultyLabel === d)).map((d) => chip("diff", d, d)).join("");
+    const typeChips = (name === "英语" ? ["单选", "判断", "阅读", "阅读填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("");
+    const statusChips = ["未做", "做错", "收藏"].map((s) => chip("status", s, s)).join("");
+    const kindChips = ["客观题", "主观题"].map((k) => chip("kind", k, k)).join("");
+
     return `
-      <div class="card">
-        <div class="row-between">
-          <strong>${esc(name)} · ${m.score}分</strong>
-          <span class="muted" style="font-size:12px">${p.total} 题 · 已练 ${p.done} · ${p.acc == null ? "—" : p.acc + "%"}</span>
+      <div class="card" style="padding:16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:20px;font-weight:700">${esc(name)}</div>
+          <div class="muted" style="font-size:12px;margin-top:2px">${m.score}分 · ${p.total}题</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:24px;font-weight:700;color:var(--primary)">${p.done}<span style="font-size:12px;color:var(--text-sub)">/${p.total}</span></div>
+          <div class="muted" style="font-size:11px">已练 · ${p.acc == null ? "—" : p.acc + "%"}正确率</div>
         </div>
       </div>
 
-      <div class="section-title">筛选</div>
-      <div class="chip-row">
-        ${["基础", "强化", "冲刺"].filter((d) => qOf.some((q) => q.difficultyLabel === d)).map((d) => chip("diff", d, d)).join("")}
-        ${(name === "英语" ? ["单选", "判断", "阅读", "阅读填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("")}
-        ${["未做", "做错", "收藏"].map((s) => chip("status", s, s)).join("")}
-        ${["客观题", "主观题"].map((k) => chip("kind", k, k)).join("")}
+      <div class="card" style="padding:12px 16px">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">难度</div>
+        <div class="chip-row" style="margin-bottom:12px">${diffChips}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">题型</div>
+        <div class="chip-row" style="margin-bottom:12px">${typeChips}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">状态</div>
+        <div class="chip-row" style="margin-bottom:12px">${statusChips}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">类型</div>
+        <div class="chip-row">${kindChips}</div>
+        <p class="muted" style="font-size:12px;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--border)">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → <b>${filtered.length}</b> 题</p>
       </div>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → ${filtered.length} 题</p>
 
-      <div class="section-title">章节</div>
+      <div class="section-title">章节练习</div>
       ${
         qOf.length === 0
           ? (bankError
@@ -1527,13 +1555,14 @@
           chs.length
             ? chs
                 .map(
-                  (c) => `<button class="list-row" data-act="chapter" data-id="${attr(c.id)}" type="button">
-                    <span class="dot" style="background:${m.color}"></span>
+                  (c) => `<button class="list-row" data-act="chapter" data-id="${attr(c.id)}" type="button" style="padding:14px 16px">
+                    <span class="dot" style="background:${m.color};flex-shrink:0"></span>
                     <span class="main">
-                      <span class="t">${esc(c.title)}</span>
-                      <span class="s">${c.count} 题 · ${c.done}/${c.count} · 正确率 ${c.acc == null ? "—" : c.acc + "%"}</span>
+                      <span class="t" style="font-size:14px;font-weight:600">${esc(c.title)}</span>
+                      <span class="s" style="font-size:11px;margin-top:4px;display:block">${c.count}题 · 已练${c.done}/${c.count} · ${c.acc == null ? "—" : c.acc + "%"}</span>
+                      <span style="display:block;height:3px;background:var(--panel);border-radius:2px;margin-top:6px;overflow:hidden"><span style="display:block;height:100%;width:${c.count ? (c.done/c.count*100) : 0}%;background:${m.color};border-radius:2px"></span></span>
                     </span>
-                    <span class="end">›</span>
+                    <span class="end" style="flex-shrink:0">›</span>
                   </button>`
                 )
                 .join("")
@@ -1542,15 +1571,15 @@
       </div>`
       }
 
-      <div style="margin-top:16px">
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
         ${
           qOf.length === 0
             ? '<div class="muted" style="font-size:12px;text-align:center;padding:8px 0">题库加载完成后即可开始练习</div>'
-            : `<div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-primary btn-block" data-act="seq-practice" data-name="${attr(name)}" type="button">开始顺序练习</button>
-        <button class="btn btn-ghost btn-block" data-act="seq-obj" data-name="${attr(name)}" type="button">只练客观题</button>
-        <button class="btn btn-ghost btn-block" data-act="seq-subj" data-name="${attr(name)}" type="button">只练主观题</button>
-      </div>`
+            : `<button class="btn btn-primary btn-block" data-act="seq-practice" data-name="${attr(name)}" type="button" style="height:48px;font-size:15px;font-weight:600">▶ 开始顺序练习（${filtered.length}题）</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" data-act="seq-obj" data-name="${attr(name)}" type="button" style="flex:1">客观题</button>
+          <button class="btn btn-ghost" data-act="seq-subj" data-name="${attr(name)}" type="button" style="flex:1">主观题</button>
+        </div>`
         }
       </div>
 
@@ -1888,6 +1917,7 @@
       <div>
       <div class="card">
         <div class="q-stem">${mathHtml(q.stem)}</div>
+        ${q.image ? '<div class="q-img" style="margin:12px 0;text-align:center">' + q.image + '</div>' : ''}
         ${
           q.type === "single" || q.type === "judge"
             ? (q.options || [])
@@ -1895,13 +1925,13 @@
                   let cls = "opt";
                   if (!s.submitted && s.sel === opt) cls += " is-selected";
                   if (done) {
-                    if (opt === q.answer) cls += " is-correct";
+                    if (ansEqual(opt, q.answer)) cls += " is-correct";
                     else if (s.sel === opt) cls += " is-wrong";
                   }
                   return `<button class="${cls}" data-act="pick" data-opt="${attr(opt)}" type="button" ${s.submitted ? "disabled" : ""}>
                     <span class="key">${keys[idx] || idx + 1}</span>
                     <span>${mathHtml(opt)}</span>
-                    ${done ? (opt === q.answer ? `<span class="mark">✓</span>` : s.sel === opt ? `<span class="mark">✕</span>` : "") : ""}
+                    ${done ? (ansEqual(opt, q.answer) ? `<span class="mark">✓</span>` : s.sel === opt ? `<span class="mark">✕</span>` : "") : ""}
                   </button>`;
                 })
                 .join("")
@@ -2095,7 +2125,7 @@
     const t = q.type;
     if (t === "single" || t === "judge") {
       if (s.sel == null) return alert("请先选择一个选项");
-      const ok = s.sel === q.answer;
+      const ok = ansEqual(s.sel, q.answer);
       s.submitted = true;
       s.results[q.id] = ok;
       s.showExp = true;
@@ -2577,11 +2607,13 @@
 
     function rows(arr, kind) {
       if (!arr.length) {
-        const msg = kind === "fav" ? "还没有收藏题。做题时点「收藏」。" : "暂无错题。";
+        const msg = kind === "fav" ? "还没有收藏题。做题时点「收藏」。" : "暂无错题，继续保持！";
         return (
-          '<div class="empty">' +
-          esc(msg) +
-          '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+          '<div class="empty-state">' +
+          '<div class="es-icon">🎉</div>' +
+          '<div class="es-title">' + esc(msg) + '</div>' +
+          '<div class="es-desc">多刷题、多复盘，错题会越来越少的</div>' +
+          '<div class="es-action" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
           '<button class="btn btn-primary btn-sm" data-act="daily" type="button">去做今日 30 题</button>' +
           '<button class="btn btn-ghost btn-sm" data-nav="bank" type="button">去题库</button>' +
           "</div></div>"
@@ -2663,22 +2695,28 @@
         "</div>" +
         '<div class="section-title">按科目筛选</div>' +
         '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + subjChips + "</div>" +
-        '<div class="section-title">遗忘曲线节奏</div>' +
-        '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' +
-        ["fast","mid","slow"].map(function(k){
-          var c = FORGET_CURVES[k];
-          return '<button class="chip' + (state.forgetCurve === k ? " is-active" : "") + '" data-act="curve" data-v="' + k + '" type="button">' + c.label + ' (' + c.wrong.slice(1).join("/") + 'd)</button>';
-        }).join("") +
-        "</div>" +
-        '<div class="section-title">按错误次数筛选</div>' +
-        '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + nChips + "</div>" +
-        '<div class="section-title">按错因补练</div>' +
-        '<div class="chip-row" style="margin-bottom:12px">' +
-        '<button class="chip" data-act="by-reason" data-r="concept" type="button">概念不清</button>' +
-        '<button class="chip" data-act="by-reason" data-r="calc" type="button">计算失误</button>' +
-        '<button class="chip" data-act="by-reason" data-r="read" type="button">审题偏差</button>' +
-        '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
-        "</div>" +
+        '<button class="btn btn-ghost btn-sm" data-act="wrong-adv-toggle" type="button" style="margin-bottom:12px;width:100%">' +
+        (state.wrongAdvOpen ? "▾ 收起高级筛选" : "▸ 高级筛选（遗忘曲线 / 错误次数 / 错因）") +
+        "</button>" +
+        (state.wrongAdvOpen ? (
+          '<div class="filter-drawer">' +
+          '<div class="fd-title">遗忘曲线节奏</div>' +
+          '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' +
+          ["fast","mid","slow"].map(function(k){
+            var c = FORGET_CURVES[k];
+            return '<button class="chip' + (state.forgetCurve === k ? " is-active" : "") + '" data-act="curve" data-v="' + k + '" type="button">' + c.label + ' (' + c.wrong.slice(1).join("/") + 'd)</button>';
+          }).join("") +
+          "</div>" +
+          '<div class="fd-title">按错误次数筛选</div>' +
+          '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + nChips + "</div>" +
+          '<div class="fd-title">按错因补练</div>' +
+          '<div class="chip-row" style="flex-wrap:wrap">' +
+          '<button class="chip" data-act="by-reason" data-r="concept" type="button">概念不清</button>' +
+          '<button class="chip" data-act="by-reason" data-r="calc" type="button">计算失误</button>' +
+          '<button class="chip" data-act="by-reason" data-r="read" type="button">审题偏差</button>' +
+          '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
+          "</div></div>"
+        ) : "") +
         '<div class="section-title">错题列表（点题看解析，✓ 标记掌握）</div>' + rows(pageItems, "wrong") +
         (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "") +
         masteredSection +
@@ -3086,14 +3124,14 @@ function ensureExplain(q) {
     { name: "桂林航天工业学院", city: "桂林", tier: "公办本科", plan26: 1300, plan25: 0, itMajor: true, url: "https://zsw.guat.edu.cn/info/1030/1208.htm", majors: ["电子信息工程", "通信工程", "软件工程", "数字媒体技术"], note: "2026新增公办，51大类对口约266人，4600-10000元/年", majorUrls: { "通信工程": "https://dept4.guat.edu.cn/info/1158/1019.htm", "软件工程": "https://dept7.guat.edu.cn/info/1175/3064.htm", "数字媒体技术": "https://art.guat.edu.cn/info/1133/1638.htm" } },
     { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 2500, plan25: 2000, itMajor: true, url: "https://www.gxnzd.edu.cn/xg/zyjs/dzxxgcjs.htm", majors: ["电子信息工程技术", "计算机应用工程", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约316人，7500元/年", majorUrls: { "计算机应用工程": "https://www.gxnzd.edu.cn/xg/info/1044/1722.htm", "网络工程技术": "https://www.gxnzd.edu.cn/xg/info/1044/1722.htm", "数字媒体技术": "https://www.gxnzd.edu.cn/xg/zyjs/szmtjs.htm" } },
     { name: "南宁职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 500, plan25: 0, itMajor: true, url: "https://zs.nnvtu.edu.cn/info/1125/8000.htm", majors: ["软件工程技术(相思湖校区)"], note: "2026新增公办职业本科，51大类对口约200人，7500元/年" },
-    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://www.lzpu.edu.cn/zsxx/zsbzs/zszc2/zsbzs1/content_102572", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
+    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://www.lzpu.edu.cn/zsxx/zsbzs", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
     { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://sjxy.gltu.edu.cn/zsjy.htm", majors: ["数据科学与大数据技术"], note: "51大类对口约90人，9999元/年" },
     /* ---- 民办（9所） ---- */
     { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan26: 4400, plan25: 6000, itMajor: true, url: "https://www.guit.edu.cn/zs/info/1021/1580.htm", majors: ["计算机科学与技术", "软件工程", "电子信息工程", "电子信息科学与技术", "通信工程", "网络工程", "人工智能", "物联网工程", "医学信息工程", "虚拟现实技术", "数据科学与大数据技术"], note: "原桂电信科，IT类最强民办，51大类对口约880人，24500元/年", majorUrls: { "通信工程": "https://www.guit.edu.cn/zs/info/1021/1581.htm", "网络工程": "https://www.guit.edu.cn/zs/info/1021/1583.htm", "电子信息工程": "https://www.guit.edu.cn/zs/info/1022/1330.htm", "电子信息科学与技术": "https://www.guit.edu.cn/zs/info/1022/1329.htm", "软件工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "人工智能": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "物联网工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "医学信息工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "虚拟现实技术": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "数据科学与大数据技术": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm" } },
     { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan26: 4900, plan25: 6500, itMajor: true, url: "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053232.htm", majors: ["人工智能", "计算机科学与技术", "电子信息工程", "数据科学与大数据技术"], note: "招生大校，51大类对口约330人，24800元/年", majorUrls: { "计算机科学与技术": "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053251.htm", "数据科学与大数据技术": "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053227.htm" } },
     { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", plan26: 2000, plan25: 4030, itMajor: true, url: "https://www.gxcvuedu.com/rgznydsjxy/zyjj/zsb/content_9725", majors: ["计算机应用工程", "大数据工程技术", "信息安全与管理"], note: "职业本科，51大类对口约165人，26000元/年" },
     { name: "广西外国语学院", city: "南宁", tier: "民办本科", plan26: 3015, plan25: 4500, itMajor: true, url: "https://sie.gxufl.edu.cn/info/110458", majors: ["人工智能", "计算机科学与技术", "软件工程", "网络工程", "数据科学与大数据技术"], note: "51大类对口约195人，25200元/年", majorUrls: { "人工智能": "https://zs.gxufl.edu.cn/info/103415", "软件工程": "https://sie.gxufl.edu.cn/info/2453", "网络工程": "https://zs.gxufl.edu.cn/info/58144", "数据科学与大数据技术": "https://sie.gxufl.edu.cn/info/110458" } },
-    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://jsj.unn.edu.cn/zyjs1/zsbzy.htm", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
+    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://www.unn.edu.cn/", urlDead: "原页面 jsj.unn.edu.cn 已不可达，暂改学校主页", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
     { name: "广西民族大学相思湖学院", city: "南宁", tier: "民办本科", plan26: 2000, plan25: 2800, itMajor: true, url: "https://www.gxxshxy.edu.cn/info/1201/26441.htm", majors: ["计算机科学与技术", "软件工程", "网络工程"], note: "民大独立学院，51大类对口约460人，20000元/年" },
     { name: "南宁师范大学师园学院", city: "南宁", tier: "民办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://www.gxsy.edu.cn/Item/10100.aspx", majors: ["计算机科学与技术"], note: "南师独立学院，51大类对口100人，15000元/年" },
     { name: "柳州工学院", city: "柳州", tier: "民办本科", plan26: 725, plan25: 725, itMajor: true, url: "https://www.lzhit.edu.cn/xxkxygcxy2026/zyjs/dzxxgc.htm", majors: ["电子信息工程"], note: "原鹿山学院，51大类对口65人，22500元/年" },
@@ -3320,98 +3358,157 @@ function ensureExplain(q) {
     setTitle("院校查询", true);
     const kw = (state.schoolQ || "").trim().toLowerCase();
     const cityFilter = state.schoolCity || "all";
+    const trendFilter = state.schoolTrend || "all";
+    const pubFilter = state.schoolPub || "all";
     const cities = ["all", ...Array.from(new Set(SCHOOLS_DATA.map((s) => s.city)))];
-    let list = SCHOOLS_DATA;
+
+    let list = SCHOOLS_DATA.slice();
     if (cityFilter !== "all") list = list.filter((s) => s.city === cityFilter);
-    if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw));
+    if (pubFilter === "公") list = list.filter((s) => s.tier.indexOf("公办") >= 0);
+    if (pubFilter === "民") list = list.filter((s) => s.tier.indexOf("民办") >= 0);
+    if (trendFilter === "up") list = list.filter((s) => s.plan25 > 0 && s.plan26 > s.plan25);
+    if (trendFilter === "down") list = list.filter((s) => s.plan25 > 0 && s.plan26 < s.plan25);
+    if (trendFilter === "new") list = list.filter((s) => s.plan25 === 0);
+    if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw) || s.city.toLowerCase().includes(kw));
 
     const total26 = SCHOOLS_DATA.reduce((a, s) => a + (s.plan26 || 0), 0);
-    const itCount = SCHOOLS_DATA.filter((s) => s.itMajor).length;
+    const gong = SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length;
+    const cntOf = (c) => c === "all" ? SCHOOLS_DATA.length : SCHOOLS_DATA.filter((s) => s.city === c).length;
+    const maxT = Math.max(...SCHOOLS_TREND.map((t) => parseFloat(t.total)));
+
+    const deltaOf = (s) => {
+      if (s.plan25 === 0) return { cls: "new", txt: "🆕 新增" };
+      const d = s.plan26 - s.plan25;
+      if (d > 0) return { cls: "up", txt: "+" + d + " 扩招" };
+      if (d < 0) return { cls: "down", txt: "-" + (-d) + " 缩招" };
+      return { cls: "flat", txt: "0 持平" };
+    };
+    const parseNote = (n) => {
+      const cntM = (n || "").match(/51大类对口约?(\d+(?:\.\d+)?)人/);
+      const feeM = (n || "").match(/(\d[\,]*(?:-\d[\,]*)?元\/年)/);
+      const rest = (n || "").replace(/51大类对口约?[\d.]+人/, "").replace(/(\d[\,]*(?:-\d[\,]*)?元\/年)/, "").replace(/^[，,、。\s]+/, "").replace(/[，,、。\s]+$/, "");
+      return { cnt: cntM ? cntM[1] : null, fee: feeM ? feeM[1] : null, frags: rest.split(/[，,、。;；]+/).map((x) => x.trim()).filter(Boolean) };
+    };
+    const findDetail = (schoolName, majorName) => {
+      const arr = MAJOR_DETAIL[schoolName] || [];
+      return arr.find((d) => d.name === majorName || majorName.indexOf(d.name) >= 0 || d.name.indexOf(majorName) >= 0) || null;
+    };
+
+    const seg = (key, cur, opts) => opts.map((o) =>
+      `<button type="button" class="${cur === o.v ? "on" : ""}" data-act="schools-filter" data-f="${key}" data-v="${attr(o.v)}">${o.t}</button>`).join("");
+
+    const cardsHtml = list.length ? list.map((s) => {
+      const d = deltaOf(s), pn = parseNote(s.note);
+      const isGong = s.tier.indexOf("公办") >= 0;
+      const open = (state.schoolMajor && state.schoolMajor.school === s.name) ? state.schoolMajor.major : null;
+
+      const chips = s.majors.map((m) =>
+        `<button type="button" class="major-chip ${open === m ? "on" : ""}" data-act="school-major" data-school="${attr(s.name)}" data-major="${attr(m)}">${esc(m)}<span class="ext">▾</span></button>`).join("");
+
+      let detailHtml = "";
+      if (open) {
+        const dm = findDetail(s.name, open);
+        const offHref = (s.majorUrls && s.majorUrls[open]) || s.url || "#";
+        if (dm) {
+          detailHtml = `<div class="major-detail">
+            <div class="md-head">${esc(dm.name)}<span class="md-plan">招 ${dm.plan} 人</span></div>
+            <div class="md-grid">
+              <div>💰 学费：<b>${dm.fee}</b> 元/学年</div>
+              <div>📚 类别：${esc(dm.category)}</div>
+              <div class="full">📍 校区：${esc(dm.campus)}</div>
+              <div class="full muted">📝 ${esc(dm.note || "")}</div>
+            </div>
+            <div class="md-actions">
+              <button type="button" class="btn-primary" data-act="school-goto" data-href="${attr(offHref)}" data-label="${attr(s.name)}">🏫 前往该专业官网核对 ↗</button>
+              <button type="button" class="btn-ghost" data-act="school-goto" data-href="https://www.gxeea.cn/view/content_1215_32740.htm" data-label="广西招生考试院">📄 招考院2026计划PDF ↗</button>
+            </div>
+          </div>`;
+        } else {
+          detailHtml = `<div class="major-detail">
+            <div class="md-head">${esc(open)}</div>
+            <div class="muted" style="margin-top:6px">该专业暂无逐专业招生数/学费明细，请到学校招生网核对官方计划。</div>
+            <div class="md-actions">
+              <button type="button" class="btn-primary" data-act="school-goto" data-href="${attr(offHref)}" data-label="${attr(s.name)}">🏫 前往学校招生网核对 ↗</button>
+            </div>
+          </div>`;
+        }
+      }
+
+      return `<div class="card school-card">
+        <div class="sc-head">
+          <span class="sc-name">${esc(s.name)}</span>
+          <span class="badge ${isGong ? "gong" : "min"}">${esc(s.tier)}</span>
+          <span class="badge it">💻 51大类对口</span>
+          <span class="badge city">📍 ${esc(s.city)}</span>
+        </div>
+        <div class="sc-main">
+          <div class="sc-plan">${s.plan26}<small> 人（2026）</small></div>
+          <div class="sc-delta ${d.cls}">${d.txt}<span class="vs">较2025年</span></div>
+        </div>
+        <div class="major-box">
+          <div class="major-label">招生专业（点 chip 看该专业详情）：</div>
+          <div class="major-chips">${chips}</div>
+          ${detailHtml}
+          ${s.urlDead ? `<div class="dead-warn">⚠️ ${esc(s.urlDead)}</div>` : ""}
+        </div>
+        <div>
+          ${s.url ? `<button type="button" class="btn-ghost" data-act="school-goto" data-href="${attr(s.url)}" data-label="${attr(s.name)}">🏫 官网 ↗</button>` : ""}
+        </div>
+        <div class="sc-foot">
+          ${pn.cnt ? `<span class="tag-note cnt">🎯 51大类对口约${pn.cnt}人</span>` : ""}
+          ${pn.fee ? `<span class="tag-note fee">💰 学费 ${pn.fee}</span>` : ""}
+          ${pn.frags.map((f) => `<span class="tag-note">${esc(f)}</span>`).join("")}
+        </div>
+      </div>`;
+    }).join("") : '<div class="empty-state">😕 没有匹配的院校，换个城市 / 关键词试试</div>';
 
     return `
-      <div class="card" style="margin-bottom:12px">
-        <input class="input" id="schoolSearch" placeholder="搜院校名 / 专业（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" />
-      </div>
-
-      <!-- 改革三年趋势 -->
-      <div class="card" style="margin-bottom:12px;padding:14px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:10px">📈 改革三年招生趋势（广西专升本）</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${SCHOOLS_TREND.map((t) => `
-            <div style="flex:1;min-width:100px;padding:10px;border-radius:10px;background:color-mix(in srgb, var(--text) 5%, transparent);text-align:center">
-              <div style="font-size:18px;font-weight:800;color:${t.year === "2026" ? "var(--primary)" : "var(--text)"}">${t.year}</div>
-              <div style="font-size:12px;color:var(--text-sub)">${t.label}</div>
-              <div style="font-size:15px;font-weight:700;margin-top:4px">${t.total}</div>
-              <div style="font-size:10px;color:var(--text-sub);margin-top:2px">${t.note}</div>
-            </div>
-          `).join("")}
+      <div class="schools-v2">
+        <div class="card">
+          <input class="search-box" id="schoolSearch" type="search" placeholder="搜院校名 / 专业 / 城市（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" autocomplete="off" />
         </div>
-      </div>
-
-      <div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">
-        ${cities.map((c) => `<button class="chip ${cityFilter === c ? "is-active" : ""}" data-act="school-city" data-v="${attr(c)}" type="button">${c === "all" ? "全部城市" : esc(c)}</button>`).join("")}
-      </div>
-      <div class="stat-grid" style="margin-bottom:12px">
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">51大类可报院校</div></div>
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length}</div><div class="l">公办</div></div>
-        <div class="stat-box"><div class="n">${(total26 / 10000).toFixed(2)}万</div><div class="l">2026对口总计划</div></div>
-      </div>
-      ${list.length ? list.map((s) => {
-        const delta = s.plan26 - s.plan25;
-        const deltaTxt = s.plan25 === 0 ? '<span class="pill" style="background:#dcfce7;color:#166534">🆕 2026新增</span>'
-          : (delta > 0 ? `<span class="pill" style="background:#dcfce7;color:#166534">↑扩招${delta}</span>`
-            : (delta < 0 ? `<span class="pill" style="background:#fee2e2;color:#991b1b">↓缩招${-delta}</span>` : ""));
-        const detail = MAJOR_DETAIL[s.name] || [];
-        const expanded = (state.schoolMajor && state.schoolMajor.school === s.name) ? state.schoolMajor.major : null;
-        return `
-        <div class="card" style="margin-bottom:10px;padding:14px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <strong style="font-size:16px">${esc(s.name)}</strong>
-            <span class="pill" style="background:${s.tier.indexOf("公办") >= 0 ? "#dcfce7;color:#166534" : "#fef3c7;color:#92400e"}">${esc(s.tier)}</span>
-            ${s.itMajor ? '<span class="pill" style="background:#dbeafe;color:#1e40af">💻 51大类对口</span>' : ""}
-            <span class="pill">📍 ${esc(s.city)}</span>
-            ${deltaTxt}
-            <span class="pill" style="margin-left:auto;font-weight:700">2026招 ${s.plan26} 人</span>
-            ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener" style="font-size:11px;color:var(--primary);text-decoration:none;margin-left:4px">官网↗</a>` : ""}
+        <div class="card">
+          <div class="section-title">📈 改革三年招生趋势（广西专升本）</div>
+          <div class="trend-grid">
+            ${SCHOOLS_TREND.map((t) => `<div class="trend-cell">
+              <div class="trend-year">${t.year}</div>
+              <div class="trend-label">${t.label}</div>
+              <div class="trend-num">${t.total}</div>
+              <div class="trend-bars"><i class="${t.year === "2026" ? "hot" : ""}" style="height:${Math.round(parseFloat(t.total) / maxT * 100)}%"></i></div>
+              <div class="trend-note">${t.note}</div>
+            </div>`).join("")}
           </div>
-          <div style="margin-top:8px;font-size:13px;line-height:1.7">
-            <div><b>招生专业（点 chip 看详情）：</b></div>
-            <div style="margin-top:6px">
-              ${s.majors.map((m) => {
-                const hasDetail = detail.some((d) => d.name === m || m.indexOf(d.name) >= 0 || d.name.indexOf(m) >= 0);
-                const isOpen = expanded === m;
-                return `<button type="button" data-act="school-major" data-school="${attr(s.name)}" data-major="${attr(m)}" class="pill" style="margin-right:6px;margin-top:6px;cursor:pointer;border:1px solid ${isOpen ? "var(--primary)" : "transparent"};background:${isOpen ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "color-mix(in srgb, var(--text) 6%, transparent)"}">${esc(m)}${hasDetail ? " ▸" : ""}</button>`;
-              }).join("")}
+          <div class="source-line">📅 数据来源：广西招生考试院，更新于 2026-05</div>
+        </div>
+        <div class="card stats">
+          <div class="stat-box"><div class="stat-num">${SCHOOLS_DATA.length}<small> 所</small></div><div class="stat-label">51大类可报院校</div></div>
+          <div class="stat-box"><div class="stat-num">${gong}<small> 所</small></div><div class="stat-label">公办</div></div>
+          <div class="stat-box"><div class="stat-num">${(total26 / 10000).toFixed(2)}<small> 万</small></div><div class="stat-label">2026对口总计划</div></div>
+        </div>
+        <div class="layout">
+          <aside class="filter-panel">
+            <div class="card">
+              <div class="section-title">📍 城市</div>
+              <div class="chip-row">
+                ${cities.map((c) => `<button type="button" class="chip ${cityFilter === c ? "on" : ""}" data-act="school-city" data-v="${attr(c)}">${c === "all" ? "全部城市" : esc(c)}<span class="cnt">${cntOf(c)}</span></button>`).join("")}
+              </div>
+              <div class="section-title" style="margin-top:12px">📊 扩招 / 缩招</div>
+              <div class="seg">${seg("schoolTrend", trendFilter, [{v:"all",t:"全部"},{v:"up",t:"↑扩招"},{v:"down",t:"↓缩招"},{v:"new",t:"🆕新增"}])}</div>
+              <div class="section-title" style="margin-top:12px">🏛️ 公办 / 民办</div>
+              <div class="seg">${seg("schoolPub", pubFilter, [{v:"all",t:"全部"},{v:"公",t:"公办"},{v:"民",t:"民办"}])}</div>
             </div>
-            ${expanded ? (() => {
-              const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
-              // 按当前展开的专业 chip 动态取专业介绍页 URL；没有配置则 fallback 到学校默认 url
-              const majorUrlMap = s.majorUrls || {};
-              const officialUrl = majorUrlMap[expanded] || s.url || "https://www.guet.edu.cn/";
-              const pdfUrl = "https://www.gxeea.cn/view/content_1215_32740.htm";
-              const officialLink = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-                <a href="${officialUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🏫 ${esc(s.name)}官网 ↗</a>
-                <a href="${pdfUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:#fff;color:var(--primary);border:1px solid var(--primary);border-radius:8px;font-size:12px;text-decoration:none">📄 广西招考院2026计划PDF(公开) ↗</a>
-              </div>`;
-              if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">${officialLink}</div>`;
-              return `
-              <div style="margin-top:10px;padding:12px;border-radius:10px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-left:3px solid var(--primary)">
-                <div style="font-weight:700;font-size:14px;margin-bottom:6px">${esc(d.name)}<span class="pill" style="margin-left:8px;background:#dbeafe;color:#1e40af">招 ${d.plan} 人</span></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
-                  <div><span class="muted">💰 学费：</span>${d.fee} 元/学年</div>
-                  <div><span class="muted">📚 类别：</span>${esc(d.category)}</div>
-                  <div style="grid-column:1/-1"><span class="muted">📍 校区：</span>${esc(d.campus)}</div>
-                  <div style="grid-column:1/-1" class="muted">📝 ${esc(d.note || "")}</div>
-                </div>
-                ${officialLink}
-              </div>`;
-            })() : ""}
-            <div class="muted" style="font-size:12px;margin-top:6px">📝 ${esc(s.note)}</div>
-          </div>
-        </div>`;
-      }).join("") : '<div class="empty">没有匹配的院校，换个关键词试试</div>'}
-      <div class="disclaimer">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向"51 电子与信息大类"招生的院校共约 4.5 万对口名额；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年总数。2027 年招生计划与分数线以当年公布为准。</div>
-    `;
+            <div class="card">
+              <div class="section-title">ℹ️ 数据来源说明</div>
+              <div class="muted">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向「51 电子与信息大类」招生的院校，共 ${total26} 个对口名额；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年总数。扩招/缩招按各校 2026 计划数对比 2025 计划数计算。2027 年招生计划与分数线以当年公布为准。</div>
+            </div>
+          </aside>
+          <section class="school-list">
+            <div class="count-line">共 ${list.length} 所院校</div>
+            ${cardsHtml}
+            <div class="feedback-line">数据仅供参考，如有误请 <a href="https://github.com/blueevening/gxzsb-2027/issues" target="_blank" rel="noopener">点此反馈</a></div>
+          </section>
+        </div>
+      </div>`;
   }
 
   function viewLogin() {
@@ -3524,11 +3621,11 @@ function ensureExplain(q) {
       var h = x.t ? Math.max(6, Math.round(x.t / max * 100)) : 2;
       var rate = x.t ? Math.round(x.c / x.t * 100) : null;
       return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:118px">' +
-        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t + (rate != null ? '·' + rate + '%' : '') : "") + '</div>' +
+        '<div style="font-size:10px;color:var(--text-sub);margin-bottom:2px">' + (x.t ? x.t + '题·' + rate + '%' : "") + '</div>' +
         '<div style="width:70%;border-radius:4px 4px 0 0;background:var(--primary);opacity:' + (0.35 + 0.65 * x.t / max) + ';height:' + h + '%"></div>' +
         '<div style="font-size:10px;color:var(--text-sub);margin-top:3px">' + x.label + '</div></div>';
     }).join("");
-    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题 <span style="font-weight:400;color:var(--text-sub);font-size:11px">柱=做题量 · 数字后=正确率 · 共 ' + total + ' 题</span></div>' +
+    return '<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题</div>' +
       '<div style="display:flex;align-items:flex-end;gap:4px;height:118px">' + bars + '</div></div>';
   }
 
@@ -3567,14 +3664,29 @@ function ensureExplain(q) {
         <div class="muted" id="offlineBarTxt" style="font-size:12px;margin-top:8px"></div>
       </div>
 
-      <div class="card" style="padding:0;margin-bottom:16px">
-        <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="resources" type="button"><span class="main"><span class="t">学习资料（C语言 / 计网 / 电工）</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
-        <div class="list-row" style="display:flex;align-items:center;gap:8px;padding:12px 16px">
-          <span class="main" style="flex:1"><span class="t">字号大小</span></span>
+      <div class="card" style="padding:14px;margin-bottom:16px">
+        <button class="row-item" data-act="set-nick" type="button">
+          <span class="ri-main"><span class="ri-label">修改昵称</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="export-all" type="button">
+          <span class="ri-main"><span class="ri-label">导出数据备份</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-nav="resources" type="button">
+          <span class="ri-main"><span class="ri-label">学习资料（C语言 / 计网 / 电工）</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="import" type="button">
+          <span class="ri-main"><span class="ri-label">导入数据备份</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="theme" type="button">
+          <span class="ri-main"><span class="ri-label">深色/浅色模式</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <div class="row-item" style="cursor:default">
+          <span class="ri-main"><span class="ri-label">字号大小</span></span>
           <div style="display:flex;gap:4px">
             ${["sm","md","lg"].map(function(k){
               var on = (state.fontSize || "md") === k;
@@ -3582,9 +3694,19 @@ function ensureExplain(q) {
             }).join("")}
           </div>
         </div>
-        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
-        <div style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-sub)">版本 v${window.V || "2.2.0"}</div>
+        <button class="row-item" data-act="logout" type="button">
+          <span class="ri-main"><span class="ri-label">退出登录</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+
+        <div class="danger-group">
+          <button class="row-item" data-act="reset-study" type="button">
+            <span class="ri-main"><span class="ri-label">重置学习数据</span></span>
+            <span class="ri-chevron">›</span>
+          </button>
+        </div>
+
+        <div style="padding:12px 0 0;text-align:center;font-size:12px;color:var(--text-sub)">版本 v${window.V || "2.2.0"}</div>
       </div>
     `;
   }
@@ -3676,8 +3798,43 @@ function formulaFilter() {
     return '<p style="margin:4px 0">' + (/^【/.test(l) ? '<strong>' : '') + mathHtml(l) + (/^【/.test(l) ? '</strong>' : '') + '</p>';
   }
 
+  /* SVG 安全提取：把 stem 中的 br 换行和 svg 图示提取为安全占位符，
+     mathHtml 处理完文本后再还原；仅保留几何标签，剥离事件属性、script、style 等危险内容 */
+  function sanitizeSvg(svgStr) {
+    // 移除事件属性、script、style 标签和危险属性
+    return svgStr
+      .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+      .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+      .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/\shref\s*=\s*"javascript:[^"]*"/gi, "");
+  }
+  function extractSafeHtml(raw) {
+    var keep = [];
+    // 提取 <br> / <br/> / <br />
+    raw = raw.replace(/<br\s*\/?>/gi, function () {
+      keep.push("<br>");
+      return "@@SH" + (keep.length - 1) + "@@";
+    });
+    // 提取 <svg>...</svg>（非贪婪匹配）
+    raw = raw.replace(/<svg[\s\S]*?<\/svg>/gi, function (m) {
+      keep.push(sanitizeSvg(m));
+      return "@@SH" + (keep.length - 1) + "@@";
+    });
+    return { text: raw, keep: keep };
+  }
+  function restoreSafeHtml(html, keep) {
+    return html.replace(/@@SH(\d+)@@/g, function (m, idx) {
+      return keep[parseInt(idx, 10)] || "";
+    });
+  }
+
   function mathHtml(expr) {
     let raw = String(expr == null ? "" : expr);
+    // 先提取安全 HTML 片段（<br>、<svg>），避免被 escKeep 转义
+    var safe = extractSafeHtml(raw);
+    raw = safe.text;
     // 横排简单分数 a/b → frac{a}{b}，统一渲染成上下堆叠（分子上/分母下）
     // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
     // 横排分数 a/b → frac{a}{b}：支持数字、单/双字母短变量(x/R1/Rf/ui)、括号表达式
@@ -3752,7 +3909,7 @@ function formulaFilter() {
       out += escKeep(raw[i]);
       i++;
     }
-    return autoFrac(out);
+    return restoreSafeHtml(autoFrac(out), safe.keep);
   }
   function autoFrac(html) {
     let s0 = String(html == null ? "" : html);
@@ -4849,7 +5006,7 @@ function formulaFilter() {
     if (!act && nav) return go(nav);
 
     if (act === "preload-offline") {
-      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js"];
+      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js","learn-book-2027.js","english-extra.js","exam-plans-v2.js","kp-detail.js","syllabus.js"];
       const btn = document.getElementById("offlineBtn");
       const txt = document.getElementById("offlineBarTxt");
       if (btn) btn.disabled = true;
@@ -5470,21 +5627,32 @@ function formulaFilter() {
       window.scrollTo(0, _sy);
       requestAnimationFrame(() => window.scrollTo(0, _sy));
       setTimeout(() => window.scrollTo(0, _sy), 80);
-    } else if (act === "school-major") {
-      const sn = t.getAttribute("data-school");
-      const mj = t.getAttribute("data-major");
-      // 再次点同一个 = 收起
-      if (state.schoolMajor && state.schoolMajor.school === sn && state.schoolMajor.major === mj) {
-        state.schoolMajor = null;
-      } else {
-        state.schoolMajor = { school: sn, major: mj };
-      }
-      // 同步保存滚动位置，render 后立即恢复（不用 overflow:hidden，那会阻止 scrollTo）
+    } else if (act === "schools-filter") {
+      state[t.getAttribute("data-f")] = t.getAttribute("data-v");
       var _sy = window.scrollY;
       render();
       window.scrollTo(0, _sy);
       requestAnimationFrame(() => window.scrollTo(0, _sy));
       setTimeout(() => window.scrollTo(0, _sy), 80);
+    } else if (act === "school-major") {
+      const sn = t.getAttribute("data-school");
+      const mj = t.getAttribute("data-major");
+      if (state.schoolMajor && state.schoolMajor.school === sn && state.schoolMajor.major === mj) {
+        state.schoolMajor = null;
+      } else {
+        state.schoolMajor = { school: sn, major: mj };
+      }
+      var _sy2 = window.scrollY;
+      render();
+      window.scrollTo(0, _sy2);
+      requestAnimationFrame(() => window.scrollTo(0, _sy2));
+      setTimeout(() => window.scrollTo(0, _sy2), 80);
+    } else if (act === "school-goto") {
+      const href = t.getAttribute("data-href");
+      const label = t.getAttribute("data-label") || "学校官网";
+      if (href && confirm("即将离开本站前往「" + label + "」官网，请核对专业信息，以官方发布为准。是否继续？")) {
+        window.open(href, "_blank", "noopener");
+      }
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
       state.wrongPage = 1;
@@ -5522,6 +5690,9 @@ function formulaFilter() {
       render();
     } else if (act === "wrong-mastered-toggle") {
       state.wrongMasteredOpen = !state.wrongMasteredOpen;
+      render();
+    } else if (act === "wrong-adv-toggle") {
+      state.wrongAdvOpen = !state.wrongAdvOpen;
       render();
     } else if (act === "curve") {
       state.forgetCurve = t.getAttribute("data-v") || "mid";

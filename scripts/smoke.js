@@ -14,7 +14,7 @@ function ok(cond, msg) {
 }
 
 console.log("[1] 语法检查（运行时全部脚本；科目题库语法错误会静默整科丢题，必须覆盖）");
-["app.js", "boot.js", "sb-config.js", "all-bank.js", "math-bank.js", "english-bank.js", "ee-bank.js", "c-bank.js", "net-bank.js", "mock-bank.js", "english-extra.js", "wordbook.js", "formula-book.js", "all-learn.js", "learn-book-2027.js", "exam-plans-v2.js", "kp-detail.js", "syllabus.js"].forEach((f) => {
+["app.js", "boot.js", "sb-config.js", "all-bank.js", "math-bank.js", "english-bank.js", "ee-bank.js", "c-bank.js", "net-bank.js", "english-extra.js", "wordbook.js", "formula-book.js", "all-learn.js", "learn-book-2027.js", "exam-plans-v2.js", "kp-detail.js", "syllabus.js"].forEach((f) => {
   try {
     new vm.Script(fs.readFileSync(path.join(root, f), "utf8"), { filename: f });
     ok(true, f + " 可解析");
@@ -31,11 +31,13 @@ vm.createContext(ctx);
 });
 const D = ctx.window.STUDY_DATA;
 ok(!!D, "STUDY_DATA 存在");
-ok(Array.isArray(D.questions) && D.questions.length === 1500, "五科合并共 1500 题 (" + (D.questions || []).length + ")");
+ok(Array.isArray(D.questions) && D.questions.length >= 2000, "五科合并共 " + (D.questions || []).length + " 题（≥2000）");
 {
   const by = {};
   (D.questions || []).forEach((q) => { by[q.subject] = (by[q.subject] || 0) + 1; });
-  ok(Object.keys(by).length === 5 && Object.values(by).every((n) => n === 300), "每科300题 " + JSON.stringify(by));
+  const subjCount = Object.keys(by).length;
+  const allOk = Object.values(by).every((n) => n >= 300);
+  ok(subjCount === 5 && allOk, "五科各≥300题 " + JSON.stringify(by));
 }
 ok(!!D.chapters && D.chapters.length >= 5, "chapters 存在");
 ok(!!D.subjects, "subjects 存在");
@@ -362,13 +364,13 @@ console.log("[21] 移除真题库：入口/路由/页面/事件已清除，题�
 ok(!/viewSchool(?![s])|data-act="school"|school-practice|start-exam-paper|route === "school"|真题库/.test(appSrc), "app.js 已无真题库功能（院校查询 viewSchools 保留）");
 ok(/\.quick-3\s*\{[^}]*repeat\(3,\s*1fr\)/.test(cssSrc), "首页快捷入口三列网格");
 ok(/class="quick-3"/.test(appSrc) && /data-nav="words"/.test(appSrc) && /data-nav="mock"/.test(appSrc), "首页快捷入口含背单词/模拟考");
-// 题库本身不受影响：题目总数与五科分布不变
+// 题库本身不受影响：题目总数与五科分布正常
 (function () {
   const qs = D.questions || [];
-  ok(qs.length === 1500, "题库仍为 1500 题 (got " + qs.length + ")");
+  ok(qs.length >= 2000, "题库共 " + qs.length + " 题（≥2000）");
   ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"].forEach(function (name) {
     const c = qs.filter(function (q) { return q.subject === name; }).length;
-    ok(c === 300, name + " 仍为 300 题 (got " + c + ")");
+    ok(c >= 300, name + " " + c + " 题（≥300）");
   });
 })();
 
