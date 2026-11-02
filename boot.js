@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "3.0.1";          // 与 index.html 的版本号保持一致
+  var V = "3.1.1";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
 
   /* 自动刷新：每次从收藏夹点进去，都自动刷新一次，获取最新缓存 */
