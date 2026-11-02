@@ -4141,7 +4141,7 @@ function formulaFilter() {
     var goal = window.WORDS.getDailyGoal();
     var newWords = window.WORDS.getNewWords(goal);
     if (!state.wbLearn) {
-      state.wbLearn = { list: newWords, i: 0, flipped: false };
+      state.wbLearn = { list: newWords, i: 0, shown: false };
     }
     var L = state.wbLearn;
     if (L.i >= L.list.length) {
@@ -4160,25 +4160,31 @@ function formulaFilter() {
       <div class="wb-card-wrap">
         <div class="wb-progress-text">${L.i+1} / ${L.list.length} · ${prog}%</div>
         <div class="wb-progress-bar"><div class="wb-progress-fill" style="width:${prog}%"></div></div>
-        <div class="wb-card ${L.flipped?'flipped':''}" data-act="wb-flip">
-          <div class="wb-card-front">
-            <div class="wb-word">${esc(w.w)}</div>
-            <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
-            <div class="wb-hint">点击卡片查看释义</div>
-          </div>
-          <div class="wb-card-back">
-            <div class="wb-word">${esc(w.w)}</div>
-            <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
-            <div class="wb-pos">${esc(w.pos)}</div>
-            <div class="wb-meaning">${esc(w.m)}</div>
-          </div>
+
+        <div class="wb-card-simple">
+          <div class="wb-word">${esc(w.w)}</div>
+          <div class="wb-phonetic">/${esc(w.ph)}/</div>
+          <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
         </div>
-        <div class="wb-mark-btns" style="display:flex;gap:8px">
-          <button class="btn btn-wb-forget" data-act="wb-mark" data-v="1" style="flex:1" type="button">不认识</button>
-          <button class="btn btn-wb-hard" data-act="wb-mark" data-v="2" style="flex:1" type="button">模糊</button>
-          <button class="btn btn-wb-know" data-act="wb-mark" data-v="3" style="flex:1" type="button">认识</button>
+
+        ${L.shown ? `
+          <div class="wb-meaning-panel">
+            <div class="wb-pos-badge">${esc(w.pos)}</div>
+            <div class="wb-meaning-text">${esc(w.m)}</div>
+          </div>
+        ` : `
+          <button class="btn btn-secondary btn-block wb-show-btn" data-act="wb-show-meaning" type="button">👁️ 显示释义</button>
+        `}
+
+        <div class="wb-action-row">
+          ${L.i > 0 ? `<button class="btn btn-outline wb-prev-btn" data-act="wb-prev" type="button">← 上一个</button>` : `<div></div>`}
+          ${L.shown ? `
+            <div class="wb-mark-btns">
+              <button class="btn btn-wb-forget" data-act="wb-mark" data-v="1" type="button">不认识</button>
+              <button class="btn btn-wb-hard" data-act="wb-mark" data-v="2" type="button">模糊</button>
+              <button class="btn btn-wb-know" data-act="wb-mark" data-v="3" type="button">认识</button>
+            </div>
+          ` : `<div></div>`}
         </div>
       </div>
     `;
@@ -6023,6 +6029,10 @@ function formulaFilter() {
       }
     } else if (act === "wb-flip") {
       if (state.wbLearn) { state.wbLearn.flipped = !state.wbLearn.flipped; render(); }
+    } else if (act === "wb-show-meaning") {
+      if (state.wbLearn) { state.wbLearn.shown = true; render(); }
+    } else if (act === "wb-prev") {
+      if (state.wbLearn && state.wbLearn.i > 0) { state.wbLearn.i--; state.wbLearn.shown = false; render(); }
     } else if (act === "wb-flip-review") {
       if (state.wbReview) { state.wbReview.flipped = !state.wbReview.flipped; render(); }
     } else if (act === "wb-mark") {
@@ -6031,7 +6041,7 @@ function formulaFilter() {
       var q = parseInt(t.getAttribute("data-v"));
       window.WORDS.markWord(w.id, q);
       state.wbLearn.i++;
-      state.wbLearn.flipped = false;
+      state.wbLearn.shown = false;
       render();
     } else if (act === "wb-mark-review") {
       if (!state.wbReview) return;

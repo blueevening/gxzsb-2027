@@ -2802,3 +2802,51 @@ button, .btn { min-height: 44px; }
 }
 .filter-drawer .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-sub); }
 
+/* 9. 背单词 - 学习模式优化 */
+.wb-card-simple {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px 20px; text-align: center; margin: 16px 0;
+}
+.wb-show-btn {
+  margin: 12px 0;
+  font-size: 15px;
+  padding: 14px;
+}
+.wb-meaning-panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px; margin: 12px 0;
+  animation: fadeInUp 0.25s ease;
+}
+.wb-pos-badge {
+  display: inline-block; background: var(--primary-soft); color: var(--primary);
+  padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  margin-bottom: 12px;
+}
+.wb-meaning-text {
+  font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.6;
+}
+.wb-action-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 16px;
+}
+.wb-prev-btn {
+  flex-shrink: 0; padding: 10px 16px; font-size: 14px;
+}
+.wb-action-row .wb-mark-btns {
+  flex: 1; display: flex; gap: 8px; margin: 0;
+}
+.wb-action-row .wb-mark-btns .btn {
+  flex: 1; padding: 12px 8px; font-size: 14px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .wb-card-simple { padding: 24px 16px; }
+  .wb-meaning-text { font-size: 18px; }
+  .wb-action-row { flex-direction: column; }
+  .wb-action-row .wb-mark-btns { width: 100%; }
+}
