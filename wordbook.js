@@ -29,8 +29,8 @@ window.WORDS = (function () {
   function setProgress(p) { save(LS.progress, p); }
 
   function getLearnOrder() {
-    // v2: 按分类优先级排序，核心词汇（大纲要求）优先
-    var ORDER_VERSION = "v2";
+    // v3: 按分类优先级排序，核心词汇（大纲要求）优先
+    var ORDER_VERSION = "v3";
     let order = load(LS.learnOrder + "_" + ORDER_VERSION, null);
     if (!order || order.length !== WORDS.length) {
       // 分类优先级：核心词汇 > 词汇 > 不规则动词 > 短语搭配 > 写作句型 > 语法重点
