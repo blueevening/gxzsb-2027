@@ -4891,8 +4891,9 @@ function formulaFilter() {
       _lastRouteKey = routeKey;
     }
     const app = $("#app");
-    // 重置沉浸式模式类
+    // 重置沉浸式模式
     document.body.classList.remove('wb-immersive-mode');
+    document.body.style.background = '';
     // login 为公开页，未登录也可访问
     if (route === "login") {
       app.innerHTML = viewLogin();
@@ -4926,6 +4927,7 @@ function formulaFilter() {
     else if (route === "words") app.innerHTML = viewWords();
     else if (route === "word-learn") {
       document.body.classList.add('wb-immersive-mode');
+      document.body.style.background = '#12151C';
       app.innerHTML = viewWordLearn();
     }
     else if (route === "word-review") app.innerHTML = viewWordReview();
