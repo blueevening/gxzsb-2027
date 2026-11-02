@@ -2802,21 +2802,24 @@ button, .btn { min-height: 44px; }
 }
 .filter-drawer .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-sub); }
 
-/* 9. 背单词 - 沉浸式重做 */
+/* 9. 背单词 - 沉浸式重做（终极版） */
 .wb-immersive {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: #1A1D24 !important; z-index: 99999;
-  display: flex; flex-direction: column;
-  padding: 0; overflow: hidden;
-  margin: 0;
+  position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
+  background: #12151C !important; z-index: 999999 !important;
+  display: flex !important; flex-direction: column !important;
+  padding: 0 !important; overflow: hidden !important;
+  margin: 0 !important;
 }
-/* 沉浸式模式：body 和 shell 都变深色，不要盖住背景 */
+/* 沉浸式模式：所有父元素都变深色，不要盖住背景 */
 body.wb-immersive-mode,
+body.wb-immersive-mode .app,
 body.wb-immersive-mode .shell,
-body.wb-immersive-mode .app-frame {
-  background: #1A1D24 !important;
+body.wb-immersive-mode .app-frame,
+body.wb-immersive-mode #app {
+  background: #12151C !important;
   padding: 0 !important;
   margin: 0 !important;
+  border: none !important;
 }
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
