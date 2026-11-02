@@ -2802,7 +2802,7 @@ button, .btn { min-height: 44px; }
 }
 .filter-drawer .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-sub); }
 
-/* 9. 背单词 - 沉浸式重做（终极版2） */
+/* 9. 背单词 - 沉浸式重做（终极版3） */
 .wb-immersive {
   position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
   background: #12151C !important; z-index: 9999999 !important;
@@ -2810,17 +2810,9 @@ button, .btn { min-height: 44px; }
   padding: 0 !important; overflow: hidden !important;
   margin: 0 !important;
 }
-/* 沉浸式模式：所有元素都透明，不要盖住背景 */
-body.wb-immersive-mode * {
-  background: transparent !important;
-}
-body.wb-immersive-mode .wb-immersive,
-body.wb-immersive-mode .wb-immersive * {
+/* 直接改 wb-card 背景，不依赖类名 */
+.wb-card {
   background: #12151C !important;
-}
-body.wb-immersive-mode .wb-card,
-body.wb-immersive-mode .wb-card * {
-  background: #1E232E !important;
 }
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
