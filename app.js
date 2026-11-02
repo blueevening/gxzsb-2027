@@ -4141,7 +4141,13 @@ function formulaFilter() {
     var goal = window.WORDS.getDailyGoal();
     var newWords = window.WORDS.getNewWords(goal);
     if (!state.wbLearn) {
-      state.wbLearn = { list: newWords, i: 0, shown: false, startX: 0, startY: 0 };
+      state.wbLearn = {
+        list: newWords,
+        i: 0,
+        shown: false,
+        round: 1,
+        wrongList: []
+      };
       // 自动发音
       try {
         var firstWord = newWords[0];
@@ -4157,22 +4163,34 @@ function formulaFilter() {
       } catch(e){}
     }
     var L = state.wbLearn;
+    // 第一轮背完，检查有没有需要复习的词
+    if (L.i >= L.list.length && L.round === 1 && L.wrongList.length > 0) {
+      // 进入第二轮极速复习
+      L.round = 2;
+      L.list = L.wrongList;
+      L.i = 0;
+      L.shown = false;
+      L.wrongList = [];
+    }
     if (L.i >= L.list.length) {
+      var totalLearned = L.list.length;
       state.wbLearn = null;
       return `
         <div class="wb-done">
           <div class="wb-done-icon">🎉</div>
-          <div class="wb-done-title">今日新词学完啦！</div>
-          <div class="wb-done-sub">共学习 ${L.list.length} 个单词</div>
+          <div class="wb-done-title">${L.round === 2 ? '极速复习完成！' : '今日新词学完啦！'}</div>
+          <div class="wb-done-sub">共学习 ${totalLearned} 个单词</div>
           <button class="btn btn-primary btn-block" data-nav="words" type="button">返回单词本</button>
         </div>`;
     }
     var w = L.list[L.i];
     var prog = Math.round((L.i / L.list.length) * 100);
+    var roundLabel = L.round === 2 ? '极速复习' : '今日新词';
     return `
       <div class="wb-immersive">
         <div class="wb-progress-bar" style="width:${prog}%"></div>
         <button class="wb-close-btn" data-nav="words" type="button">✕</button>
+        <div class="wb-round-badge">${roundLabel} · ${L.i+1}/${L.list.length}</div>
 
         <div class="wb-card" id="wb-card-el" data-act="wb-card-touch">
           <div class="wb-card-inner">
@@ -4186,6 +4204,7 @@ function formulaFilter() {
               <div class="wb-meaning-section">
                 <div class="wb-pos-badge">${esc(w.pos)}</div>
                 <div class="wb-meaning-text">${esc(w.m)}</div>
+                ${w.ex && w.ex.length > 0 ? `<div class="wb-extra-tip">💡 ${esc(w.ex[0])}</div>` : ''}
               </div>
             ` : `
               <div class="wb-hint">点击卡片或上滑查看释义</div>
@@ -4219,29 +4238,23 @@ function formulaFilter() {
             var dx = e.changedTouches[0].clientX - startX;
             var dy = e.changedTouches[0].clientY - startY;
             var threshold = 60;
-            // 只有在显示释义后才触发评价手势
             var shown = window.state && window.state.wbLearn && window.state.wbLearn.shown;
             if (!shown) {
-              // 没显示释义时，上滑=显示释义
               if (dy < -threshold && Math.abs(dy) > Math.abs(dx)) {
                 var btn = document.querySelector('[data-act="wb-show-meaning"]');
                 if (btn) btn.click();
               }
               return;
             }
-            // 触觉反馈
             try { navigator.vibrate && navigator.vibrate(20); } catch(e){}
-            // 左滑 = 不认识
             if (dx < -threshold && Math.abs(dx) > Math.abs(dy)) {
               var btn1 = document.querySelector('.btn-swipe-left');
               if (btn1) btn1.click();
             }
-            // 右滑 = 认识
             else if (dx > threshold && Math.abs(dx) > Math.abs(dy)) {
               var btn3 = document.querySelector('.btn-swipe-right');
               if (btn3) btn3.click();
             }
-            // 上滑 = 模糊
             else if (dy < -threshold && Math.abs(dy) > Math.abs(dx)) {
               var btn2 = document.querySelector('.btn-swipe-up');
               if (btn2) btn2.click();
@@ -6109,6 +6122,10 @@ function formulaFilter() {
       var w = state.wbLearn.list[state.wbLearn.i];
       var q = parseInt(t.getAttribute("data-v"));
       window.WORDS.markWord(w.id, q);
+      // 收集不认识和模糊的词，用于极速复习
+      if (q <= 2 && state.wbLearn.round === 1) {
+        state.wbLearn.wrongList.push(w);
+      }
       state.wbLearn.i++;
       state.wbLearn.shown = false;
       render();
