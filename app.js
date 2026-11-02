@@ -23,11 +23,17 @@
   }
 
   var sb = null;
-  if (window.supabase && window.SB_CONFIG) {
-    try {
-      sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key);
-    } catch(e) {}
+  function initSb() {
+    if (window.supabase && window.SB_CONFIG) {
+      try {
+        sb = window.supabase.createClient(window.SB_CONFIG.url, window.SB_CONFIG.key);
+      } catch(e) {}
+    }
   }
+  initSb();
+  /* supabase SDK 后台异步加载完成后重建 sb（boot.js 先注入 app.js，后加载 SDK） */
+  window.addEventListener("gxzsb:sb-ready", function () { initSb(); });
+  window.addEventListener("gxzsb:sb-unavailable", function () { /* 静默降级为本地模式 */ });
 
   /* 题库快照：app.js 先于数据就绪注入（登录页不依赖数据），
      数据后台静默加载完成后由 gxzsb:data-ready 重建 */
@@ -237,6 +243,12 @@
     const i = s.lastIndexOf(".");
     return i >= 0 && i < s.length - 1 ? s.slice(i + 1).toLowerCase() : "";
   }
+  /* 答案归一化：trim + 折叠全角空格 + 统一半角，避免因空格差异误判 */
+  function normAns(s) {
+    if (s == null) return "";
+    return String(s).replace(/　/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function ansEqual(a, b) { return normAns(a) === normAns(b); }
   /* __QA_PURE_END__ */
 
   /* 主题持久化：主 key 异常时读备份 key */
@@ -1910,13 +1922,13 @@
                   let cls = "opt";
                   if (!s.submitted && s.sel === opt) cls += " is-selected";
                   if (done) {
-                    if (opt === q.answer) cls += " is-correct";
+                    if (ansEqual(opt, q.answer)) cls += " is-correct";
                     else if (s.sel === opt) cls += " is-wrong";
                   }
                   return `<button class="${cls}" data-act="pick" data-opt="${attr(opt)}" type="button" ${s.submitted ? "disabled" : ""}>
                     <span class="key">${keys[idx] || idx + 1}</span>
                     <span>${mathHtml(opt)}</span>
-                    ${done ? (opt === q.answer ? `<span class="mark">✓</span>` : s.sel === opt ? `<span class="mark">✕</span>` : "") : ""}
+                    ${done ? (ansEqual(opt, q.answer) ? `<span class="mark">✓</span>` : s.sel === opt ? `<span class="mark">✕</span>` : "") : ""}
                   </button>`;
                 })
                 .join("")
@@ -2110,7 +2122,7 @@
     const t = q.type;
     if (t === "single" || t === "judge") {
       if (s.sel == null) return alert("请先选择一个选项");
-      const ok = s.sel === q.answer;
+      const ok = ansEqual(s.sel, q.answer);
       s.submitted = true;
       s.results[q.id] = ok;
       s.showExp = true;
@@ -3750,8 +3762,43 @@ function formulaFilter() {
     return '<p style="margin:4px 0">' + (/^【/.test(l) ? '<strong>' : '') + mathHtml(l) + (/^【/.test(l) ? '</strong>' : '') + '</p>';
   }
 
+  /* SVG 安全提取：把 stem 中的 br 换行和 svg 图示提取为安全占位符，
+     mathHtml 处理完文本后再还原；仅保留几何标签，剥离事件属性、script、style 等危险内容 */
+  function sanitizeSvg(svgStr) {
+    // 移除事件属性、script、style 标签和危险属性
+    return svgStr
+      .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+      .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+      .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/\shref\s*=\s*"javascript:[^"]*"/gi, "");
+  }
+  function extractSafeHtml(raw) {
+    var keep = [];
+    // 提取 <br> / <br/> / <br />
+    raw = raw.replace(/<br\s*\/?>/gi, function () {
+      keep.push("<br>");
+      return "@@SH" + (keep.length - 1) + "@@";
+    });
+    // 提取 <svg>...</svg>（非贪婪匹配）
+    raw = raw.replace(/<svg[\s\S]*?<\/svg>/gi, function (m) {
+      keep.push(sanitizeSvg(m));
+      return "@@SH" + (keep.length - 1) + "@@";
+    });
+    return { text: raw, keep: keep };
+  }
+  function restoreSafeHtml(html, keep) {
+    return html.replace(/@@SH(\d+)@@/g, function (m, idx) {
+      return keep[parseInt(idx, 10)] || "";
+    });
+  }
+
   function mathHtml(expr) {
     let raw = String(expr == null ? "" : expr);
+    // 先提取安全 HTML 片段（<br>、<svg>），避免被 escKeep 转义
+    var safe = extractSafeHtml(raw);
+    raw = safe.text;
     // 横排简单分数 a/b → frac{a}{b}，统一渲染成上下堆叠（分子上/分母下）
     // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
     // 横排分数 a/b → frac{a}{b}：支持数字、单/双字母短变量(x/R1/Rf/ui)、括号表达式
@@ -3826,7 +3873,7 @@ function formulaFilter() {
       out += escKeep(raw[i]);
       i++;
     }
-    return autoFrac(out);
+    return restoreSafeHtml(autoFrac(out), safe.keep);
   }
   function autoFrac(html) {
     let s0 = String(html == null ? "" : html);

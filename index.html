@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>广西专升本练习 · gxzsb</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -15,26 +15,11 @@
 <meta name="apple-mobile-web-app-title" content="专升本">
 <link rel="icon" href="data:,">
 <script>
-/* v2.10.0：清旧SW缓存后重新注册新SW，支持离线刷题 */
+/* v2.11.0：正常注册 SW，版本由 sw.js 内部管理（activate 时自动清旧缓存） */
 (function () {
   try {
     if ('serviceWorker' in navigator) {
-      // 先清旧SW和旧缓存
-      navigator.serviceWorker.getRegistrations().then(function (regs) {
-        var needClean = regs.length > 0;
-        regs.forEach(function (r) { r.unregister(); });
-        if (window.caches) {
-          caches.keys().then(function (keys) {
-            keys.forEach(function (k) { caches.delete(k); });
-          });
-        }
-        // 清完后延迟注册新SW
-        setTimeout(function () {
-          navigator.serviceWorker.register('sw.js').catch(function () {});
-        }, 800);
-      }).catch(function () {
-        navigator.serviceWorker.register('sw.js').catch(function () {});
-      });
+      navigator.serviceWorker.register('sw.js').catch(function () {});
     }
   } catch (e) {}
   /* 应用主题 */
