@@ -2804,11 +2804,11 @@ button, .btn { min-height: 44px; }
 
 /* 9. 背单词 - 沉浸式重做 */
 .wb-immersive {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: #1A1D24; z-index: 9999;
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: #1A1D24 !important; z-index: 99999;
   display: flex; flex-direction: column;
-  padding: 0;
-  overflow: hidden;
+  padding: 0; overflow: hidden;
+  margin: 0;
 }
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
