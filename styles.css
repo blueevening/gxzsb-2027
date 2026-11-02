@@ -2802,13 +2802,17 @@ button, .btn { min-height: 44px; }
 }
 .filter-drawer .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-sub); }
 
-/* 9. 背单词 - 沉浸式重做（终极版3） */
+/* 9. 背单词 - 沉浸式重做（终极版4） */
 .wb-immersive {
   position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
   background: #12151C !important; z-index: 9999999 !important;
   display: flex !important; flex-direction: column !important;
   padding: 0 !important; overflow: hidden !important;
   margin: 0 !important;
+}
+/* wb-card 直接设深色，解决中间白色背景 */
+.wb-card {
+  background: #12151C !important;
 }
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
