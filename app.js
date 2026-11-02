@@ -4214,7 +4214,6 @@ function formulaFilter() {
 
         <div class="wb-bottom-actions">
           ${L.shown ? `
-            <div class="wb-swipe-hint">← 左滑不认识 · 上滑模糊 · 右滑认识 →</div>
             <div class="wb-mark-btns">
               <button class="btn-swipe-left" data-act="wb-mark" data-v="1" type="button">✕ 不认识</button>
               <button class="btn-swipe-up" data-act="wb-mark" data-v="2" type="button">○ 模糊</button>
