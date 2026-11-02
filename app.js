@@ -4174,7 +4174,7 @@ function formulaFilter() {
         <div class="wb-progress-bar" style="width:${prog}%"></div>
         <button class="wb-close-btn" data-nav="words" type="button">✕</button>
 
-        <div class="wb-card" data-act="wb-card-touch">
+        <div class="wb-card" id="wb-card-el" data-act="wb-card-touch">
           <div class="wb-card-inner">
             <div class="wb-word">${esc(w.w)}</div>
             <div class="wb-phonetic-row">
@@ -4188,24 +4188,67 @@ function formulaFilter() {
                 <div class="wb-meaning-text">${esc(w.m)}</div>
               </div>
             ` : `
-              <div class="wb-hint">点击卡片查看释义</div>
+              <div class="wb-hint">点击卡片或上滑查看释义</div>
             `}
           </div>
         </div>
 
         <div class="wb-bottom-actions">
           ${L.shown ? `
-            <div class="wb-swipe-hint">← 不认识 · 模糊 · 认识 →</div>
+            <div class="wb-swipe-hint">← 左滑不认识 · 上滑模糊 · 右滑认识 →</div>
             <div class="wb-mark-btns">
-              <button class="btn-swipe-left" data-act="wb-mark" data-v="1" type="button">不认识</button>
-              <button class="btn-swipe-up" data-act="wb-mark" data-v="2" type="button">模糊</button>
-              <button class="btn-swipe-right" data-act="wb-mark" data-v="3" type="button">认识</button>
+              <button class="btn-swipe-left" data-act="wb-mark" data-v="1" type="button">✕ 不认识</button>
+              <button class="btn-swipe-up" data-act="wb-mark" data-v="2" type="button">○ 模糊</button>
+              <button class="btn-swipe-right" data-act="wb-mark" data-v="3" type="button">✓ 认识</button>
             </div>
           ` : `
             <button class="btn-show-meaning" data-act="wb-show-meaning" type="button">显示释义</button>
           `}
         </div>
       </div>
+      <script>
+        (function(){
+          var card = document.getElementById('wb-card-el');
+          if (!card) return;
+          var startX = 0, startY = 0;
+          card.addEventListener('touchstart', function(e){
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          }, {passive: true});
+          card.addEventListener('touchend', function(e){
+            var dx = e.changedTouches[0].clientX - startX;
+            var dy = e.changedTouches[0].clientY - startY;
+            var threshold = 60;
+            // 只有在显示释义后才触发评价手势
+            var shown = window.state && window.state.wbLearn && window.state.wbLearn.shown;
+            if (!shown) {
+              // 没显示释义时，上滑=显示释义
+              if (dy < -threshold && Math.abs(dy) > Math.abs(dx)) {
+                var btn = document.querySelector('[data-act="wb-show-meaning"]');
+                if (btn) btn.click();
+              }
+              return;
+            }
+            // 触觉反馈
+            try { navigator.vibrate && navigator.vibrate(20); } catch(e){}
+            // 左滑 = 不认识
+            if (dx < -threshold && Math.abs(dx) > Math.abs(dy)) {
+              var btn1 = document.querySelector('.btn-swipe-left');
+              if (btn1) btn1.click();
+            }
+            // 右滑 = 认识
+            else if (dx > threshold && Math.abs(dx) > Math.abs(dy)) {
+              var btn3 = document.querySelector('.btn-swipe-right');
+              if (btn3) btn3.click();
+            }
+            // 上滑 = 模糊
+            else if (dy < -threshold && Math.abs(dy) > Math.abs(dx)) {
+              var btn2 = document.querySelector('.btn-swipe-up');
+              if (btn2) btn2.click();
+            }
+          }, {passive: true});
+        })();
+      </script>
     `;
   }
 
