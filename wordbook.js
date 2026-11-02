@@ -29,14 +29,34 @@ window.WORDS = (function () {
   function setProgress(p) { save(LS.progress, p); }
 
   function getLearnOrder() {
-    let order = load(LS.learnOrder, null);
+    // v2: 按分类优先级排序，核心词汇（大纲要求）优先
+    var ORDER_VERSION = "v2";
+    let order = load(LS.learnOrder + "_" + ORDER_VERSION, null);
     if (!order || order.length !== WORDS.length) {
-      order = WORDS.map(function(_, i) { return i; });
-      for (var i = order.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
-      }
-      save(LS.learnOrder, order);
+      // 分类优先级：核心词汇 > 词汇 > 不规则动词 > 短语搭配 > 写作句型 > 语法重点
+      var priority = {
+        "核心词汇": 1,
+        "词汇": 2,
+        "不规则动词": 3,
+        "短语搭配": 4,
+        "写作句型": 5,
+        "语法重点": 6
+      };
+      // 给每个词按分类排序，同分类内随机打乱
+      var indexed = WORDS.map(function(w, i) {
+        var cat = w.cat || "核心词汇";
+        return {
+          idx: i,
+          priority: priority[cat] || 99,
+          rand: Math.random()
+        };
+      });
+      indexed.sort(function(a, b) {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.rand - b.rand;
+      });
+      order = indexed.map(function(x) { return x.idx; });
+      save(LS.learnOrder + "_" + ORDER_VERSION, order);
     }
     return order;
   }
