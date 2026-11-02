@@ -1416,9 +1416,9 @@
     ];
     return (
       '<div class="card" style="display:flex;text-align:center;padding:16px;margin-bottom:16px">' +
-      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">总题数</div></div>' +
-      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">已练习</div></div>' +
-      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">正确率</div></div>' +
+      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">📚 总题数</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">✅ 已练习</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">🎯 正确率</div></div>' +
       '</div>' +
       groups.map(function (g) {
         return (
@@ -1427,14 +1427,17 @@
             const p = subjStat(n);
             const m = subjOf(n);
             return (
-              '<button class="bank-subject ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%">' +
+              '<button class="bank-subject hoverable ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%;background:var(--card);border:1px solid var(--border);transition:all .2s ease">' +
               '<div style="width:40px;height:40px;border-radius:10px;background:' + (m.color || "#2563EB") + '20;color:' + (m.color || "#2563EB") + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">' + esc(m.short[0]) + '</div>' +
               '<div style="flex:1;min-width:0">' +
               '<div style="font-size:15px;font-weight:600">' + esc(m.short) + '</div>' +
               '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + p.total + " 题 · 已练 " + p.done + "</div>" +
               '<div class="bar" style="margin-top:6px;height:4px"><i style="width:' + (p.pct || 0) + '%;background:' + (m.color || "#2563EB") + ';border-radius:2px"></i></div>' +
               '</div>' +
-              '<div style="font-size:18px;font-weight:700;color:' + (m.color || "#2563EB") + '">' + (p.pct || 0) + '%</div>' +
+              '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">' +
+              '<span style="font-size:12px;color:var(--text-sub)">' + (p.pct || 0) + '%</span>' +
+              '<span style="font-size:12px;color:' + (m.color || "#2563EB") + ';font-weight:600">开始刷题 ›</span>' +
+              '</div>' +
               '</button>'
             );
           }).join("")
@@ -2604,11 +2607,13 @@
 
     function rows(arr, kind) {
       if (!arr.length) {
-        const msg = kind === "fav" ? "还没有收藏题。做题时点「收藏」。" : "暂无错题。";
+        const msg = kind === "fav" ? "还没有收藏题。做题时点「收藏」。" : "暂无错题，继续保持！";
         return (
-          '<div class="empty">' +
-          esc(msg) +
-          '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+          '<div class="empty-state">' +
+          '<div class="es-icon">🎉</div>' +
+          '<div class="es-title">' + esc(msg) + '</div>' +
+          '<div class="es-desc">多刷题、多复盘，错题会越来越少的</div>' +
+          '<div class="es-action" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
           '<button class="btn btn-primary btn-sm" data-act="daily" type="button">去做今日 30 题</button>' +
           '<button class="btn btn-ghost btn-sm" data-nav="bank" type="button">去题库</button>' +
           "</div></div>"
@@ -2690,22 +2695,28 @@
         "</div>" +
         '<div class="section-title">按科目筛选</div>' +
         '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + subjChips + "</div>" +
-        '<div class="section-title">遗忘曲线节奏</div>' +
-        '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' +
-        ["fast","mid","slow"].map(function(k){
-          var c = FORGET_CURVES[k];
-          return '<button class="chip' + (state.forgetCurve === k ? " is-active" : "") + '" data-act="curve" data-v="' + k + '" type="button">' + c.label + ' (' + c.wrong.slice(1).join("/") + 'd)</button>';
-        }).join("") +
-        "</div>" +
-        '<div class="section-title">按错误次数筛选</div>' +
-        '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + nChips + "</div>" +
-        '<div class="section-title">按错因补练</div>' +
-        '<div class="chip-row" style="margin-bottom:12px">' +
-        '<button class="chip" data-act="by-reason" data-r="concept" type="button">概念不清</button>' +
-        '<button class="chip" data-act="by-reason" data-r="calc" type="button">计算失误</button>' +
-        '<button class="chip" data-act="by-reason" data-r="read" type="button">审题偏差</button>' +
-        '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
-        "</div>" +
+        '<button class="btn btn-ghost btn-sm" data-act="wrong-adv-toggle" type="button" style="margin-bottom:12px;width:100%">' +
+        (state.wrongAdvOpen ? "▾ 收起高级筛选" : "▸ 高级筛选（遗忘曲线 / 错误次数 / 错因）") +
+        "</button>" +
+        (state.wrongAdvOpen ? (
+          '<div class="filter-drawer">' +
+          '<div class="fd-title">遗忘曲线节奏</div>' +
+          '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' +
+          ["fast","mid","slow"].map(function(k){
+            var c = FORGET_CURVES[k];
+            return '<button class="chip' + (state.forgetCurve === k ? " is-active" : "") + '" data-act="curve" data-v="' + k + '" type="button">' + c.label + ' (' + c.wrong.slice(1).join("/") + 'd)</button>';
+          }).join("") +
+          "</div>" +
+          '<div class="fd-title">按错误次数筛选</div>' +
+          '<div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">' + nChips + "</div>" +
+          '<div class="fd-title">按错因补练</div>' +
+          '<div class="chip-row" style="flex-wrap:wrap">' +
+          '<button class="chip" data-act="by-reason" data-r="concept" type="button">概念不清</button>' +
+          '<button class="chip" data-act="by-reason" data-r="calc" type="button">计算失误</button>' +
+          '<button class="chip" data-act="by-reason" data-r="read" type="button">审题偏差</button>' +
+          '<button class="chip" data-act="by-reason" data-r="formula" type="button">公式记错</button>' +
+          "</div></div>"
+        ) : "") +
         '<div class="section-title">错题列表（点题看解析，✓ 标记掌握）</div>' + rows(pageItems, "wrong") +
         (moreWrong ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="wrong-more" type="button">加载更多（' + filteredItems.length + ' 中已显示 ' + pageItems.length + '）</button></div>' : "") +
         masteredSection +
@@ -3653,14 +3664,29 @@ function ensureExplain(q) {
         <div class="muted" id="offlineBarTxt" style="font-size:12px;margin-top:8px"></div>
       </div>
 
-      <div class="card" style="padding:0;margin-bottom:16px">
-        <button class="list-row" data-act="set-nick" type="button"><span class="main"><span class="t">修改昵称</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="export-all" type="button"><span class="main"><span class="t">导出数据备份</span></span><span class="end">›</span></button>
-        <button class="list-row" data-nav="resources" type="button"><span class="main"><span class="t">学习资料（C语言 / 计网 / 电工）</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="import" type="button"><span class="main"><span class="t">导入数据备份</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="theme" type="button"><span class="main"><span class="t">深色/浅色模式</span></span><span class="end">›</span></button>
-        <div class="list-row" style="display:flex;align-items:center;gap:8px;padding:12px 16px">
-          <span class="main" style="flex:1"><span class="t">字号大小</span></span>
+      <div class="card" style="padding:14px;margin-bottom:16px">
+        <button class="row-item" data-act="set-nick" type="button">
+          <span class="ri-main"><span class="ri-label">修改昵称</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="export-all" type="button">
+          <span class="ri-main"><span class="ri-label">导出数据备份</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-nav="resources" type="button">
+          <span class="ri-main"><span class="ri-label">学习资料（C语言 / 计网 / 电工）</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="import" type="button">
+          <span class="ri-main"><span class="ri-label">导入数据备份</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="theme" type="button">
+          <span class="ri-main"><span class="ri-label">深色/浅色模式</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+        <div class="row-item" style="cursor:default">
+          <span class="ri-main"><span class="ri-label">字号大小</span></span>
           <div style="display:flex;gap:4px">
             ${["sm","md","lg"].map(function(k){
               var on = (state.fontSize || "md") === k;
@@ -3668,9 +3694,19 @@ function ensureExplain(q) {
             }).join("")}
           </div>
         </div>
-        <button class="list-row" data-act="logout" type="button"><span class="main"><span class="t">退出登录</span></span><span class="end">›</span></button>
-        <button class="list-row" data-act="reset-study" type="button"><span class="main"><span class="t" style="color:var(--error)">重置学习数据</span></span><span class="end">›</span></button>
-        <div style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-sub)">版本 v${window.V || "2.2.0"}</div>
+        <button class="row-item" data-act="logout" type="button">
+          <span class="ri-main"><span class="ri-label">退出登录</span></span>
+          <span class="ri-chevron">›</span>
+        </button>
+
+        <div class="danger-group">
+          <button class="row-item" data-act="reset-study" type="button">
+            <span class="ri-main"><span class="ri-label">重置学习数据</span></span>
+            <span class="ri-chevron">›</span>
+          </button>
+        </div>
+
+        <div style="padding:12px 0 0;text-align:center;font-size:12px;color:var(--text-sub)">版本 v${window.V || "2.2.0"}</div>
       </div>
     `;
   }
@@ -5640,6 +5676,9 @@ function formulaFilter() {
       render();
     } else if (act === "wrong-mastered-toggle") {
       state.wrongMasteredOpen = !state.wrongMasteredOpen;
+      render();
+    } else if (act === "wrong-adv-toggle") {
+      state.wrongAdvOpen = !state.wrongAdvOpen;
       render();
     } else if (act === "curve") {
       state.forgetCurve = t.getAttribute("data-v") || "mid";
