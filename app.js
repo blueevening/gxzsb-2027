@@ -3101,14 +3101,14 @@ function ensureExplain(q) {
     { name: "桂林航天工业学院", city: "桂林", tier: "公办本科", plan26: 1300, plan25: 0, itMajor: true, url: "https://zsw.guat.edu.cn/info/1030/1208.htm", majors: ["电子信息工程", "通信工程", "软件工程", "数字媒体技术"], note: "2026新增公办，51大类对口约266人，4600-10000元/年", majorUrls: { "通信工程": "https://dept4.guat.edu.cn/info/1158/1019.htm", "软件工程": "https://dept7.guat.edu.cn/info/1175/3064.htm", "数字媒体技术": "https://art.guat.edu.cn/info/1133/1638.htm" } },
     { name: "广西农业职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 2500, plan25: 2000, itMajor: true, url: "https://www.gxnzd.edu.cn/xg/zyjs/dzxxgcjs.htm", majors: ["电子信息工程技术", "计算机应用工程", "网络工程技术", "数字媒体技术"], note: "职业本科，51大类对口约316人，7500元/年", majorUrls: { "计算机应用工程": "https://www.gxnzd.edu.cn/xg/info/1044/1722.htm", "网络工程技术": "https://www.gxnzd.edu.cn/xg/info/1044/1722.htm", "数字媒体技术": "https://www.gxnzd.edu.cn/xg/zyjs/szmtjs.htm" } },
     { name: "南宁职业技术大学", city: "南宁", tier: "公办职业本科", plan26: 500, plan25: 0, itMajor: true, url: "https://zs.nnvtu.edu.cn/info/1125/8000.htm", majors: ["软件工程技术(相思湖校区)"], note: "2026新增公办职业本科，51大类对口约200人，7500元/年" },
-    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://www.lzpu.edu.cn/zsxx/zsbzs/zszc2/zsbzs1/content_102572", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
+    { name: "柳州职业技术大学", city: "柳州", tier: "公办职业本科", plan26: 250, plan25: 0, itMajor: true, url: "https://www.lzpu.edu.cn/zsxx/zsbzs", majors: ["工业互联网技术"], note: "2026新增公办职业本科，51大类对口约50人，7494元/年" },
     { name: "桂林旅游学院", city: "桂林", tier: "公办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://sjxy.gltu.edu.cn/zsjy.htm", majors: ["数据科学与大数据技术"], note: "51大类对口约90人，9999元/年" },
     /* ---- 民办（9所） ---- */
     { name: "桂林信息科技学院", city: "桂林", tier: "民办本科", plan26: 4400, plan25: 6000, itMajor: true, url: "https://www.guit.edu.cn/zs/info/1021/1580.htm", majors: ["计算机科学与技术", "软件工程", "电子信息工程", "电子信息科学与技术", "通信工程", "网络工程", "人工智能", "物联网工程", "医学信息工程", "虚拟现实技术", "数据科学与大数据技术"], note: "原桂电信科，IT类最强民办，51大类对口约880人，24500元/年", majorUrls: { "通信工程": "https://www.guit.edu.cn/zs/info/1021/1581.htm", "网络工程": "https://www.guit.edu.cn/zs/info/1021/1583.htm", "电子信息工程": "https://www.guit.edu.cn/zs/info/1022/1330.htm", "电子信息科学与技术": "https://www.guit.edu.cn/zs/info/1022/1329.htm", "软件工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "人工智能": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "物联网工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "医学信息工程": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "虚拟现实技术": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm", "数据科学与大数据技术": "https://www.guit.edu.cn/zs/xyzy/xxgcxy.htm" } },
     { name: "南宁理工学院", city: "南宁", tier: "民办本科", plan26: 4900, plan25: 6500, itMajor: true, url: "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053232.htm", majors: ["人工智能", "计算机科学与技术", "电子信息工程", "数据科学与大数据技术"], note: "招生大校，51大类对口约330人，24800元/年", majorUrls: { "计算机科学与技术": "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053251.htm", "数据科学与大数据技术": "https://zsc.bwgl.cn/zy/syjs/2025/4/1400000000000053227.htm" } },
     { name: "广西城市职业大学", city: "崇左", tier: "民办职业本科", plan26: 2000, plan25: 4030, itMajor: true, url: "https://www.gxcvuedu.com/rgznydsjxy/zyjj/zsb/content_9725", majors: ["计算机应用工程", "大数据工程技术", "信息安全与管理"], note: "职业本科，51大类对口约165人，26000元/年" },
     { name: "广西外国语学院", city: "南宁", tier: "民办本科", plan26: 3015, plan25: 4500, itMajor: true, url: "https://sie.gxufl.edu.cn/info/110458", majors: ["人工智能", "计算机科学与技术", "软件工程", "网络工程", "数据科学与大数据技术"], note: "51大类对口约195人，25200元/年", majorUrls: { "人工智能": "https://zs.gxufl.edu.cn/info/103415", "软件工程": "https://sie.gxufl.edu.cn/info/2453", "网络工程": "https://zs.gxufl.edu.cn/info/58144", "数据科学与大数据技术": "https://sie.gxufl.edu.cn/info/110458" } },
-    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://jsj.unn.edu.cn/zyjs1/zsbzy.htm", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
+    { name: "南宁学院", city: "南宁", tier: "民办本科", plan26: 1300, plan25: 1700, itMajor: true, url: "https://www.unn.edu.cn/", urlDead: "原页面 jsj.unn.edu.cn 已不可达，暂改学校主页", majors: ["计算机科学与技术"], note: "51大类对口约52人，22500元/年" },
     { name: "广西民族大学相思湖学院", city: "南宁", tier: "民办本科", plan26: 2000, plan25: 2800, itMajor: true, url: "https://www.gxxshxy.edu.cn/info/1201/26441.htm", majors: ["计算机科学与技术", "软件工程", "网络工程"], note: "民大独立学院，51大类对口约460人，20000元/年" },
     { name: "南宁师范大学师园学院", city: "南宁", tier: "民办本科", plan26: 1500, plan25: 1000, itMajor: true, url: "https://www.gxsy.edu.cn/Item/10100.aspx", majors: ["计算机科学与技术"], note: "南师独立学院，51大类对口100人，15000元/年" },
     { name: "柳州工学院", city: "柳州", tier: "民办本科", plan26: 725, plan25: 725, itMajor: true, url: "https://www.lzhit.edu.cn/xxkxygcxy2026/zyjs/dzxxgc.htm", majors: ["电子信息工程"], note: "原鹿山学院，51大类对口65人，22500元/年" },
@@ -3335,98 +3335,157 @@ function ensureExplain(q) {
     setTitle("院校查询", true);
     const kw = (state.schoolQ || "").trim().toLowerCase();
     const cityFilter = state.schoolCity || "all";
+    const trendFilter = state.schoolTrend || "all";
+    const pubFilter = state.schoolPub || "all";
     const cities = ["all", ...Array.from(new Set(SCHOOLS_DATA.map((s) => s.city)))];
-    let list = SCHOOLS_DATA;
+
+    let list = SCHOOLS_DATA.slice();
     if (cityFilter !== "all") list = list.filter((s) => s.city === cityFilter);
-    if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw));
+    if (pubFilter === "公") list = list.filter((s) => s.tier.indexOf("公办") >= 0);
+    if (pubFilter === "民") list = list.filter((s) => s.tier.indexOf("民办") >= 0);
+    if (trendFilter === "up") list = list.filter((s) => s.plan25 > 0 && s.plan26 > s.plan25);
+    if (trendFilter === "down") list = list.filter((s) => s.plan25 > 0 && s.plan26 < s.plan25);
+    if (trendFilter === "new") list = list.filter((s) => s.plan25 === 0);
+    if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw) || s.city.toLowerCase().includes(kw));
 
     const total26 = SCHOOLS_DATA.reduce((a, s) => a + (s.plan26 || 0), 0);
-    const itCount = SCHOOLS_DATA.filter((s) => s.itMajor).length;
+    const gong = SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length;
+    const cntOf = (c) => c === "all" ? SCHOOLS_DATA.length : SCHOOLS_DATA.filter((s) => s.city === c).length;
+    const maxT = Math.max(...SCHOOLS_TREND.map((t) => parseFloat(t.total)));
+
+    const deltaOf = (s) => {
+      if (s.plan25 === 0) return { cls: "new", txt: "🆕 新增" };
+      const d = s.plan26 - s.plan25;
+      if (d > 0) return { cls: "up", txt: "+" + d + " 扩招" };
+      if (d < 0) return { cls: "down", txt: "-" + (-d) + " 缩招" };
+      return { cls: "flat", txt: "0 持平" };
+    };
+    const parseNote = (n) => {
+      const cntM = (n || "").match(/51大类对口约?(\d+(?:\.\d+)?)人/);
+      const feeM = (n || "").match(/(\d[\,]*(?:-\d[\,]*)?元\/年)/);
+      const rest = (n || "").replace(/51大类对口约?[\d.]+人/, "").replace(/(\d[\,]*(?:-\d[\,]*)?元\/年)/, "").replace(/^[，,、。\s]+/, "").replace(/[，,、。\s]+$/, "");
+      return { cnt: cntM ? cntM[1] : null, fee: feeM ? feeM[1] : null, frags: rest.split(/[，,、。;；]+/).map((x) => x.trim()).filter(Boolean) };
+    };
+    const findDetail = (schoolName, majorName) => {
+      const arr = MAJOR_DETAIL[schoolName] || [];
+      return arr.find((d) => d.name === majorName || majorName.indexOf(d.name) >= 0 || d.name.indexOf(majorName) >= 0) || null;
+    };
+
+    const seg = (key, cur, opts) => opts.map((o) =>
+      `<button type="button" class="${cur === o.v ? "on" : ""}" data-act="schools-filter" data-f="${key}" data-v="${attr(o.v)}">${o.t}</button>`).join("");
+
+    const cardsHtml = list.length ? list.map((s) => {
+      const d = deltaOf(s), pn = parseNote(s.note);
+      const isGong = s.tier.indexOf("公办") >= 0;
+      const open = (state.schoolMajor && state.schoolMajor.school === s.name) ? state.schoolMajor.major : null;
+
+      const chips = s.majors.map((m) =>
+        `<button type="button" class="major-chip ${open === m ? "on" : ""}" data-act="school-major" data-school="${attr(s.name)}" data-major="${attr(m)}">${esc(m)}<span class="ext">▾</span></button>`).join("");
+
+      let detailHtml = "";
+      if (open) {
+        const dm = findDetail(s.name, open);
+        const offHref = (s.majorUrls && s.majorUrls[open]) || s.url || "#";
+        if (dm) {
+          detailHtml = `<div class="major-detail">
+            <div class="md-head">${esc(dm.name)}<span class="md-plan">招 ${dm.plan} 人</span></div>
+            <div class="md-grid">
+              <div>💰 学费：<b>${dm.fee}</b> 元/学年</div>
+              <div>📚 类别：${esc(dm.category)}</div>
+              <div class="full">📍 校区：${esc(dm.campus)}</div>
+              <div class="full muted">📝 ${esc(dm.note || "")}</div>
+            </div>
+            <div class="md-actions">
+              <button type="button" class="btn-primary" data-act="school-goto" data-href="${attr(offHref)}" data-label="${attr(s.name)}">🏫 前往该专业官网核对 ↗</button>
+              <button type="button" class="btn-ghost" data-act="school-goto" data-href="https://www.gxeea.cn/view/content_1215_32740.htm" data-label="广西招生考试院">📄 招考院2026计划PDF ↗</button>
+            </div>
+          </div>`;
+        } else {
+          detailHtml = `<div class="major-detail">
+            <div class="md-head">${esc(open)}</div>
+            <div class="muted" style="margin-top:6px">该专业暂无逐专业招生数/学费明细，请到学校招生网核对官方计划。</div>
+            <div class="md-actions">
+              <button type="button" class="btn-primary" data-act="school-goto" data-href="${attr(offHref)}" data-label="${attr(s.name)}">🏫 前往学校招生网核对 ↗</button>
+            </div>
+          </div>`;
+        }
+      }
+
+      return `<div class="card school-card">
+        <div class="sc-head">
+          <span class="sc-name">${esc(s.name)}</span>
+          <span class="badge ${isGong ? "gong" : "min"}">${esc(s.tier)}</span>
+          <span class="badge it">💻 51大类对口</span>
+          <span class="badge city">📍 ${esc(s.city)}</span>
+        </div>
+        <div class="sc-main">
+          <div class="sc-plan">${s.plan26}<small> 人（2026）</small></div>
+          <div class="sc-delta ${d.cls}">${d.txt}<span class="vs">较2025年</span></div>
+        </div>
+        <div class="major-box">
+          <div class="major-label">招生专业（点 chip 看该专业详情）：</div>
+          <div class="major-chips">${chips}</div>
+          ${detailHtml}
+          ${s.urlDead ? `<div class="dead-warn">⚠️ ${esc(s.urlDead)}</div>` : ""}
+        </div>
+        <div>
+          ${s.url ? `<button type="button" class="btn-ghost" data-act="school-goto" data-href="${attr(s.url)}" data-label="${attr(s.name)}">🏫 官网 ↗</button>` : ""}
+        </div>
+        <div class="sc-foot">
+          ${pn.cnt ? `<span class="tag-note cnt">🎯 51大类对口约${pn.cnt}人</span>` : ""}
+          ${pn.fee ? `<span class="tag-note fee">💰 学费 ${pn.fee}</span>` : ""}
+          ${pn.frags.map((f) => `<span class="tag-note">${esc(f)}</span>`).join("")}
+        </div>
+      </div>`;
+    }).join("") : '<div class="empty-state">😕 没有匹配的院校，换个城市 / 关键词试试</div>';
 
     return `
-      <div class="card" style="margin-bottom:12px">
-        <input class="input" id="schoolSearch" placeholder="搜院校名 / 专业（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" />
-      </div>
-
-      <!-- 改革三年趋势 -->
-      <div class="card" style="margin-bottom:12px;padding:14px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:10px">📈 改革三年招生趋势（广西专升本）</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${SCHOOLS_TREND.map((t) => `
-            <div style="flex:1;min-width:100px;padding:10px;border-radius:10px;background:color-mix(in srgb, var(--text) 5%, transparent);text-align:center">
-              <div style="font-size:18px;font-weight:800;color:${t.year === "2026" ? "var(--primary)" : "var(--text)"}">${t.year}</div>
-              <div style="font-size:12px;color:var(--text-sub)">${t.label}</div>
-              <div style="font-size:15px;font-weight:700;margin-top:4px">${t.total}</div>
-              <div style="font-size:10px;color:var(--text-sub);margin-top:2px">${t.note}</div>
-            </div>
-          `).join("")}
+      <div class="schools-v2">
+        <div class="card">
+          <input class="search-box" id="schoolSearch" type="search" placeholder="搜院校名 / 专业 / 城市（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" autocomplete="off" />
         </div>
-      </div>
-
-      <div class="chip-row" style="margin-bottom:12px;flex-wrap:wrap">
-        ${cities.map((c) => `<button class="chip ${cityFilter === c ? "is-active" : ""}" data-act="school-city" data-v="${attr(c)}" type="button">${c === "all" ? "全部城市" : esc(c)}</button>`).join("")}
-      </div>
-      <div class="stat-grid" style="margin-bottom:12px">
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.length}</div><div class="l">51大类可报院校</div></div>
-        <div class="stat-box"><div class="n">${SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length}</div><div class="l">公办</div></div>
-        <div class="stat-box"><div class="n">${(total26 / 10000).toFixed(2)}万</div><div class="l">2026对口总计划</div></div>
-      </div>
-      ${list.length ? list.map((s) => {
-        const delta = s.plan26 - s.plan25;
-        const deltaTxt = s.plan25 === 0 ? '<span class="pill" style="background:#dcfce7;color:#166534">🆕 2026新增</span>'
-          : (delta > 0 ? `<span class="pill" style="background:#dcfce7;color:#166534">↑扩招${delta}</span>`
-            : (delta < 0 ? `<span class="pill" style="background:#fee2e2;color:#991b1b">↓缩招${-delta}</span>` : ""));
-        const detail = MAJOR_DETAIL[s.name] || [];
-        const expanded = (state.schoolMajor && state.schoolMajor.school === s.name) ? state.schoolMajor.major : null;
-        return `
-        <div class="card" style="margin-bottom:10px;padding:14px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <strong style="font-size:16px">${esc(s.name)}</strong>
-            <span class="pill" style="background:${s.tier.indexOf("公办") >= 0 ? "#dcfce7;color:#166534" : "#fef3c7;color:#92400e"}">${esc(s.tier)}</span>
-            ${s.itMajor ? '<span class="pill" style="background:#dbeafe;color:#1e40af">💻 51大类对口</span>' : ""}
-            <span class="pill">📍 ${esc(s.city)}</span>
-            ${deltaTxt}
-            <span class="pill" style="margin-left:auto;font-weight:700">2026招 ${s.plan26} 人</span>
-            ${s.url ? `<a href="${s.url}" target="_blank" rel="noopener" style="font-size:11px;color:var(--primary);text-decoration:none;margin-left:4px">官网↗</a>` : ""}
+        <div class="card">
+          <div class="section-title">📈 改革三年招生趋势（广西专升本）</div>
+          <div class="trend-grid">
+            ${SCHOOLS_TREND.map((t) => `<div class="trend-cell">
+              <div class="trend-year">${t.year}</div>
+              <div class="trend-label">${t.label}</div>
+              <div class="trend-num">${t.total}</div>
+              <div class="trend-bars"><i class="${t.year === "2026" ? "hot" : ""}" style="height:${Math.round(parseFloat(t.total) / maxT * 100)}%"></i></div>
+              <div class="trend-note">${t.note}</div>
+            </div>`).join("")}
           </div>
-          <div style="margin-top:8px;font-size:13px;line-height:1.7">
-            <div><b>招生专业（点 chip 看详情）：</b></div>
-            <div style="margin-top:6px">
-              ${s.majors.map((m) => {
-                const hasDetail = detail.some((d) => d.name === m || m.indexOf(d.name) >= 0 || d.name.indexOf(m) >= 0);
-                const isOpen = expanded === m;
-                return `<button type="button" data-act="school-major" data-school="${attr(s.name)}" data-major="${attr(m)}" class="pill" style="margin-right:6px;margin-top:6px;cursor:pointer;border:1px solid ${isOpen ? "var(--primary)" : "transparent"};background:${isOpen ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "color-mix(in srgb, var(--text) 6%, transparent)"}">${esc(m)}${hasDetail ? " ▸" : ""}</button>`;
-              }).join("")}
+          <div class="source-line">📅 数据来源：广西招生考试院，更新于 2026-05</div>
+        </div>
+        <div class="card stats">
+          <div class="stat-box"><div class="stat-num">${SCHOOLS_DATA.length}<small> 所</small></div><div class="stat-label">51大类可报院校</div></div>
+          <div class="stat-box"><div class="stat-num">${gong}<small> 所</small></div><div class="stat-label">公办</div></div>
+          <div class="stat-box"><div class="stat-num">${(total26 / 10000).toFixed(2)}<small> 万</small></div><div class="stat-label">2026对口总计划</div></div>
+        </div>
+        <div class="layout">
+          <aside class="filter-panel">
+            <div class="card">
+              <div class="section-title">📍 城市</div>
+              <div class="chip-row">
+                ${cities.map((c) => `<button type="button" class="chip ${cityFilter === c ? "on" : ""}" data-act="school-city" data-v="${attr(c)}">${c === "all" ? "全部城市" : esc(c)}<span class="cnt">${cntOf(c)}</span></button>`).join("")}
+              </div>
+              <div class="section-title" style="margin-top:12px">📊 扩招 / 缩招</div>
+              <div class="seg">${seg("schoolTrend", trendFilter, [{v:"all",t:"全部"},{v:"up",t:"↑扩招"},{v:"down",t:"↓缩招"},{v:"new",t:"🆕新增"}])}</div>
+              <div class="section-title" style="margin-top:12px">🏛️ 公办 / 民办</div>
+              <div class="seg">${seg("schoolPub", pubFilter, [{v:"all",t:"全部"},{v:"公",t:"公办"},{v:"民",t:"民办"}])}</div>
             </div>
-            ${expanded ? (() => {
-              const d = detail.find((x) => x.name === expanded || expanded.indexOf(x.name) >= 0 || x.name.indexOf(expanded) >= 0);
-              // 按当前展开的专业 chip 动态取专业介绍页 URL；没有配置则 fallback 到学校默认 url
-              const majorUrlMap = s.majorUrls || {};
-              const officialUrl = majorUrlMap[expanded] || s.url || "https://www.guet.edu.cn/";
-              const pdfUrl = "https://www.gxeea.cn/view/content_1215_32740.htm";
-              const officialLink = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-                <a href="${officialUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:var(--primary);color:#fff;border-radius:8px;font-size:12px;text-decoration:none">🏫 ${esc(s.name)}官网 ↗</a>
-                <a href="${pdfUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:#fff;color:var(--primary);border:1px solid var(--primary);border-radius:8px;font-size:12px;text-decoration:none">📄 广西招考院2026计划PDF(公开) ↗</a>
-              </div>`;
-              if (!d) return `<div style="margin-top:8px;padding:10px;border-radius:8px;background:color-mix(in srgb, var(--text) 4%, transparent);font-size:12px" class="muted">${officialLink}</div>`;
-              return `
-              <div style="margin-top:10px;padding:12px;border-radius:10px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-left:3px solid var(--primary)">
-                <div style="font-weight:700;font-size:14px;margin-bottom:6px">${esc(d.name)}<span class="pill" style="margin-left:8px;background:#dbeafe;color:#1e40af">招 ${d.plan} 人</span></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
-                  <div><span class="muted">💰 学费：</span>${d.fee} 元/学年</div>
-                  <div><span class="muted">📚 类别：</span>${esc(d.category)}</div>
-                  <div style="grid-column:1/-1"><span class="muted">📍 校区：</span>${esc(d.campus)}</div>
-                  <div style="grid-column:1/-1" class="muted">📝 ${esc(d.note || "")}</div>
-                </div>
-                ${officialLink}
-              </div>`;
-            })() : ""}
-            <div class="muted" style="font-size:12px;margin-top:6px">📝 ${esc(s.note)}</div>
-          </div>
-        </div>`;
-      }).join("") : '<div class="empty">没有匹配的院校，换个关键词试试</div>'}
-      <div class="disclaimer">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向"51 电子与信息大类"招生的院校共约 4.5 万对口名额；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年总数。2027 年招生计划与分数线以当年公布为准。</div>
-    `;
+            <div class="card">
+              <div class="section-title">ℹ️ 数据来源说明</div>
+              <div class="muted">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向「51 电子与信息大类」招生的院校，共 ${total26} 个对口名额；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年总数。扩招/缩招按各校 2026 计划数对比 2025 计划数计算。2027 年招生计划与分数线以当年公布为准。</div>
+            </div>
+          </aside>
+          <section class="school-list">
+            <div class="count-line">共 ${list.length} 所院校</div>
+            ${cardsHtml}
+            <div class="feedback-line">数据仅供参考，如有误请 <a href="https://github.com/blueevening/gxzsb-2027/issues" target="_blank" rel="noopener">点此反馈</a></div>
+          </section>
+        </div>
+      </div>`;
   }
 
   function viewLogin() {
@@ -5471,21 +5530,32 @@ function formulaFilter() {
       window.scrollTo(0, _sy);
       requestAnimationFrame(() => window.scrollTo(0, _sy));
       setTimeout(() => window.scrollTo(0, _sy), 80);
-    } else if (act === "school-major") {
-      const sn = t.getAttribute("data-school");
-      const mj = t.getAttribute("data-major");
-      // 再次点同一个 = 收起
-      if (state.schoolMajor && state.schoolMajor.school === sn && state.schoolMajor.major === mj) {
-        state.schoolMajor = null;
-      } else {
-        state.schoolMajor = { school: sn, major: mj };
-      }
-      // 同步保存滚动位置，render 后立即恢复（不用 overflow:hidden，那会阻止 scrollTo）
+    } else if (act === "schools-filter") {
+      state[t.getAttribute("data-f")] = t.getAttribute("data-v");
       var _sy = window.scrollY;
       render();
       window.scrollTo(0, _sy);
       requestAnimationFrame(() => window.scrollTo(0, _sy));
       setTimeout(() => window.scrollTo(0, _sy), 80);
+    } else if (act === "school-major") {
+      const sn = t.getAttribute("data-school");
+      const mj = t.getAttribute("data-major");
+      if (state.schoolMajor && state.schoolMajor.school === sn && state.schoolMajor.major === mj) {
+        state.schoolMajor = null;
+      } else {
+        state.schoolMajor = { school: sn, major: mj };
+      }
+      var _sy2 = window.scrollY;
+      render();
+      window.scrollTo(0, _sy2);
+      requestAnimationFrame(() => window.scrollTo(0, _sy2));
+      setTimeout(() => window.scrollTo(0, _sy2), 80);
+    } else if (act === "school-goto") {
+      const href = t.getAttribute("data-href");
+      const label = t.getAttribute("data-label") || "学校官网";
+      if (href && confirm("即将离开本站前往「" + label + "」官网，请核对专业信息，以官方发布为准。是否继续？")) {
+        window.open(href, "_blank", "noopener");
+      }
     } else if (act === "wrong-subj") {
       state.wrongSubj = t.getAttribute("data-v");
       state.wrongPage = 1;
