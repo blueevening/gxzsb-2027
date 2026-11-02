@@ -4349,14 +4349,24 @@ function formulaFilter() {
     var all = window.WORDS.WORDS;
     var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     var q = state.wbSearch || "";
+    var pageSize = 100;
+    // 切换字母或搜索时重置分页
+    var curKey = (letter || "all") + "|" + q;
+    if (state.wbListKey !== curKey) {
+      state.wbListKey = curKey;
+      state.wbListPage = 1;
+    }
+    var pageNo = state.wbListPage || 1;
     var list;
     if (q) {
       list = window.WORDS.searchWords(q);
     } else if (letter && letter !== "all") {
       list = all.filter(function(w){ return w.letter === letter.toUpperCase(); });
     } else {
-      list = all.slice(0, 100);
+      list = all;
     }
+    var shown = list.slice(0, pageNo * pageSize);
+    var hasMore = list.length > shown.length;
     return `
       <div class="wb-list">
         <div class="wb-search-box">
@@ -4370,17 +4380,19 @@ function formulaFilter() {
             return `<button class="chip ${letter===l?'is-active':''}" data-nav="word-list/${l}" type="button">${l}</button>`;
           }).join("")}
         </div>
-        <div class="wb-count">${list.length} 个词</div>
+        <div class="wb-count">${list.length} 个词${q ? "" : " · 已显示 " + shown.length}</div>
         <div class="wb-word-list">
-          ${list.map(function(w){
+          ${shown.map(function(w){
             return `<div class="wb-word-item">
               <span class="wb-w">${esc(w.w)}</span>
               <span class="wb-ph">/${esc(w.ph)}/</span>
               <span class="wb-ps">${esc(w.pos)}</span>
               <span class="wb-mean">${esc(w.m)}</span>
+              ${w.cat ? `<span class="wb-cat" style="font-size:10px;color:var(--text-sub);margin-left:auto">${esc(w.cat)}</span>` : ""}
             </div>`;
           }).join("")}
         </div>
+        ${hasMore ? `<button class="btn btn-ghost btn-block" data-act="wb-list-more" type="button" style="margin-top:12px">加载更多（已显示 ${shown.length} / ${list.length}）</button>` : ""}
       </div>
     `;
   }
@@ -5960,6 +5972,9 @@ function formulaFilter() {
       render();
     } else if (act === "wb-set-goal") {
       window.WORDS.setDailyGoal(parseInt(t.getAttribute("data-v")));
+      render();
+    } else if (act === "wb-list-more") {
+      state.wbListPage = (state.wbListPage || 1) + 1;
       render();
     } else if (act === "wb-flip") {
       if (state.wbLearn) { state.wbLearn.flipped = !state.wbLearn.flipped; render(); }
