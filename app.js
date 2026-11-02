@@ -5977,7 +5977,9 @@ function formulaFilter() {
       render();
     } else if (act === "wb-list-more") {
       state.wbListPage = (state.wbListPage || 1) + 1;
+      var scrollY = window.scrollY;
       render();
+      window.scrollTo(0, scrollY);
     } else if (act === "wb-flip") {
       if (state.wbLearn) { state.wbLearn.flipped = !state.wbLearn.flipped; render(); }
     } else if (act === "wb-flip-review") {
