@@ -2810,6 +2810,13 @@ button, .btn { min-height: 44px; }
   padding: 0; overflow: hidden;
   margin: 0;
 }
+/* 沉浸式模式下，shell 和 app-frame 透明，不要盖住背景 */
+body:has(.wb-immersive) .shell,
+body:has(.wb-immersive) .app-frame {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
   background: radial-gradient(circle at 30% 20%, rgba(0,230,118,0.08) 0%, transparent 40%),
