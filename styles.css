@@ -2821,13 +2821,13 @@ button, .btn { min-height: 44px; }
   0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
   100% { transform: translate(5%, 5%) scale(1.1); opacity: 1; }
 }
-.wb-progress-bar {
+.wb-immersive .wb-progress-bar {
   position: absolute; top: 0; left: 0; height: 3px;
   background: linear-gradient(90deg, #00E676, #00b8d4);
   transition: width 0.3s ease;
   z-index: 10001;
 }
-.wb-close-btn {
+.wb-immersive .wb-close-btn {
   position: absolute; top: 16px; left: 16px;
   width: 36px; height: 36px; border-radius: 50%;
   background: rgba(255,255,255,0.1); border: none;
@@ -2835,7 +2835,7 @@ button, .btn { min-height: 44px; }
   z-index: 10001;
   display: flex; align-items: center; justify-content: center;
 }
-.wb-close-btn:hover { background: rgba(255,255,255,0.2); }
+.wb-immersive .wb-close-btn:hover { background: rgba(255,255,255,0.2); }
 .wb-round-badge {
   position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
   font-size: 12px; color: #A0A5B1; z-index: 10001;
