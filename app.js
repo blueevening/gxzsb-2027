@@ -4346,6 +4346,7 @@ function formulaFilter() {
 
   function viewWordList(letter) {
     setTitle("词汇浏览", true);
+    state.wbLetter = letter || "all";
     var all = window.WORDS.WORDS;
     var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     var q = state.wbSearch || "";
@@ -5977,9 +5978,49 @@ function formulaFilter() {
       render();
     } else if (act === "wb-list-more") {
       state.wbListPage = (state.wbListPage || 1) + 1;
-      var scrollY = window.scrollY;
-      render();
-      window.scrollTo(0, scrollY);
+      // 直接动态追加，不重新渲染整个页面
+      var all = window.WORDS.WORDS;
+      var q = state.wbSearch || "";
+      var pageSize = 100;
+      var pageNo = state.wbListPage || 1;
+      var list;
+      if (q) {
+        list = window.WORDS.searchWords(q);
+      } else if (state.wbLetter && state.wbLetter !== 'all') {
+        list = all.filter(function(w){ return w.letter === state.wbLetter.toUpperCase(); });
+      } else {
+        list = all;
+      }
+      var start = (pageNo - 1) * pageSize;
+      var end = pageNo * pageSize;
+      var newItems = list.slice(start, end);
+      var hasMore = list.length > end;
+      // 追加到列表
+      var listEl = document.querySelector('.wb-word-list');
+      if (listEl) {
+        var html = newItems.map(function(w){
+          return '<div class="wb-word-item">' +
+            '<span class="wb-w">' + esc(w.w) + '</span>' +
+            '<span class="wb-ph">/' + esc(w.ph) + '/</span>' +
+            '<span class="wb-ps">' + esc(w.pos) + '</span>' +
+            '<span class="wb-mean">' + esc(w.m) + '</span>' +
+            (w.cat && w.cat !== '核心词汇' ? '<span class="wb-cat" style="font-size:10px;color:var(--text-sub);margin-left:auto;flex-shrink:0">' + esc(w.cat) + '</span>' : '') +
+            '</div>';
+        }).join('');
+        listEl.insertAdjacentHTML('beforeend', html);
+      }
+      // 更新计数
+      var countEl = document.querySelector('.wb-count');
+      if (countEl) countEl.textContent = list.length + ' 个词' + (q ? '' : ' · 已显示 ' + Math.min(end, list.length));
+      // 更新按钮
+      var btn = document.querySelector('[data-act="wb-list-more"]');
+      if (btn) {
+        if (hasMore) {
+          btn.textContent = '加载更多（已显示 ' + Math.min(end, list.length) + ' / ' + list.length + '）';
+        } else {
+          btn.style.display = 'none';
+        }
+      }
     } else if (act === "wb-flip") {
       if (state.wbLearn) { state.wbLearn.flipped = !state.wbLearn.flipped; render(); }
     } else if (act === "wb-flip-review") {
