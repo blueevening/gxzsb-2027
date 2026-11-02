@@ -4141,7 +4141,7 @@ function formulaFilter() {
     var goal = window.WORDS.getDailyGoal();
     var newWords = window.WORDS.getNewWords(goal);
     if (!state.wbLearn) {
-      state.wbLearn = { list: newWords, i: 0, shown: false };
+      state.wbLearn = { list: newWords, i: 0, shown: false, startX: 0, startY: 0 };
       // 自动发音
       try {
         var firstWord = newWords[0];
@@ -4170,36 +4170,40 @@ function formulaFilter() {
     var w = L.list[L.i];
     var prog = Math.round((L.i / L.list.length) * 100);
     return `
-      <div class="wb-card-wrap">
-        <div class="wb-progress-topbar" style="width:${prog}%"></div>
-        <div class="wb-progress-text">${L.i+1} / ${L.list.length} · ${prog}%</div>
+      <div class="wb-immersive">
+        <div class="wb-progress-bar" style="width:${prog}%"></div>
+        <button class="wb-close-btn" data-nav="words" type="button">✕</button>
 
-        <div class="wb-card-simple">
-          <div class="wb-word-row">
+        <div class="wb-card" data-act="wb-card-touch">
+          <div class="wb-card-inner">
             <div class="wb-word">${esc(w.w)}</div>
-            <button class="wb-speak-icon" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊</button>
+            <div class="wb-phonetic-row">
+              <span class="wb-phonetic">/${esc(w.ph)}/</span>
+              <button class="wb-speak-icon" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊</button>
+            </div>
+
+            ${L.shown ? `
+              <div class="wb-meaning-section">
+                <div class="wb-pos-badge">${esc(w.pos)}</div>
+                <div class="wb-meaning-text">${esc(w.m)}</div>
+              </div>
+            ` : `
+              <div class="wb-hint">点击卡片查看释义</div>
+            `}
           </div>
-          <div class="wb-phonetic">/${esc(w.ph)}/</div>
         </div>
 
-        ${L.shown ? `
-          <div class="wb-meaning-panel">
-            <div class="wb-pos-badge">${esc(w.pos)}</div>
-            <div class="wb-meaning-text">${esc(w.m)}</div>
-          </div>
-        ` : `
-          <button class="btn btn-secondary btn-block wb-show-btn" data-act="wb-show-meaning" type="button">👁️ 显示释义</button>
-        `}
-
-        <div class="wb-action-row">
-          ${L.i > 0 ? `<button class="btn btn-outline wb-prev-btn" data-act="wb-prev" type="button">← 上一个</button>` : `<div></div>`}
+        <div class="wb-bottom-actions">
           ${L.shown ? `
+            <div class="wb-swipe-hint">← 不认识 · 模糊 · 认识 →</div>
             <div class="wb-mark-btns">
-              <button class="btn btn-wb-forget" data-act="wb-mark" data-v="1" type="button">不认识</button>
-              <button class="btn btn-wb-hard" data-act="wb-mark" data-v="2" type="button">模糊</button>
-              <button class="btn btn-wb-know" data-act="wb-mark" data-v="3" type="button">认识</button>
+              <button class="btn-swipe-left" data-act="wb-mark" data-v="1" type="button">不认识</button>
+              <button class="btn-swipe-up" data-act="wb-mark" data-v="2" type="button">模糊</button>
+              <button class="btn-swipe-right" data-act="wb-mark" data-v="3" type="button">认识</button>
             </div>
-          ` : `<div></div>`}
+          ` : `
+            <button class="btn-show-meaning" data-act="wb-show-meaning" type="button">显示释义</button>
+          `}
         </div>
       </div>
     `;
@@ -6044,6 +6048,13 @@ function formulaFilter() {
       }
     } else if (act === "wb-flip") {
       if (state.wbLearn) { state.wbLearn.flipped = !state.wbLearn.flipped; render(); }
+    } else if (act === "wb-card-touch") {
+      if (!state.wbLearn) return;
+      // 点击卡片 = 显示释义（如果还没显示的话）
+      if (!state.wbLearn.shown) {
+        state.wbLearn.shown = true;
+        render();
+      }
     } else if (act === "wb-show-meaning") {
       if (state.wbLearn) { state.wbLearn.shown = true; render(); }
     } else if (act === "wb-prev") {

@@ -2802,101 +2802,108 @@ button, .btn { min-height: 44px; }
 }
 .filter-drawer .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-sub); }
 
-/* 9. 背单词 - 学习模式优化 */
-.wb-progress-topbar {
-  position: fixed; top: 0; left: 0; height: 3px;
-  background: var(--primary); transition: width 0.3s ease;
-  z-index: 100;
+/* 9. 背单词 - 沉浸式重做 */
+.wb-immersive {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: #1A1D24; z-index: 9999;
+  display: flex; flex-direction: column;
+  padding: 0;
 }
-.wb-card-simple {
-  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-  padding: 32px 20px; text-align: center; margin: 16px 0;
+.wb-progress-bar {
+  position: absolute; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, #00E676, #00b8d4);
+  transition: width 0.3s ease;
+  z-index: 10001;
 }
-.wb-word-row {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  margin-bottom: 8px;
+.wb-close-btn {
+  position: absolute; top: 16px; left: 16px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: none;
+  color: #fff; font-size: 18px; cursor: pointer;
+  z-index: 10001;
+  display: flex; align-items: center; justify-content: center;
+}
+.wb-close-btn:hover { background: rgba(255,255,255,0.2); }
+
+.wb-card {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 60px 24px 20px;
+  cursor: pointer;
+}
+.wb-card-inner {
+  background: #242832; border-radius: 24px;
+  padding: 40px 28px; width: 100%; max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
 }
 .wb-word {
-  font-size: 40px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;
+  font-size: 42px; font-weight: 800; color: #FFFFFF;
+  margin-bottom: 12px; letter-spacing: 0.5px;
+}
+.wb-phonetic-row {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 24px;
+}
+.wb-phonetic {
+  font-size: 16px; color: #A0A5B1;
 }
 .wb-speak-icon {
-  background: none; border: none; font-size: 22px; cursor: pointer;
-  padding: 4px; opacity: 0.7; transition: opacity 0.2s;
+  background: none; border: none; font-size: 18px; cursor: pointer;
+  opacity: 0.7;
 }
 .wb-speak-icon:hover { opacity: 1; }
-.wb-phonetic {
-  font-size: 16px; color: #b0b0b0; margin-bottom: 12px;
+.wb-hint {
+  font-size: 13px; color: #666; margin-top: 8px;
 }
-.wb-show-btn {
-  margin: 12px 0;
-  font-size: 15px;
-  padding: 14px;
-}
-.wb-meaning-panel {
-  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-  padding: 20px; margin: 12px 0;
-  animation: fadeInUp 0.25s ease;
+.wb-meaning-section {
+  margin-top: 16px; padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 .wb-pos-badge {
-  display: inline-block; background: var(--primary-soft); color: var(--primary);
-  padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  display: inline-block; background: rgba(0,230,118,0.15); color: #00E676;
+  padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
   margin-bottom: 12px;
 }
 .wb-meaning-text {
-  font-size: 22px; font-weight: 600; color: #ffffff; line-height: 1.6;
-}
-.wb-action-row {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin-top: 16px;
-}
-.wb-prev-btn {
-  flex-shrink: 0; padding: 10px 16px; font-size: 14px;
-}
-.wb-action-row .wb-mark-btns {
-  flex: 1; display: flex; gap: 8px; margin: 0;
-}
-.wb-action-row .wb-mark-btns .btn {
-  flex: 1; padding: 14px 8px; font-size: 15px; font-weight: 600;
-  border-radius: 12px;
+  font-size: 22px; font-weight: 600; color: #FFFFFF; line-height: 1.5;
 }
 
-/* 红黄绿三色按钮 */
-.btn-wb-forget {
-  background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
+.wb-bottom-actions {
+  padding: 20px 24px 40px;
 }
-.btn-wb-forget:hover { background: rgba(239, 68, 68, 0.25); }
-.btn-wb-hard {
-  background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);
+.wb-swipe-hint {
+  text-align: center; font-size: 12px; color: #666; margin-bottom: 16px;
 }
-.btn-wb-hard:hover { background: rgba(245, 158, 11, 0.25); }
-.btn-wb-know {
-  background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);
+.btn-show-meaning {
+  width: 100%; padding: 16px;
+  background: rgba(255,255,255,0.1); border: none; border-radius: 16px;
+  color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
 }
-.btn-wb-know:hover { background: rgba(34, 197, 94, 0.25); }
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+.btn-show-meaning:hover { background: rgba(255,255,255,0.15); }
+.wb-mark-btns {
+  display: flex; gap: 10px;
+}
+.btn-swipe-left, .btn-swipe-up, .btn-swipe-right {
+  flex: 1; padding: 16px 8px; border: none; border-radius: 16px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.btn-swipe-left:active, .btn-swipe-up:active, .btn-swipe-right:active {
+  transform: scale(0.95);
+}
+.btn-swipe-left {
+  background: rgba(255,82,82,0.15); color: #FF5252; border: 1px solid rgba(255,82,82,0.3);
+}
+.btn-swipe-up {
+  background: rgba(255,193,7,0.15); color: #FFC107; border: 1px solid rgba(255,193,7,0.3);
+}
+.btn-swipe-right {
+  background: rgba(0,230,118,0.15); color: #00E676; border: 1px solid rgba(0,230,118,0.3);
 }
 
 @media (max-width: 480px) {
-  .wb-card-wrap { padding: 12px 12px; }
-  .wb-card-simple { padding: 24px 16px; margin: 12px 0; }
-  .wb-word { font-size: 30px; }
-  .wb-speak-icon { font-size: 20px; }
-  .wb-phonetic { font-size: 15px; }
-  .wb-meaning-panel { padding: 16px; }
+  .wb-card-inner { padding: 32px 20px; }
+  .wb-word { font-size: 34px; }
   .wb-meaning-text { font-size: 18px; }
-  .wb-show-btn { padding: 12px; font-size: 14px; }
-  .wb-action-row { flex-direction: column; gap: 10px; margin-top: 12px; }
-  .wb-action-row .wb-mark-btns { width: 100%; gap: 6px; }
-  .wb-action-row .wb-mark-btns .btn { padding: 12px 4px; font-size: 14px; }
-  .wb-prev-btn { width: 100%; }
-}
-
-@media (max-width: 360px) {
-  .wb-word { font-size: 26px; }
-  .wb-card-simple { padding: 20px 12px; }
-  .wb-meaning-text { font-size: 16px; }
-  .wb-action-row .wb-mark-btns .btn { padding: 10px 2px; font-size: 13px; }
+  .wb-bottom-actions { padding: 16px 16px 32px; }
 }
