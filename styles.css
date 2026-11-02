@@ -2743,12 +2743,13 @@ button, .btn { min-height: 44px; }
 /* 2. 列表项右箭头（可点击列表项统一加 > 引导） */
 .row-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; background: var(--card); border-radius: var(--radius-btn);
-  border: 1px solid var(--border); margin-bottom: 8px;
-  transition: all 0.2s ease; cursor: pointer;
+  padding: 13px 0;
+  transition: background 0.2s ease; cursor: pointer;
+  border-bottom: 1px solid var(--border);
 }
-.row-item:hover { border-color: var(--primary); background: var(--primary-soft); }
-.row-item:active { transform: scale(0.99); }
+.row-item:last-child { border-bottom: none; }
+.row-item:hover { background: var(--primary-soft); }
+.row-item:active { background: var(--primary-soft); opacity: 0.8; }
 .row-item .ri-main { flex: 1; min-width: 0; }
 .row-item .ri-label { font-size: 14px; font-weight: 500; color: var(--text); }
 .row-item .ri-sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
