@@ -1094,7 +1094,7 @@
         `<button class="tab-item ${state.route === n.id || (n.id === "bank" && state.route === "subject") || (n.id === "words" && (state.route === "word-learn" || state.route === "word-review" || state.route === "word-list")) ? "is-active" : ""}" data-nav="${n.id}" type="button"><span class="ico">${n.ico}</span><span>${n.label}</span></button>`
     ).join("");
     $("#tabbar").innerHTML = tabHtml;
-    $("#sideNav").innerHTML = html;
+    $("#sideNav").innerHTML = tabHtml;  /* 桌面侧边栏也用和手机底部一致的核心按钮 */
     document.querySelectorAll("[data-nav]").forEach((b) =>
       b.addEventListener("click", () => go(b.getAttribute("data-nav")))
     );
