@@ -2810,10 +2810,11 @@ button, .btn { min-height: 44px; }
   padding: 0; overflow: hidden;
   margin: 0;
 }
-/* 沉浸式模式下，shell 和 app-frame 透明，不要盖住背景 */
-body:has(.wb-immersive) .shell,
-body:has(.wb-immersive) .app-frame {
-  background: transparent !important;
+/* 沉浸式模式：body 和 shell 都变深色，不要盖住背景 */
+body.wb-immersive-mode,
+body.wb-immersive-mode .shell,
+body.wb-immersive-mode .app-frame {
+  background: #1A1D24 !important;
   padding: 0 !important;
   margin: 0 !important;
 }
