@@ -2810,10 +2810,6 @@ button, .btn { min-height: 44px; }
   padding: 0 !important; overflow: hidden !important;
   margin: 0 !important;
 }
-/* 直接改 wb-card 背景，不依赖类名 */
-.wb-card {
-  background: #12151C !important;
-}
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
   background: radial-gradient(circle at 30% 20%, rgba(0,230,118,0.08) 0%, transparent 40%),
