@@ -4142,6 +4142,19 @@ function formulaFilter() {
     var newWords = window.WORDS.getNewWords(goal);
     if (!state.wbLearn) {
       state.wbLearn = { list: newWords, i: 0, shown: false };
+      // 自动发音
+      try {
+        var firstWord = newWords[0];
+        if (firstWord) {
+          setTimeout(function() {
+            try {
+              if (window.speechSynthesis) window.speechSynthesis.cancel();
+              var au = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(firstWord.w) + "&type=2");
+              au.play().catch(function(){});
+            } catch(e){}
+          }, 300);
+        }
+      } catch(e){}
     }
     var L = state.wbLearn;
     if (L.i >= L.list.length) {
@@ -4158,13 +4171,15 @@ function formulaFilter() {
     var prog = Math.round((L.i / L.list.length) * 100);
     return `
       <div class="wb-card-wrap">
+        <div class="wb-progress-topbar" style="width:${prog}%"></div>
         <div class="wb-progress-text">${L.i+1} / ${L.list.length} · ${prog}%</div>
-        <div class="wb-progress-bar"><div class="wb-progress-fill" style="width:${prog}%"></div></div>
 
         <div class="wb-card-simple">
-          <div class="wb-word">${esc(w.w)}</div>
+          <div class="wb-word-row">
+            <div class="wb-word">${esc(w.w)}</div>
+            <button class="wb-speak-icon" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊</button>
+          </div>
           <div class="wb-phonetic">/${esc(w.ph)}/</div>
-          <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
         </div>
 
         ${L.shown ? `
@@ -6043,6 +6058,19 @@ function formulaFilter() {
       state.wbLearn.i++;
       state.wbLearn.shown = false;
       render();
+      // 自动发音下一个单词
+      try {
+        var nextW = state.wbLearn.list[state.wbLearn.i];
+        if (nextW) {
+          setTimeout(function() {
+            try {
+              if (window.speechSynthesis) window.speechSynthesis.cancel();
+              var au = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(nextW.w) + "&type=2");
+              au.play().catch(function(){});
+            } catch(e){}
+          }, 200);
+        }
+      } catch(e){}
     } else if (act === "wb-mark-review") {
       if (!state.wbReview) return;
       var w2 = state.wbReview.list[state.wbReview.i];

@@ -2803,9 +2803,29 @@ button, .btn { min-height: 44px; }
 .filter-drawer .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-sub); }
 
 /* 9. 背单词 - 学习模式优化 */
+.wb-progress-topbar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: var(--primary); transition: width 0.3s ease;
+  z-index: 100;
+}
 .wb-card-simple {
   background: var(--card); border: 1px solid var(--border); border-radius: 16px;
   padding: 32px 20px; text-align: center; margin: 16px 0;
+}
+.wb-word-row {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.wb-word {
+  font-size: 40px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;
+}
+.wb-speak-icon {
+  background: none; border: none; font-size: 22px; cursor: pointer;
+  padding: 4px; opacity: 0.7; transition: opacity 0.2s;
+}
+.wb-speak-icon:hover { opacity: 1; }
+.wb-phonetic {
+  font-size: 16px; color: #b0b0b0; margin-bottom: 12px;
 }
 .wb-show-btn {
   margin: 12px 0;
@@ -2823,7 +2843,7 @@ button, .btn { min-height: 44px; }
   margin-bottom: 12px;
 }
 .wb-meaning-text {
-  font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.6;
+  font-size: 22px; font-weight: 600; color: #ffffff; line-height: 1.6;
 }
 .wb-action-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -2836,8 +2856,23 @@ button, .btn { min-height: 44px; }
   flex: 1; display: flex; gap: 8px; margin: 0;
 }
 .wb-action-row .wb-mark-btns .btn {
-  flex: 1; padding: 12px 8px; font-size: 14px;
+  flex: 1; padding: 14px 8px; font-size: 15px; font-weight: 600;
+  border-radius: 12px;
 }
+
+/* 红黄绿三色按钮 */
+.btn-wb-forget {
+  background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-wb-forget:hover { background: rgba(239, 68, 68, 0.25); }
+.btn-wb-hard {
+  background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.btn-wb-hard:hover { background: rgba(245, 158, 11, 0.25); }
+.btn-wb-know {
+  background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.btn-wb-know:hover { background: rgba(34, 197, 94, 0.25); }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
@@ -2846,6 +2881,7 @@ button, .btn { min-height: 44px; }
 
 @media (max-width: 480px) {
   .wb-card-simple { padding: 24px 16px; }
+  .wb-word { font-size: 32px; }
   .wb-meaning-text { font-size: 18px; }
   .wb-action-row { flex-direction: column; }
   .wb-action-row .wb-mark-btns { width: 100%; }
