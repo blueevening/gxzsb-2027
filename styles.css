@@ -2880,9 +2880,23 @@ button, .btn { min-height: 44px; }
 }
 
 @media (max-width: 480px) {
-  .wb-card-simple { padding: 24px 16px; }
-  .wb-word { font-size: 32px; }
+  .wb-card-wrap { padding: 12px 12px; }
+  .wb-card-simple { padding: 24px 16px; margin: 12px 0; }
+  .wb-word { font-size: 30px; }
+  .wb-speak-icon { font-size: 20px; }
+  .wb-phonetic { font-size: 15px; }
+  .wb-meaning-panel { padding: 16px; }
   .wb-meaning-text { font-size: 18px; }
-  .wb-action-row { flex-direction: column; }
-  .wb-action-row .wb-mark-btns { width: 100%; }
+  .wb-show-btn { padding: 12px; font-size: 14px; }
+  .wb-action-row { flex-direction: column; gap: 10px; margin-top: 12px; }
+  .wb-action-row .wb-mark-btns { width: 100%; gap: 6px; }
+  .wb-action-row .wb-mark-btns .btn { padding: 12px 4px; font-size: 14px; }
+  .wb-prev-btn { width: 100%; }
+}
+
+@media (max-width: 360px) {
+  .wb-word { font-size: 26px; }
+  .wb-card-simple { padding: 20px 12px; }
+  .wb-meaning-text { font-size: 16px; }
+  .wb-action-row .wb-mark-btns .btn { padding: 10px 2px; font-size: 13px; }
 }
