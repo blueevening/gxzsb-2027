@@ -439,6 +439,28 @@
   window.gxzsbEnsureData = function () { return startData(); };
   window.gxzsbEnsureBase = function () { return (_basePromise || startData()); };
 
+  /* 断网/联网提示 */
+  function netBar() {
+    var b = document.getElementById("netBar");
+    if (!b) {
+      b = document.createElement("div");
+      b.id = "netBar";
+      b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9998;padding:6px 16px;text-align:center;font-size:12px;background:#ef4444;color:#fff;transform:translateY(-100%);transition:transform .2s;";
+      document.body.appendChild(b);
+    }
+    return b;
+  }
+  function updateNet() {
+    var b = netBar();
+    var online = navigator.onLine;
+    b.textContent = online ? "已恢复联网" : "当前离线，刷题不受影响，同步将暂停";
+    b.style.background = online ? "#22c55e" : "#ef4444";
+    b.style.transform = online ? "translateY(-100%)" : "translateY(0)";
+    if (online) setTimeout(function(){ b.style.transform = "translateY(-100%)"; }, 2000);
+  }
+  window.addEventListener("online", updateNet);
+  window.addEventListener("offline", updateNet);
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {

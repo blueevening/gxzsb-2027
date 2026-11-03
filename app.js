@@ -3743,6 +3743,11 @@ function ensureExplain(q) {
     `;
   }
 
+  function highlight(html, kw) {
+    if (!kw) return html;
+    var re = new RegExp("(" + kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+    return html.replace(re, "<mark>$1</mark>");
+  }
   function viewSearch() {
     setTitle("搜索", true);
     const k = state.searchQ.trim().toLowerCase();
@@ -3762,7 +3767,7 @@ function ensureExplain(q) {
                 (q) => `<button class="list-row" data-act="open-q" data-id="${attr(q.id)}" type="button">
                   <span class="dot" style="background:${subjOf(q.subject).color}"></span>
                   <span class="main">
-                    <span class="t">${renderMath(String(q.stem).slice(0, 80))}</span>
+                    <span class="t">${highlight(renderMath(String(q.stem).slice(0, 80)), k)}</span>
                     <span class="s">${subjOf(q.subject).short} · ${esc(q.chapter || "")} · ${esc(q.difficultyLabel)}</span>
                   </span>
                   <span class="end">›</span>
