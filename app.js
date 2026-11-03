@@ -1618,10 +1618,12 @@
     }
     }
     // ordered：顺序练习按题库录入顺序稳定取前 N；显式 ids 时保持给定顺序，不再打乱
+    let fullPool = null;  // 存完整题库，用于顺序练习自动加载下一组
     if (opts.ids) {
       if (opts.limit) pool = pool.slice(0, opts.limit);
     } else if (opts.ordered) {
       pool = pool.slice().sort((a, b) => (a._ord || 0) - (b._ord || 0));
+      fullPool = pool.slice();  // 先存完整题库
       if (opts.limit) pool = pool.slice(0, opts.limit);
     } else if (opts.limit) {
       pool = shuffle(pool).slice(0, opts.limit);
@@ -1630,7 +1632,7 @@
     state.session = {
       title: opts.title || "练习",
       q: pool,
-      pool: opts.ordered ? pool.slice() : null,  // 顺序练习存完整题库，用于自动加载下一组
+      pool: fullPool,  // 顺序练习存完整题库，用于自动加载下一组
       i: 0,
       sel: null,
       submitted: false,
