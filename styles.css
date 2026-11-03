@@ -1396,6 +1396,14 @@ sup.math-sup .frac .den { padding-top: 1px; }
 }
 .wb-mean { color: var(--text); flex: 1; }
 
+/* 语法词条：垂直布局，标题在上内容在下 */
+.wb-word-item.is-gram {
+  flex-direction: column; align-items: stretch; gap: 6px;
+}
+.wb-word-item.is-gram .wb-w { min-width: 0; font-size: 16px; }
+.wb-word-item.is-gram .wb-ph { display: none; }
+.wb-word-item.is-gram .wb-mean { flex: none; line-height: 1.7; margin-top: 2px; }
+
 @media (max-width: 480px) {
   .wb-word { font-size: 28px; }
   .wb-meaning { font-size: 16px; }
