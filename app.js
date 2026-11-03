@@ -1630,6 +1630,7 @@
     state.session = {
       title: opts.title || "练习",
       q: pool,
+      pool: opts.ordered ? pool.slice() : null,  // 顺序练习存完整题库，用于自动加载下一组
       i: 0,
       sel: null,
       submitted: false,
@@ -2173,6 +2174,22 @@
       if (s.exam && !s.examSubmitted) {
         submitExam(false);
         return;
+      }
+      // 顺序练习：自动加载下一组，而不是直接跳到报告页
+      if (s.ordered && s.pool) {
+        const doneIds = new Set(s.q.map(q => q.id));
+        const nextPool = s.pool.filter(q => !doneIds.has(q.id));
+        if (nextPool.length > 0) {
+          const batch = nextPool.slice(0, 20);
+          s.q = batch;
+          s.i = 0;
+          s.sel = null;
+          s.submitted = false;
+          s.showExp = false;
+          render();
+          window.scrollTo({ top: 0 });
+          return;
+        }
       }
       saveExamHistory(s);
       go("report");
