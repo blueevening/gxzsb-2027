@@ -604,6 +604,8 @@ body.boot-loading .shell { padding: 32px 16px; }
 
 /* 长题干 / 解析：可滚动，不溢出 */
 .q-stem { max-height: 42vh; overflow-y: auto; overflow-wrap: anywhere; word-break: break-word; }
+.q-passage { background: var(--bg); border-left: 3px solid var(--primary); padding: 12px; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.7; max-height: 30vh; overflow-y: auto; }
+[data-theme="dark"] .q-passage { background: color-mix(in srgb, var(--primary) 8%, transparent); }
 .explain-body { max-height: 60vh; overflow-y: auto; }
 .explain-block .content { overflow-wrap: anywhere; word-break: break-word; }
 

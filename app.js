@@ -1931,6 +1931,7 @@
       <div class="practice-wrap">
       <div>
       <div class="card">
+        ${q.passage ? '<div class="q-passage">' + mathHtml(q.passage) + '</div>' : ''}
         <div class="q-stem">${mathHtml(q.stem)}</div>
         ${q.image ? '<div class="q-img" style="margin:12px 0;text-align:center">' + q.image + '</div>' : ''}
         ${
