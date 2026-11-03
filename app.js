@@ -3509,9 +3509,6 @@ function ensureExplain(q) {
           <div class="stat-box"><div class="stat-num">${gong}<small> 所</small></div><div class="stat-label">其中公办</div></div>
           <div class="stat-box"><div class="stat-num">${total51}<small> 人</small></div><div class="stat-label">电子信息类计划</div></div>
         </div>
-        <div style="text-align:center;font-size:11px;color:var(--text-sub);margin:4px 0 12px;line-height:1.5">
-          ↑ 上：全广西所有大类总计划（5.19万）　↓ 下：仅你这个"电子与信息类"能报的（约${total51}人）
-        </div>
         <div class="layout">
           <aside class="filter-panel">
             <div class="card">
