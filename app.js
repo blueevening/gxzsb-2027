@@ -2066,11 +2066,11 @@
                       : "";
                     refBody = (ansTxt ? "答案：" + ansTxt : "见上方「详细解析」") + stepTxt;
                   }
-                  extra =
+                  extra +=
                     `<div class="smart-grade">智能评分 <b>${pct}%</b></div>` +
                     `<div class="ref-answer"><b>参考答案：</b>${mathHtml(refBody).slice(0, 900)}</div>`;
                 } else if (!ok) {
-                  extra = `<div class="ref-answer"><b>参考答案：</b>${mathHtml(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
+                  extra += `<div class="ref-answer"><b>参考答案：</b>${mathHtml(String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer).slice(0, 120))}</div>`;
                 }
                 const bar = showSmart
                   ? `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 当前判定为答对" : "✕ 当前判定为需加强"}${ok && okRun >= 3 ? ` · 🔥 连对 ${okRun}` : ""}${sc != null ? " · 智能评分 " + Math.round(sc * 100) + "%" : ""}</div>`
