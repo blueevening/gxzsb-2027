@@ -1935,7 +1935,30 @@
         <div class="q-stem">${mathHtml(q.stem)}</div>
         ${q.image ? '<div class="q-img" style="margin:12px 0;text-align:center">' + q.image + '</div>' : ''}
         ${
-          q.type === "single" || q.type === "judge"
+          q.type === "reading"
+            ? (q.subQuestions || []).map((sq, sqIdx) => {
+                const sqAns = sq.answer;
+                return `<div style="margin:16px 0 8px;padding-top:12px;border-top:1px dashed var(--border)">
+                  <div style="font-weight:600;margin-bottom:8px">${sqIdx + 1}. ${mathHtml(sq.stem)}</div>
+                  <div class="opts">
+                    ${(sq.options || []).map((opt, idx) => {
+                      let cls = "opt";
+                      const selKey = `sq${sqIdx}_${idx}`;
+                      if (!s.submitted && s.sel === selKey) cls += " is-selected";
+                      if (done) {
+                        if (opt === sqAns) cls += " is-correct";
+                        else if (s.sel === selKey) cls += " is-wrong";
+                      }
+                      return `<button class="${cls}" data-act="pick" data-opt="${attr(selKey)}" type="button" ${s.submitted ? "disabled" : ""}>
+                        <span class="key">${keys[idx] || idx + 1}</span>
+                        <span>${mathHtml(opt)}</span>
+                        ${done ? (opt === sqAns ? `<span class="mark">✓</span>` : s.sel === selKey ? `<span class="mark">✕</span>` : "") : ""}
+                      </button>`;
+                    }).join("")}
+                  </div>
+                </div>`;
+              }).join("")
+            : q.type === "single" || q.type === "judge"
             ? (q.options || [])
                 .map((opt, idx) => {
                   let cls = "opt";
@@ -2144,6 +2167,29 @@
       const ok = ansEqual(s.sel, q.answer);
       s.submitted = true;
       s.results[q.id] = ok;
+      s.showExp = true;
+      record(q, ok);
+    } else if (t === "reading") {
+      // 阅读理解大题：5道子题逐题判分
+      const subs = q.subQuestions || [];
+      let correct = 0;
+      const answers = {};
+      for (let i = 0; i < subs.length; i++) {
+        const sel = s.sel;
+        // s.sel 是最后点击的选项，但用户可能点了多个子题——需要从DOM读
+        const btns = document.querySelectorAll(`[data-act="pick"][data-opt^="sq${i}_"]`);
+        let chosenIdx = -1;
+        btns.forEach((b, idx) => { if (b.classList.contains("is-selected")) chosenIdx = idx; });
+        if (chosenIdx < 0) { toastLite(`请完成第${i+1}题`); return; }
+        const chosen = subs[i].options[chosenIdx];
+        answers[i] = chosen;
+        if (chosen === subs[i].answer) correct++;
+      }
+      const ok = correct === subs.length;
+      s.submitted = true;
+      s.results[q.id] = ok;
+      s.scores = s.scores || {};
+      s.scores[q.id] = correct / subs.length;  // 按正确率给分
       s.showExp = true;
       record(q, ok);
     } else if (t === "translate" || t === "write") {
@@ -5433,6 +5479,18 @@ function formulaFilter() {
       const s = state.session;
       if (!s || s.submitted) return;
       if (!lockAction(180)) return;
+      const q = s.q[s.i];
+      if (q.type === "reading") {
+        // 阅读题：多子题分别选，不整体render，避免丢失其他子题选择
+        const opt = t.getAttribute("data-opt");
+        s.sel = opt;
+        // 取消同组其他按钮的选中态
+        const sqIdx = opt.split("_")[0];
+        document.querySelectorAll(`[data-act="pick"][data-opt^="${sqIdx}_"]`).forEach(b => b.classList.remove("is-selected"));
+        t.classList.add("is-selected");
+        saveSession();
+        return;  // 不render()
+      }
       s.sel = t.getAttribute("data-opt");
       saveSession();
       render();
