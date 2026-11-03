@@ -1931,15 +1931,15 @@
       <div class="practice-wrap">
       <div>
       <div class="card">
-        ${q.passage ? '<div class="q-passage">' + mathHtml(q.passage) + '</div>' : ''}
+        ${q.passage ? '<div class="q-passage"><div style="font-weight:600;margin-bottom:10px;font-size:13px;color:var(--primary)">📖 阅读文章</div>' + q.passage.split('\n\n').map(p => `<p>${mathHtml(p)}</p>`).join('') + '</div>' : ''}
         <div class="q-stem">${mathHtml(q.stem)}</div>
         ${q.image ? '<div class="q-img" style="margin:12px 0;text-align:center">' + q.image + '</div>' : ''}
         ${
           q.type === "reading"
             ? (q.subQuestions || []).map((sq, sqIdx) => {
                 const sqAns = sq.answer;
-                return `<div style="margin:16px 0 8px;padding-top:12px;border-top:1px dashed var(--border)">
-                  <div style="font-weight:600;margin-bottom:8px">${sqIdx + 1}. ${mathHtml(sq.stem)}</div>
+                return `<div style="margin:20px 0;padding:14px;background:var(--bg-soft);border-radius:10px">
+                  <div style="font-weight:600;margin-bottom:10px;font-size:15px">第${sqIdx + 1}题：${mathHtml(sq.stem)}</div>
                   <div class="opts">
                     ${(sq.options || []).map((opt, idx) => {
                       let cls = "opt";
@@ -1952,10 +1952,11 @@
                       return `<button class="${cls}" data-act="pick" data-opt="${attr(selKey)}" type="button" ${s.submitted ? "disabled" : ""}>
                         <span class="key">${keys[idx] || idx + 1}</span>
                         <span>${mathHtml(opt)}</span>
-                        ${done ? (opt === sqAns ? `<span class="mark">✓</span>` : s.sel === selKey ? `<span class="mark">✕</span>` : "") : ""}
+                        ${done ? (opt === sqAns ? `<span class="mark">✓ 正确</span>` : s.sel === selKey ? `<span class="mark">✕</span>` : "") : ""}
                       </button>`;
                     }).join("")}
                   </div>
+                  ${done ? `<div style="margin-top:8px;font-size:13px;color:var(--primary)">💡 ${sq.explain || '解析：见文章上下文'}</div>` : ""}
                 </div>`;
               }).join("")
             : q.blanks
