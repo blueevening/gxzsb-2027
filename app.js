@@ -1967,7 +1967,8 @@
                   <div style="font-weight:600;margin-bottom:8px;font-size:14px">空 ${bIdx + 1} / 5</div>
                   <div style="font-size:15px;line-height:1.8;margin-bottom:10px">${mathHtml(blank.context || blank.hint || '')}</div>
                   <input class="fill-input" id="fillInput_${bIdx}" style="width:100%;padding:8px 0;border:none;border-bottom:2px solid var(--border);background:transparent;color:var(--text);font-size:16px;font-weight:500;outline:none" placeholder="输入答案（不超过4个词）" ${s.submitted ? "disabled" : ""} value="${attr(userAns)}" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" />
-                  ${done ? `<div style="margin-top:8px;font-size:13px;${isCorrect ? 'color:var(--success)' : 'color:var(--danger)'}">${isCorrect ? '✓ 正确' : '✕ 正确答案：'} <b>${mathHtml(blank.answer)}</b></div>` : ""}
+                  ${done ? `<div style="margin-top:8px;font-size:13px;${isCorrect ? 'color:var(--success)' : 'color:var(--danger)'}">${isCorrect ? '✓ 正确' : '✕'} 答案：<b>${mathHtml(blank.answer)}</b></div>
+                  ${blank.evidence ? `<div style="margin-top:6px;padding:8px;background:color-mix(in srgb, var(--primary) 8%, transparent);border-radius:6px;font-size:13px;color:var(--text-sub);line-height:1.6">📖 原文：${mathHtml(blank.evidence)}</div>` : ""}` : ""}
                 </div>`;
               }).join("")
             : q.type === "single" || q.type === "judge"
