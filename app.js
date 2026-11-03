@@ -6130,9 +6130,10 @@ function formulaFilter() {
       var listEl = document.querySelector('.wb-word-list');
       if (listEl) {
         var html = newItems.map(function(w){
-          return '<div class="wb-word-item">' +
+          var isGram = w.letter === '#' || w.cat === 'gram';
+          return '<div class="wb-word-item' + (isGram ? ' is-gram' : '') + '">' +
             '<span class="wb-w">' + esc(w.w) + '</span>' +
-            '<span class="wb-ph">/' + esc(w.ph) + '/</span>' +
+            '<span class="wb-ph">' + (isGram ? '' : '/' + esc(w.ph) + '/') + '</span>' +
             '<span class="wb-ps">' + esc(w.pos) + '</span>' +
             '<span class="wb-mean">' + esc(w.m) + '</span>' +
             (w.cat && w.cat !== '核心词汇' ? '<span class="wb-cat" style="font-size:10px;color:var(--text-sub);margin-left:auto;flex-shrink:0">' + esc(w.cat) + '</span>' : '') +
