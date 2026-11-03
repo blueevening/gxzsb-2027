@@ -2703,7 +2703,7 @@
 
       body =
         '<div class="card"><strong>今天有 ' + due + " 道题该重做</strong>" +
-        '<p class="muted" style="font-size:12px;margin:6px 0 12px">按艾宾浩斯遗忘曲线自动排期，到期重做记得更牢；点 ✓ 手动标记已掌握</p>' +
+        '<p class="muted" style="font-size:13px;margin:6px 0 12px;line-height:1.6">按艾宾浩斯遗忘曲线自动排期，到期重做记得更牢；点 ✓ 手动标记已掌握</p>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
         '<button class="btn btn-primary" data-act="due" type="button"' + (due ? "" : " disabled") + ">开始重做到期题</button>" +
         '<button class="btn btn-ghost" data-act="practice-wrong-all" type="button"' + (items.length ? "" : " disabled") + ">刷全部待复习错题</button>" +
