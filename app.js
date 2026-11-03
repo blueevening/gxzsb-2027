@@ -5008,7 +5008,7 @@ function formulaFilter() {
     if (route === "word-list") {
       var wel = document.getElementById("wbSearchInput");
       if (wel) {
-        wel.focus();
+        // 不自动 focus（避免进单词页就弹键盘）；只绑 input 监听
         wel.oninput = function() {
           state.wbSearch = wel.value;
           render();
