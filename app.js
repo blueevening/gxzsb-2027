@@ -2162,10 +2162,10 @@
     if (s.sel != null && q && q.id != null) s.answers[q.id] = s.sel;
     saveSession();
     render();
-    // 提交后自动滚到反馈区，方便立刻看对错
+    // 提交后自动滚到按钮栏，方便立刻点下一题
     try {
-      const fb = document.querySelector(".feedback");
-      if (fb) fb.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      const qa = document.querySelector(".q-actions");
+      if (qa) qa.scrollIntoView({ block: "end", behavior: "smooth" });
     } catch (e) {}
   }
 
