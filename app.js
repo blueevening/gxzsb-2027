@@ -2129,7 +2129,7 @@
     const q = s.q[s.i];
     const t = q.type;
     if (t === "single" || t === "judge") {
-      if (s.sel == null) return alert("请先选择一个选项");
+      if (s.sel == null) { toastLite("请先选择一个选项"); return; }
       const ok = ansEqual(s.sel, q.answer);
       s.submitted = true;
       s.results[q.id] = ok;
@@ -2143,7 +2143,7 @@
     } else {
       const box = document.getElementById("fillInput");
       const val = (box ? box.value : s.sel || "").trim();
-      if (!val) return alert("请先填写答案");
+      if (!val) { toastLite("请先填写答案"); return; }
       s.sel = val;
       let ok = matchAns(q, val);
       let score = ok ? 1 : 0;
@@ -5212,7 +5212,7 @@ function formulaFilter() {
         pool = Q.filter(function(q){ return q.subject === subj; });
       }
       if (pool.length) startSession({ ids: shuffle(pool).slice(0,20).map(function(q){return q.id;}), title: "考点专练 · " + pts });
-      else alert("暂无练习题");
+      else toastLite("暂无练习题");
     } else if (act === "learn-mark") {
       t.textContent = "已学 \u2713";
     } else if (act === "daily") {
@@ -5296,18 +5296,18 @@ function formulaFilter() {
       window.scrollTo({ top: 0 });
     }
     else if (act === "due") {
-      if (!dueCount()) { alert("今天没有到期的错题；到期的题会按遗忘曲线自动出现在这里"); return; }
+      if (!dueCount()) { toastLite("今天没有到期的错题，到期会自动出现"); return; }
       startSession({ dueOnly: true, onlyWrong: true, limit: 15, title: "到期错题" });
     }
     else if (act === "practice-wrong-all") {
       const ids = Object.keys(state.wrong).filter(function (id) { return qById(id); });
-      if (!ids.length) { alert("暂无错题"); return; }
+      if (!ids.length) { toastLite("暂无错题"); return; }
       const shuffled = shuffle(ids);
       startSession({ ids: shuffled, limit: ids.length, title: "全部错题重刷" });
     }
     else if (act === "practice-fav") {
       const ids = Object.keys(state.fav).filter(function (id) { return state.fav[id] && qById(id); });
-      if (!ids.length) { alert("暂无收藏题"); return; }
+      if (!ids.length) { toastLite("暂无收藏题"); return; }
       const shuffled = shuffle(ids);
       startSession({ ids: shuffled, limit: ids.length, title: "收藏题练习" });
     }
@@ -5317,7 +5317,7 @@ function formulaFilter() {
       if (last && last.subject && SUBJ[last.subject]) startSession({ subject: last.subject, limit: 12, title: "继续 " + last.subject });
       else startSession({ limit: 12, title: "综合练习" });
     } else if (act === "weak") {
-      if (!state.attempts || !state.attempts.length) { alert("还没有练习记录，先做几道题再来找薄弱考点"); return; }
+      if (!state.attempts || !state.attempts.length) { toastLite("先做几道题再来找薄弱考点"); return; }
       startSession({ mode: "weak", limit: 12, title: "薄弱强化" });
     }
     else if (act === "subject") {
@@ -5464,7 +5464,7 @@ function formulaFilter() {
       saveSession(); render();
     } else if (act === "toggle-exp") {
       const s = state.session;
-      if (!s.submitted) return alert("提交后可查看解析");
+      if (!s.submitted) { toastLite("提交后可查看解析"); return; }
       s.showExp = !s.showExp;
       render();
     } else if (act === "fav") {
@@ -5644,7 +5644,7 @@ function formulaFilter() {
           });
         });
       }
-      if (!items.length) return alert("题量不足");
+      if (!items.length) { toastLite("题量不足"); return; }
       startSession({
         ids: items.map((x) => x.id),
         title: plan.title,
