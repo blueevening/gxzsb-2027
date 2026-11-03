@@ -137,6 +137,7 @@ body.boot-loading .shell { padding: 32px 16px; }
   -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
 .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+.icon-btn:active { transform: scale(.95); }
 
 /* ===== 布局壳 ===== */
 .app-frame { display: block; }
@@ -197,6 +198,7 @@ body.boot-loading .shell { padding: 32px 16px; }
   -webkit-tap-highlight-color: transparent;
 }
 .tab-item .ico { font-size: 20px; line-height: 1; }
+.tab-item:active { opacity: .6; }
 .tab-item.is-active { color: var(--primary); font-weight: 700; }
 
 /* P1-M1：软键盘弹起时，底部操作区上浮到键盘上方 */
@@ -456,6 +458,7 @@ body.boot-loading .shell { padding: 32px 16px; }
 .opt:hover:not(:disabled) { 
   border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); 
 }
+.opt:active:not(:disabled) { transform: scale(0.99); }
 .opt.is-selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
 .opt.is-correct { border-color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); }
 .opt.is-wrong { border-color: var(--error); background: color-mix(in srgb, var(--error) 10%, transparent); }
@@ -2801,6 +2804,7 @@ button, .btn { min-height: 44px; }
 /* 4. 卡片 hover 上浮效果 */
 .card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
 .card.hoverable:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.card.hoverable:active { transform: translateY(0) scale(.99); }
 
 /* 5. 统一按钮过渡动效 */
 .btn { transition: all 0.2s ease; }
@@ -3009,7 +3013,7 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
 @keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 #app > * { animation: pageIn .2s ease; }
 .btn, .chip, .row-item, .list-row { transition: transform .08s ease, box-shadow .15s ease, background .15s ease; }
-.btn:active, .chip:active { transform: scale(.97); }
+.btn:active, .chip:active, .list-row:active { transform: scale(.98); }
 .card { transition: box-shadow .2s ease; }
 .tabbar .tab-item { transition: color .15s ease; }
 .trend-cell:active { transform: scale(.97); }
