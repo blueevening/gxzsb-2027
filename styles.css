@@ -3002,6 +3002,14 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
 
 /* v3.2.3: 趋势卡可点击年份切换 */
 .trend-cell { cursor: pointer; transition: all .15s; }
+
+/* v3.2.4: 全局质感提升 */
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#app > * { animation: pageIn .2s ease; }
+.btn, .chip, .row-item, .list-row { transition: transform .08s ease, box-shadow .15s ease, background .15s ease; }
+.btn:active, .chip:active { transform: scale(.97); }
+.card { transition: box-shadow .2s ease; }
+.tabbar .tab-item { transition: color .15s ease; }
 .trend-cell:active { transform: scale(.97); }
 .trend-cell.active { border-color: var(--primary, #4f6ef7); background: rgba(79,110,247,.06); }
 /* 撤销之前的纵向堆叠，手机端保持三列横排 */
