@@ -4141,46 +4141,126 @@ function formulaFilter() {
     var goal = window.WORDS.getDailyGoal();
     var newWords = window.WORDS.getNewWords(goal);
     if (!state.wbLearn) {
-      state.wbLearn = { list: newWords, i: 0, flipped: false };
+      state.wbLearn = {
+        list: newWords,
+        i: 0,
+        shown: false,
+        round: 1,
+        wrongList: []
+      };
+      // 自动发音
+      try {
+        var firstWord = newWords[0];
+        if (firstWord) {
+          setTimeout(function() {
+            try {
+              if (window.speechSynthesis) window.speechSynthesis.cancel();
+              var au = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(firstWord.w) + "&type=2");
+              au.play().catch(function(){});
+            } catch(e){}
+          }, 300);
+        }
+      } catch(e){}
     }
     var L = state.wbLearn;
+    // 第一轮背完，检查有没有需要复习的词
+    if (L.i >= L.list.length && L.round === 1 && L.wrongList.length > 0) {
+      // 进入第二轮极速复习
+      L.round = 2;
+      L.list = L.wrongList;
+      L.i = 0;
+      L.shown = false;
+      L.wrongList = [];
+    }
     if (L.i >= L.list.length) {
+      var totalLearned = L.list.length;
       state.wbLearn = null;
       return `
         <div class="wb-done">
           <div class="wb-done-icon">🎉</div>
-          <div class="wb-done-title">今日新词学完啦！</div>
-          <div class="wb-done-sub">共学习 ${L.list.length} 个单词</div>
+          <div class="wb-done-title">${L.round === 2 ? '极速复习完成！' : '今日新词学完啦！'}</div>
+          <div class="wb-done-sub">共学习 ${totalLearned} 个单词</div>
           <button class="btn btn-primary btn-block" data-nav="words" type="button">返回单词本</button>
         </div>`;
     }
     var w = L.list[L.i];
     var prog = Math.round((L.i / L.list.length) * 100);
+    var roundLabel = L.round === 2 ? '极速复习' : '今日新词';
     return `
-      <div class="wb-card-wrap">
-        <div class="wb-progress-text">${L.i+1} / ${L.list.length} · ${prog}%</div>
-        <div class="wb-progress-bar"><div class="wb-progress-fill" style="width:${prog}%"></div></div>
-        <div class="wb-card ${L.flipped?'flipped':''}" data-act="wb-flip">
-          <div class="wb-card-front">
+      <div class="wb-immersive">
+        <div class="wb-progress-bar" style="width:${prog}%"></div>
+        <button class="wb-close-btn" data-nav="words" type="button">✕</button>
+        <div class="wb-round-badge">${roundLabel} · ${L.i+1}/${L.list.length}</div>
+
+        <div class="wb-card" id="wb-card-el" data-act="wb-card-touch">
+          <div class="wb-card-inner">
             <div class="wb-word">${esc(w.w)}</div>
-            <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
-            <div class="wb-hint">点击卡片查看释义</div>
-          </div>
-          <div class="wb-card-back">
-            <div class="wb-word">${esc(w.w)}</div>
-            <div class="wb-phonetic">/${esc(w.ph)}/</div>
-            <button class="wb-speak-btn" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊 发音</button>
-            <div class="wb-pos">${esc(w.pos)}</div>
-            <div class="wb-meaning">${esc(w.m)}</div>
+            <div class="wb-phonetic-row">
+              <span class="wb-phonetic">/${esc(w.ph)}/</span>
+              <button class="wb-speak-icon" data-act="wb-speak" data-word="${esc(w.w)}" type="button">🔊</button>
+            </div>
+
+            ${L.shown ? `
+              <div class="wb-meaning-section">
+                <div class="wb-pos-badge">${esc(w.pos)}</div>
+                <div class="wb-meaning-text">${esc(w.m)}</div>
+                ${w.ex && w.ex.length > 0 ? `<div class="wb-extra-tip">💡 ${esc(w.ex[0])}</div>` : ''}
+              </div>
+            ` : `
+              <div class="wb-hint">点击卡片或上滑查看释义</div>
+            `}
           </div>
         </div>
-        <div class="wb-mark-btns" style="display:flex;gap:8px">
-          <button class="btn btn-wb-forget" data-act="wb-mark" data-v="1" style="flex:1" type="button">不认识</button>
-          <button class="btn btn-wb-hard" data-act="wb-mark" data-v="2" style="flex:1" type="button">模糊</button>
-          <button class="btn btn-wb-know" data-act="wb-mark" data-v="3" style="flex:1" type="button">认识</button>
+
+        <div class="wb-bottom-actions">
+          ${L.shown ? `
+            <div class="wb-mark-btns">
+              <button class="btn-swipe-left" data-act="wb-mark" data-v="1" type="button">✕ 不认识</button>
+              <button class="btn-swipe-up" data-act="wb-mark" data-v="2" type="button">○ 模糊</button>
+              <button class="btn-swipe-right" data-act="wb-mark" data-v="3" type="button">✓ 认识</button>
+            </div>
+          ` : `
+            <button class="btn-show-meaning" data-act="wb-show-meaning" type="button">显示释义</button>
+          `}
         </div>
       </div>
+      <script>
+        (function(){
+          var card = document.getElementById('wb-card-el');
+          if (!card) return;
+          var startX = 0, startY = 0;
+          card.addEventListener('touchstart', function(e){
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          }, {passive: true});
+          card.addEventListener('touchend', function(e){
+            var dx = e.changedTouches[0].clientX - startX;
+            var dy = e.changedTouches[0].clientY - startY;
+            var threshold = 60;
+            var shown = window.state && window.state.wbLearn && window.state.wbLearn.shown;
+            if (!shown) {
+              if (dy < -threshold && Math.abs(dy) > Math.abs(dx)) {
+                var btn = document.querySelector('[data-act="wb-show-meaning"]');
+                if (btn) btn.click();
+              }
+              return;
+            }
+            try { navigator.vibrate && navigator.vibrate(20); } catch(e){}
+            if (dx < -threshold && Math.abs(dx) > Math.abs(dy)) {
+              var btn1 = document.querySelector('.btn-swipe-left');
+              if (btn1) btn1.click();
+            }
+            else if (dx > threshold && Math.abs(dx) > Math.abs(dy)) {
+              var btn3 = document.querySelector('.btn-swipe-right');
+              if (btn3) btn3.click();
+            }
+            else if (dy < -threshold && Math.abs(dy) > Math.abs(dx)) {
+              var btn2 = document.querySelector('.btn-swipe-up');
+              if (btn2) btn2.click();
+            }
+          }, {passive: true});
+        })();
+      </script>
     `;
   }
 
@@ -4346,6 +4426,7 @@ function formulaFilter() {
 
   function viewWordList(letter) {
     setTitle("词汇浏览", true);
+    state.wbLetter = letter || "all";
     var all = window.WORDS.WORDS;
     var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     var q = state.wbSearch || "";
@@ -4367,6 +4448,7 @@ function formulaFilter() {
     }
     var shown = list.slice(0, pageNo * pageSize);
     var hasMore = list.length > shown.length;
+    var hashCount = all.filter(function(w){return w.letter === '#';}).length;
     return `
       <div class="wb-list">
         <div class="wb-search-box">
@@ -4379,6 +4461,7 @@ function formulaFilter() {
             if (cnt === 0) return "";
             return `<button class="chip ${letter===l?'is-active':''}" data-nav="word-list/${l}" type="button">${l}</button>`;
           }).join("")}
+          ${hashCount > 0 ? `<button class="chip ${letter==='#'?'is-active':''}" data-nav="word-list/#" type="button">语法</button>` : ""}
         </div>
         <div class="wb-count">${list.length} 个词${q ? "" : " · 已显示 " + shown.length}</div>
         <div class="wb-word-list">
@@ -4388,7 +4471,7 @@ function formulaFilter() {
               <span class="wb-ph">/${esc(w.ph)}/</span>
               <span class="wb-ps">${esc(w.pos)}</span>
               <span class="wb-mean">${esc(w.m)}</span>
-              ${w.cat ? `<span class="wb-cat" style="font-size:10px;color:var(--text-sub);margin-left:auto">${esc(w.cat)}</span>` : ""}
+              ${w.cat && w.cat !== '核心词汇' ? `<span class="wb-cat" style="font-size:10px;color:var(--text-sub);margin-left:auto;flex-shrink:0">${esc(w.cat)}</span>` : ""}
             </div>`;
           }).join("")}
         </div>
@@ -4807,6 +4890,9 @@ function formulaFilter() {
       _lastRouteKey = routeKey;
     }
     const app = $("#app");
+    // 重置沉浸式模式
+    document.body.classList.remove('wb-immersive-mode');
+    document.body.style.background = '';
     // login 为公开页，未登录也可访问
     if (route === "login") {
       app.innerHTML = viewLogin();
@@ -4838,7 +4924,11 @@ function formulaFilter() {
     else if (route === "me") app.innerHTML = viewMe();
     else if (route === "search") app.innerHTML = viewSearch();
     else if (route === "words") app.innerHTML = viewWords();
-    else if (route === "word-learn") app.innerHTML = viewWordLearn();
+    else if (route === "word-learn") {
+      document.body.classList.add('wb-immersive-mode');
+      document.body.style.background = '#12151C';
+      app.innerHTML = viewWordLearn();
+    }
     else if (route === "word-review") app.innerHTML = viewWordReview();
     else if (route === "word-list") app.innerHTML = viewWordList(params[0] || "");
     else if (route === "word-quiz") app.innerHTML = viewWordQuiz();
@@ -5975,9 +6065,62 @@ function formulaFilter() {
       render();
     } else if (act === "wb-list-more") {
       state.wbListPage = (state.wbListPage || 1) + 1;
-      render();
+      // 直接动态追加，不重新渲染整个页面
+      var all = window.WORDS.WORDS;
+      var q = state.wbSearch || "";
+      var pageSize = 100;
+      var pageNo = state.wbListPage || 1;
+      var list;
+      if (q) {
+        list = window.WORDS.searchWords(q);
+      } else if (state.wbLetter && state.wbLetter !== 'all') {
+        list = all.filter(function(w){ return w.letter === state.wbLetter.toUpperCase(); });
+      } else {
+        list = all;
+      }
+      var start = (pageNo - 1) * pageSize;
+      var end = pageNo * pageSize;
+      var newItems = list.slice(start, end);
+      var hasMore = list.length > end;
+      // 追加到列表
+      var listEl = document.querySelector('.wb-word-list');
+      if (listEl) {
+        var html = newItems.map(function(w){
+          return '<div class="wb-word-item">' +
+            '<span class="wb-w">' + esc(w.w) + '</span>' +
+            '<span class="wb-ph">/' + esc(w.ph) + '/</span>' +
+            '<span class="wb-ps">' + esc(w.pos) + '</span>' +
+            '<span class="wb-mean">' + esc(w.m) + '</span>' +
+            (w.cat && w.cat !== '核心词汇' ? '<span class="wb-cat" style="font-size:10px;color:var(--text-sub);margin-left:auto;flex-shrink:0">' + esc(w.cat) + '</span>' : '') +
+            '</div>';
+        }).join('');
+        listEl.insertAdjacentHTML('beforeend', html);
+      }
+      // 更新计数
+      var countEl = document.querySelector('.wb-count');
+      if (countEl) countEl.textContent = list.length + ' 个词' + (q ? '' : ' · 已显示 ' + Math.min(end, list.length));
+      // 更新按钮
+      var btn = document.querySelector('[data-act="wb-list-more"]');
+      if (btn) {
+        if (hasMore) {
+          btn.textContent = '加载更多（已显示 ' + Math.min(end, list.length) + ' / ' + list.length + '）';
+        } else {
+          btn.style.display = 'none';
+        }
+      }
     } else if (act === "wb-flip") {
       if (state.wbLearn) { state.wbLearn.flipped = !state.wbLearn.flipped; render(); }
+    } else if (act === "wb-card-touch") {
+      if (!state.wbLearn) return;
+      // 点击卡片 = 显示释义（如果还没显示的话）
+      if (!state.wbLearn.shown) {
+        state.wbLearn.shown = true;
+        render();
+      }
+    } else if (act === "wb-show-meaning") {
+      if (state.wbLearn) { state.wbLearn.shown = true; render(); }
+    } else if (act === "wb-prev") {
+      if (state.wbLearn && state.wbLearn.i > 0) { state.wbLearn.i--; state.wbLearn.shown = false; render(); }
     } else if (act === "wb-flip-review") {
       if (state.wbReview) { state.wbReview.flipped = !state.wbReview.flipped; render(); }
     } else if (act === "wb-mark") {
@@ -5985,9 +6128,26 @@ function formulaFilter() {
       var w = state.wbLearn.list[state.wbLearn.i];
       var q = parseInt(t.getAttribute("data-v"));
       window.WORDS.markWord(w.id, q);
+      // 收集不认识和模糊的词，用于极速复习
+      if (q <= 2 && state.wbLearn.round === 1) {
+        state.wbLearn.wrongList.push(w);
+      }
       state.wbLearn.i++;
-      state.wbLearn.flipped = false;
+      state.wbLearn.shown = false;
       render();
+      // 自动发音下一个单词
+      try {
+        var nextW = state.wbLearn.list[state.wbLearn.i];
+        if (nextW) {
+          setTimeout(function() {
+            try {
+              if (window.speechSynthesis) window.speechSynthesis.cancel();
+              var au = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(nextW.w) + "&type=2");
+              au.play().catch(function(){});
+            } catch(e){}
+          }, 200);
+        }
+      } catch(e){}
     } else if (act === "wb-mark-review") {
       if (!state.wbReview) return;
       var w2 = state.wbReview.list[state.wbReview.i];
