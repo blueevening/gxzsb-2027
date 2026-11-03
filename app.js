@@ -1963,10 +1963,11 @@
             ? (q.blanks || []).map((blank, bIdx) => {
                 const userAns = s['sel_' + bIdx] || '';
                 const isCorrect = done && matchAns(blank.answer, userAns);
-                return `<div style="margin:16px 0;padding:12px;background:var(--bg-soft);border-radius:8px;border-left:3px solid var(--primary)">
-                  <div style="font-weight:600;margin-bottom:6px;font-size:14px">空 ${bIdx + 1} <span style="font-weight:400;color:var(--muted);font-size:12px">${mathHtml(blank.hint || '')}</span></div>
-                  <input class="fill-input" id="fillInput_${bIdx}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:15px" size="20" ${s.submitted ? "disabled" : ""} value="${attr(userAns)}" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" />
-                  ${done ? `<div style="margin-top:6px;font-size:13px;${isCorrect ? 'color:var(--success)' : 'color:var(--danger)'}">${isCorrect ? '✓' : '✕'} 正确答案：<b>${mathHtml(blank.answer)}</b></div>` : ""}
+                return `<div style="margin:14px 0;padding:14px;background:var(--bg-soft);border-radius:10px;border-left:3px solid var(--primary)">
+                  <div style="font-weight:600;margin-bottom:8px;font-size:14px">空 ${bIdx + 1} / 5</div>
+                  <div style="font-size:15px;line-height:1.8;margin-bottom:10px">${mathHtml(blank.context || blank.hint || '')}</div>
+                  <input class="fill-input" id="fillInput_${bIdx}" style="width:100%;padding:8px 0;border:none;border-bottom:2px solid var(--border);background:transparent;color:var(--text);font-size:16px;font-weight:500;outline:none" placeholder="输入答案（不超过4个词）" ${s.submitted ? "disabled" : ""} value="${attr(userAns)}" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" />
+                  ${done ? `<div style="margin-top:8px;font-size:13px;${isCorrect ? 'color:var(--success)' : 'color:var(--danger)'}">${isCorrect ? '✓ 正确' : '✕ 正确答案：'} <b>${mathHtml(blank.answer)}</b></div>` : ""}
                 </div>`;
               }).join("")
             : q.type === "single" || q.type === "judge"
