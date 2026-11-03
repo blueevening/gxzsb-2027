@@ -1958,6 +1958,14 @@
                   </div>
                 </div>`;
               }).join("")
+            : q.blanks
+            ? (q.blanks || []).map((blank, bIdx) => {
+                return `<div style="margin:12px 0;padding-top:12px;border-top:1px dashed var(--border)">
+                  <label class="muted" style="font-size:12px;font-weight:650">第${bIdx + 1}空：${mathHtml(blank.hint || "")}</label>
+                  <div style="margin-top:4px"><input class="fill-input" id="fillInput_${bIdx}" size="20" ${s.submitted ? "disabled" : ""} value="${attr(s['sel_' + bIdx] || '')}" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" /></div>
+                  ${done ? `<div style="margin-top:4px;font-size:13px;color:var(--success)">✓ 答案：${mathHtml(blank.answer)}</div>` : ""}
+                </div>`;
+              }).join("")
             : q.type === "single" || q.type === "judge"
             ? (q.options || [])
                 .map((opt, idx) => {
@@ -2173,23 +2181,37 @@
       // 阅读理解大题：5道子题逐题判分
       const subs = q.subQuestions || [];
       let correct = 0;
-      const answers = {};
       for (let i = 0; i < subs.length; i++) {
-        const sel = s.sel;
-        // s.sel 是最后点击的选项，但用户可能点了多个子题——需要从DOM读
         const btns = document.querySelectorAll(`[data-act="pick"][data-opt^="sq${i}_"]`);
         let chosenIdx = -1;
         btns.forEach((b, idx) => { if (b.classList.contains("is-selected")) chosenIdx = idx; });
         if (chosenIdx < 0) { toastLite(`请完成第${i+1}题`); return; }
         const chosen = subs[i].options[chosenIdx];
-        answers[i] = chosen;
         if (chosen === subs[i].answer) correct++;
       }
       const ok = correct === subs.length;
       s.submitted = true;
       s.results[q.id] = ok;
       s.scores = s.scores || {};
-      s.scores[q.id] = correct / subs.length;  // 按正确率给分
+      s.scores[q.id] = correct / subs.length;
+      s.showExp = true;
+      record(q, ok);
+    } else if (q.blanks) {
+      // 阅读填空题：5个空逐空判分
+      const blanks = q.blanks || [];
+      let correct = 0;
+      for (let i = 0; i < blanks.length; i++) {
+        const box = document.getElementById(`fillInput_${i}`);
+        const val = (box ? box.value : "").trim().toLowerCase();
+        if (!val) { toastLite(`请填写第${i+1}空`); return; }
+        s['sel_' + i] = val;
+        if (matchAns(blanks[i].answer, val)) correct++;
+      }
+      const ok = correct === blanks.length;
+      s.submitted = true;
+      s.results[q.id] = ok;
+      s.scores = s.scores || {};
+      s.scores[q.id] = correct / blanks.length;
       s.showExp = true;
       record(q, ok);
     } else if (t === "translate" || t === "write") {
