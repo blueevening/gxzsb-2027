@@ -3527,7 +3527,6 @@ function ensureExplain(q) {
             </div>
           </aside>
           <section class="school-list">
-            <div class="count-line">共 ${list.length} 所院校</div>
             ${cardsHtml}
             <div class="feedback-line">数据仅供参考，如有误请 <a href="https://github.com/blueevening/gxzsb-2027/issues" target="_blank" rel="noopener">点此反馈</a></div>
           </section>
