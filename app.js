@@ -1914,7 +1914,7 @@
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
         <span style="display:inline-flex;gap:4px;align-items:center">
           ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习" : "📝 测试") + "</button>"}
-          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${accRun != null ? ' · 本趟正确率 <b style="color:var(--success)">' + accRun + '%</b>' : ""}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:#8b5cf6;font-weight:600">范文学习</span>' : ""}</span>
+          <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${accRun != null ? ' · 本趟正确率 <b style="color:var(--success)">' + accRun + '%</b>' : ""}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:var(--accent,#8b5cf6);font-weight:600">范文学习</span>' : ""}</span>
         </span>
       </div>
 
@@ -2652,8 +2652,8 @@
               const isMastered = !!(w && w.mastered);
               // 右侧两个按钮：✓ 标记掌握 / ↩ 恢复
               const actionBtn = isMastered
-                ? '<button data-act="unmaster-wrong" data-id="' + attr(q.id) + '" title="恢复到待复习" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#16a34a;font-size:18px;padding:8px;cursor:pointer">↩</button>'
-                : '<button data-act="master-wrong" data-id="' + attr(q.id) + '" title="标记已掌握" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#16a34a;font-size:18px;padding:8px;cursor:pointer">✓</button>';
+                ? '<button data-act="unmaster-wrong" data-id="' + attr(q.id) + '" title="恢复到待复习" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--success);font-size:18px;padding:8px;cursor:pointer">↩</button>'
+                : '<button data-act="master-wrong" data-id="' + attr(q.id) + '" title="标记已掌握" type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--success);font-size:18px;padding:8px;cursor:pointer">✓</button>';
               return (
                 '<div class="list-row" style="display:flex;align-items:center;gap:4px;position:relative' + (isMastered ? ';opacity:.55' : '') + '">' +
                 '<button data-act="open-q" data-id="' + attr(q.id) + '" type="button" style="flex:1;text-align:left;background:none;border:none;display:flex;align-items:center;gap:10px;padding:12px 16px;padding-right:56px">' +
@@ -4622,7 +4622,7 @@ function formulaFilter() {
       E.readings.map(function (r) {
         const first = r.passage.replace(/\s+/g, " ").slice(0, 90);
         return '<button class="extra-row" data-act="extra-go" data-name="readings/' + r.id + '" type="button">' +
-          '<span class="extra-row-badge" style="background:#3b82f620;color:#3b82f6">📖</span>' +
+          '<span class="extra-row-badge" style="background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary)">📖</span>' +
           '<span class="extra-row-main"><span class="extra-row-title">' + esc(r.task) + ' · ' + r.questions.length + ' 题</span>' +
           '<span class="extra-row-sub">' + esc(first) + '…</span></span>' +
           '<span class="extra-row-arrow">›</span></button>';
@@ -4706,7 +4706,7 @@ function formulaFilter() {
         '<div style="font-size:16px;font-weight:700;margin-bottom:6px">' + esc(s.name) + '</div>' +
         '<div style="font-size:13px;color:var(--text-sub);line-height:1.7;margin-bottom:10px">' + esc(s.key) + '</div>' +
         block("常见命题形式", s.types, "#3b82f6") +
-        (s.method ? '<div class="rs-block"><span class="rs-label" style="color:#10b981">解题方法</span>' +
+        (s.method ? '<div class="rs-block"><span class="rs-label" style="color:var(--success)">解题方法</span>' +
           '<div style="line-height:1.85;font-size:14px;white-space:pre-wrap">' + esc(s.method) + '</div></div>' : "") +
         block("常考位置 / 定位", s.positions, "#8b5cf6") +
         block("易错陷阱", s.traps, "#ef4444") +
@@ -4806,7 +4806,7 @@ function formulaFilter() {
         '<div class="card" style="padding:6px">' +
         E.grammar.map(function (g, i) {
           return '<button class="extra-row" data-act="extra-go" data-name="grammar/' + i + '" type="button">' +
-            '<span class="extra-row-badge" style="background:#8b5cf620;color:#8b5cf6">🧠</span>' +
+            '<span class="extra-row-badge" style="background:color-mix(in srgb, #8b5cf6 15%, transparent);color:#a78bfa">🧠</span>' +
             '<span class="extra-row-main"><span class="extra-row-title">' + esc(g.name) + '</span>' +
             '<span class="extra-row-sub">' + g.groups.length + ' 个知识模块</span></span>' +
             '<span class="extra-row-arrow">›</span></button>';
