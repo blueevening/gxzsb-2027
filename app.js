@@ -1913,7 +1913,7 @@
       <div class="row-between" style="margin:4px 0 8px;flex-wrap:wrap;gap:4px">
         <span class="muted" style="font-size:12px"><b style="color:${isSubjective(q) ? "var(--warning)" : "var(--success)"}">${objSubLabel(q)}</b> · ${esc(q.subject)} · ${esc(q.knowledgePoint)}</span>
         <span style="display:inline-flex;gap:4px;align-items:center">
-          ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习" : "📝 测试") + "</button>"}
+          ${s.exam ? "" : '<button class="chip ' + (state.practiceMode === "practice" ? "is-active" : "") + '" data-act="toggle-mode" type="button" style="font-size:11px;padding:2px 8px">' + (state.practiceMode === "practice" ? "✍ 练习中 · 切测试" : "📝 测试中 · 切练习") + "</button>"}
           <span class="mono muted" style="font-size:12px">${s.i + 1}/${s.q.length}${accRun != null ? ' · 本趟正确率 <b style="color:var(--success)">' + accRun + '%</b>' : ""}${s.end ? ' · <span class="exam-timer" id="examTimer">' + formatMMSS(examRemainMs() || 0) + "</span>" : ""}${q.score ? " · " + q.score + " 分" : ""}${(q.type === "translate" || q.type === "write") ? ' · <span style="color:var(--accent,#8b5cf6);font-weight:600">范文学习</span>' : ""}</span>
         </span>
       </div>
