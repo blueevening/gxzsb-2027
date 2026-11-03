@@ -1611,6 +1611,10 @@
     if (opts.onlyWrong) pool = pool.filter((q) => state.wrong[q.id]);
     if (opts.filterKind === "obj") pool = pool.filter((q) => !isSubjective(q));
     if (opts.filterKind === "subj") pool = pool.filter((q) => isSubjective(q));
+    // 题型筛选（单选/填空/计算等）
+    if (state.filters && Array.isArray(state.filters.type) && state.filters.type.length) {
+      pool = pool.filter((q) => state.filters.type.includes(q.typeLabel));
+    }
     if (opts.dueOnly) {
       const dueIds = Object.keys(state.wrong).filter((id) => {
         const w = state.wrong[id];
