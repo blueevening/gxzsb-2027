@@ -2398,6 +2398,8 @@ button, .btn { min-height: 44px; }
 
 /* 5) 首屏 CLS 抑制：骨架元素固定尺寸，下方内容 content-visibility 跳过渲染 */
 .skeleton, .boot-track, .hero-count { content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.skeleton { background: linear-gradient(90deg, var(--card) 25%, var(--bg) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 .card + .card, .section-gap { content-visibility: auto; contain-intrinsic-size: auto 200px; }
 @media (max-width: 1199px) {
   .side-nav { display: none !important; }  /* 移动端彻底隐藏侧栏，避免占位 */
