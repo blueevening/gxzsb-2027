@@ -2021,9 +2021,9 @@
         <div class="explain ${s.showExp && s.submitted ? "is-open" : ""}">
           <button class="explain-toggle" data-act="toggle-exp" type="button"><span>查看解析</span><span class="muted">${s.showExp && s.submitted ? "收起" : "展开"}</span></button>
           <div class="explain-body">
-            <div class="explain-block" style="border-left:3px solid #22c55e;background:#f0fdf4;padding:12px;border-radius:8px;margin-bottom:12px">
+            <div class="explain-block" style="border-left:3px solid var(--success);background:color-mix(in srgb, var(--success) 10%, transparent);padding:12px;border-radius:8px;margin-bottom:12px">
               <h4 style="margin:0 0 6px 0">⚡ 秒懂考点</h4>
-              <div class="content" style="font-size:15px">本题考 <strong style="color:#16a34a">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:#16a34a;font-size:18px">${mathHtml(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
+              <div class="content" style="font-size:15px">本题考 <strong style="color:var(--success)">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:var(--success);font-size:18px">${mathHtml(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
             </div>
             <details class="explain-block" style="border-left:3px solid #3b82f6" open>
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 详细解析（点击展开）</summary>
@@ -2041,8 +2041,8 @@
             <details class="explain-block" style="border-left:3px solid #f59e0b">
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">⚠️ 避坑指南（新手必看）</summary>
               <div class="content">
-                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:#92400e">• ${esc(p)}</p>`;}).join("") : '<p style="color:#92400e">• 看清题目问的是什么</p>'}
-                ${wrongN ? `<p style="color:#dc2626">• 你曾错这道题 ${wrongN} 次，务必巩固</p>` : ""}
+                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:var(--warning)">• ${esc(p)}</p>`;}).join("") : '<p style="color:var(--warning)">• 看清题目问的是什么</p>'}
+                ${wrongN ? `<p style="color:var(--error)">• 你曾错这道题 ${wrongN} 次，务必巩固</p>` : ""}
               </div>
             </details>
             <div class="explain-block"><h4>AI 深度解析</h4>
@@ -2288,9 +2288,9 @@
           const hm = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
           const wrongN = h.total - h.ok;
           const scColor = scoreColor(h.score, h.fullScore);
-          const badge = h.acc >= 80 ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#16a34a;font-weight:600">优秀</span>'
-                      : h.acc >= 60 ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#ffedd5;color:#ea580c;font-weight:600">及格</span>'
-                      : '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#dc2626;font-weight:600">待订正</span>';
+          const badge = h.acc >= 80 ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb, var(--success) 15%, transparent);color:var(--success);font-weight:600">优秀</span>'
+                      : h.acc >= 60 ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb, var(--warning) 15%, transparent);color:var(--warning);font-weight:600">及格</span>'
+                      : '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb, var(--error) 15%, transparent);color:var(--error);font-weight:600">待订正</span>';
           return `<div class="hist-card">
             <div class="hist-top">
               <div class="hist-title">
@@ -3675,7 +3675,7 @@ function ensureExplain(q) {
     return `
       <div class="me-page">
       <div class="card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;margin-bottom:16px">
-        <div style="width:52px;height:52px;border-radius:50%;background:white;color:#6366f1;font-size:24px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px">${nick[0] || "学"}</div>
+        <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:24px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px">${nick[0] || "学"}</div>
         <div style="font-size:16px;font-weight:bold">${esc(nick)}</div>
       </div>
 
