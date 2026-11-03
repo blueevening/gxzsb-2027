@@ -3501,12 +3501,12 @@ function ensureExplain(q) {
           <div class="source-line">📅 数据来源：广西招生考试院，更新于 2026-05</div>
         </div>
         <div class="card stats">
-          <div class="stat-box"><div class="stat-num">${SCHOOLS_DATA.length}<small> 所</small></div><div class="stat-label">你能报的院校</div></div>
+          <div class="stat-box"><div class="stat-num">${SCHOOLS_DATA.length}<small> 所</small></div><div class="stat-label">电子信息类可报院校</div></div>
           <div class="stat-box"><div class="stat-num">${gong}<small> 所</small></div><div class="stat-label">其中公办</div></div>
-          <div class="stat-box"><div class="stat-num">${(total26 / 10000).toFixed(2)}<small> 万</small></div><div class="stat-label">你能报的名额</div></div>
+          <div class="stat-box"><div class="stat-num">${(total26 / 10000).toFixed(2)}<small> 万</small></div><div class="stat-label">电子信息类计划</div></div>
         </div>
         <div style="text-align:center;font-size:11px;color:var(--text-sub);margin:-8px 0 12px">
-          ↑ 上面是全广西大盘（5.19万），下面是你这个专业大类能报的（4.89万），口径不同
+          ↑ 上：全广西所有大类总计划（5.19万）　↓ 下：仅你这个"电子与信息类"能报的（4.89万）
         </div>
         <div class="layout">
           <aside class="filter-panel">
