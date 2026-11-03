@@ -1957,7 +1957,7 @@
                     }).join("")}
                   </div>
                   ${done ? `<div style="margin-top:8px;font-size:13px;color:var(--primary)">💡 正确答案：<b style="color:var(--success)">${mathHtml(sq.answer)}</b></div>
-                  ${sq.evidence ? `<div style="margin-top:6px;padding:8px;background:color-mix(in srgb, var(--primary) 8%, transparent);border-radius:6px;font-size:13px;color:var(--text-sub);line-height:1.6">📖 原文：${mathHtml(sq.evidence)}</div>` : ""}` : ""}
+                  ${sq.evidence ? `<div style="margin-top:6px;padding:8px;background:color-mix(in srgb, var(--primary) 8%, transparent);border-radius:6px;font-size:13px;color:var(--text-sub);line-height:1.6">📖 原文：${mathHtml(sq.evidence)}${sq.evidenceZh ? `<br><span style="color:var(--muted);font-size:12px">译：${mathHtml(sq.evidenceZh)}</span>` : ""}</div>` : ""}` : ""}
                 </div>`;
               }).join("")
             : q.blanks
@@ -1969,7 +1969,7 @@
                   <div style="font-size:15px;line-height:1.8;margin-bottom:10px">${mathHtml(blank.context || blank.hint || '')}</div>
                   <input class="fill-input" id="fillInput_${bIdx}" style="width:100%;padding:8px 0;border:none;border-bottom:2px solid var(--border);background:transparent;color:var(--text);font-size:16px;font-weight:500;outline:none" placeholder="输入答案（不超过4个词）" ${s.submitted ? "disabled" : ""} value="${attr(userAns)}" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" />
                   ${done ? `<div style="margin-top:8px;font-size:13px;${isCorrect ? 'color:var(--success)' : 'color:var(--danger)'}">${isCorrect ? '✓ 正确' : '✕'} 答案：<b>${mathHtml(blank.answer)}</b></div>
-                  ${blank.evidence ? `<div style="margin-top:6px;padding:8px;background:color-mix(in srgb, var(--primary) 8%, transparent);border-radius:6px;font-size:13px;color:var(--text-sub);line-height:1.6">📖 原文：${mathHtml(blank.evidence)}</div>` : ""}` : ""}
+                  ${blank.evidence ? `<div style="margin-top:6px;padding:8px;background:color-mix(in srgb, var(--primary) 8%, transparent);border-radius:6px;font-size:13px;color:var(--text-sub);line-height:1.6">📖 原文：${mathHtml(blank.evidence)}${blank.evidenceZh ? `<br><span style="color:var(--muted);font-size:12px">译：${mathHtml(blank.evidenceZh)}</span>` : ""}</div>` : ""}` : ""}
                 </div>`;
               }).join("")
             : q.type === "single" || q.type === "judge"
