@@ -4013,7 +4013,7 @@ function formulaFilter() {
       ipPlaceholders.push(m);
       return `__IP_${ipPlaceholders.length - 1}__`;
     });
-    raw = raw.replace(/(?<![a-zA-Z])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
+    raw = raw.replace(/(?<![a-zA-Z.])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
     let out = "";
     // 恢复IP地址
     raw = raw.replace(/__IP_(\d+)__/g, (m, idx) => ipPlaceholders[parseInt(idx)]);
