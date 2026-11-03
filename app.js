@@ -5214,7 +5214,7 @@ function formulaFilter() {
       if (pool.length) startSession({ ids: shuffle(pool).slice(0,20).map(function(q){return q.id;}), title: "考点专练 · " + pts });
       else toastLite("暂无练习题");
     } else if (act === "learn-mark") {
-      t.textContent = "已学 \u2713";
+      toastLite("已标记为已学");
     } else if (act === "daily") {
       // 按需加载科目题库：每日30题需要所有科目
       var allSubjects = ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"];
