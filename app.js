@@ -3395,7 +3395,16 @@ function ensureExplain(q) {
       const m = (s.note || "").match(/51大类对口约?([\d.]+)人/);
       return a + (m ? parseFloat(m[1]) : 0);
     }, 0);
-    const gong = SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length;
+    // 年份选择：点趋势卡切换
+    const selYear = state.schoolYear || "2026";
+    // 各年份统计数据
+    const schools25 = SCHOOLS_DATA.filter((s) => s.plan25 > 0);
+    const yearStats = {
+      "2026": { count: SCHOOLS_DATA.length, gong: SCHOOLS_DATA.filter(s => s.tier.indexOf("公办")>=0).length, plan: total51, planLabel: "电子信息类计划" },
+      "2025": { count: schools25.length, gong: schools25.filter(s => s.tier.indexOf("公办")>=0).length, plan: schools25.reduce((a,s)=>a+s.plan25,0), planLabel: "院校总计划" },
+      "2024": { count: null, gong: null, plan: null, planLabel: "暂未收录" }
+    };
+    const ys = yearStats[selYear] || yearStats["2026"];
     const cntOf = (c) => c === "all" ? SCHOOLS_DATA.length : SCHOOLS_DATA.filter((s) => s.city === c).length;
     const maxT = Math.max(...SCHOOLS_TREND.map((t) => parseFloat(t.total)));
 
@@ -3492,22 +3501,21 @@ function ensureExplain(q) {
           <input class="search-box" id="schoolSearch" type="search" placeholder="搜院校名 / 专业 / 城市（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" autocomplete="off" />
         </div>
         <div class="card">
-          <div class="section-title">📈 改革三年招生趋势（全大类总数）</div>
+          <div class="section-title">📈 改革三年招生趋势（全大类总数）· 点选切换年份</div>
           <div class="trend-grid">
-            ${SCHOOLS_TREND.map((t) => `<div class="trend-cell">
+            ${SCHOOLS_TREND.map((t) => `<div class="trend-cell ${t.year === selYear ? "active" : ""}" data-act="school-year" data-v="${t.year}">
               <div class="trend-year">${t.year}</div>
               <div class="trend-label">${t.label}</div>
               <div class="trend-num">${t.total}</div>
-              <div class="trend-bars"><i class="${t.year === "2026" ? "hot" : ""}" style="height:${Math.round(parseFloat(t.total) / maxT * 100)}%"></i></div>
               <div class="trend-note">${t.note}</div>
             </div>`).join("")}
           </div>
           <div class="source-line">📅 数据来源：广西招生考试院，更新于 2026-05</div>
         </div>
         <div class="card stats">
-          <div class="stat-box"><div class="stat-num">${SCHOOLS_DATA.length}<small> 所</small></div><div class="stat-label">电子信息类可报院校</div></div>
-          <div class="stat-box"><div class="stat-num">${gong}<small> 所</small></div><div class="stat-label">其中公办</div></div>
-          <div class="stat-box"><div class="stat-num">${total51}<small> 人</small></div><div class="stat-label">电子信息类计划</div></div>
+          <div class="stat-box"><div class="stat-num">${ys.count ?? "—"}<small> ${ys.count ? "所" : ""}</small></div><div class="stat-label">${selYear === "2024" ? "院校数据" : "电子信息类可报院校"}</div></div>
+          <div class="stat-box"><div class="stat-num">${ys.gong ?? "—"}<small> ${ys.gong ? "所" : ""}</small></div><div class="stat-label">其中公办</div></div>
+          <div class="stat-box"><div class="stat-num">${ys.plan ?? "—"}<small> ${ys.plan ? " 人" : ""}</small></div><div class="stat-label">${ys.planLabel}</div></div>
         </div>
         <div class="layout">
           <aside class="filter-panel">
@@ -5738,6 +5746,10 @@ function formulaFilter() {
       window.scrollTo(0, _sy);
       requestAnimationFrame(() => window.scrollTo(0, _sy));
       setTimeout(() => window.scrollTo(0, _sy), 80);
+    } else if (act === "school-year") {
+      state.schoolYear = t.getAttribute("data-v");
+      render();
+      window.scrollTo(0, 0);
     } else if (act === "schools-filter") {
       state[t.getAttribute("data-f")] = t.getAttribute("data-v");
       var _sy = window.scrollY;
