@@ -33,6 +33,7 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
 #offlineBar{display:none;position:fixed;top:0;left:0;right:0;z-index:999;background:#DC2626;color:#fff;font-size:12px;text-align:center;padding:6px 12px}
 #offlineBar[hidden]{display:none}
 .sync-bar{position:fixed;top:0;left:0;right:0;z-index:49;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(45,91,255,.08);color:#2D5BFF;font-size:11px;padding:4px 12px}
+[data-theme="dark"] .sync-bar{background:rgba(45,91,255,.15);color:#8FA8FF}
 .sync-bar-dot{width:8px;height:8px;border-radius:50%;background:#2D5BFF;display:inline-block}
 .topbar{position:sticky;top:0;z-index:50;height:56px;display:flex;align-items:center;gap:8px;padding:0 16px;background:#F7F8FA;border-bottom:1px solid #E8EAEE}
 [data-theme="dark"] .topbar{background:#0F1115;border-color:#2A2D38}
@@ -72,7 +73,7 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
           <div class="skeleton"></div>
           <div class="skeleton sm"></div>
           <div class="skeleton sm"></div>
-          <p style="text-align:center;color:#6B7280;font-size:12px;margin-top:8px">正在加载…</p>
+          <p style="text-align:center;color:var(--text-sub,#6B7280);font-size:12px;margin-top:8px">正在加载…</p>
         </div>
       </div>
     </main>
