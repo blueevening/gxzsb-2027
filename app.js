@@ -1932,7 +1932,7 @@
       <div>
       <div class="card">
         ${q.passage ? '<div class="q-passage"><div style="font-weight:600;margin-bottom:10px;font-size:13px;color:var(--primary)">📖 阅读文章</div>' + q.passage.split('\n\n').map(p => `<p>${mathHtml(p)}</p>`).join('') + '</div>' : ''}
-        <div class="q-stem">${mathHtml(q.stem)}</div>
+        ${isCodeQuestion(q.stem) ? `<div class="q-stem q-code">${mathHtml(q.stem)}</div>` : `<div class="q-stem">${mathHtml(q.stem)}</div>`}
         ${q.image ? '<div class="q-img" style="margin:12px 0;text-align:center">' + q.image + '</div>' : ''}
         ${
           q.type === "reading"
@@ -2194,6 +2194,11 @@
       </aside>
       </div>
     `;
+  }
+
+  function isCodeQuestion(stem) {
+    // 检测题目是否是代码题——有分号、大括号、printf等特征
+    return /[;{}]|printf|scanf|int |char |return |#include/.test(stem);
   }
 
   function matchAns(q, user) {
