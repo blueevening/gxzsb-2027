@@ -3390,7 +3390,11 @@ function ensureExplain(q) {
     if (trendFilter === "new") list = list.filter((s) => s.plan25 === 0);
     if (kw) list = list.filter((s) => s.name.toLowerCase().includes(kw) || s.majors.join(" ").toLowerCase().includes(kw) || s.city.toLowerCase().includes(kw));
 
-    const total26 = SCHOOLS_DATA.reduce((a, s) => a + (s.plan26 || 0), 0);
+    // 真正的51大类对口名额：从 note 里解析"51大类对口约XXX人"求和（plan26 是学校全部专业总数，不能直接用）
+    const total51 = SCHOOLS_DATA.reduce((a, s) => {
+      const m = (s.note || "").match(/51大类对口约?([\d.]+)人/);
+      return a + (m ? parseFloat(m[1]) : 0);
+    }, 0);
     const gong = SCHOOLS_DATA.filter((s) => s.tier.indexOf("公办") >= 0).length;
     const cntOf = (c) => c === "all" ? SCHOOLS_DATA.length : SCHOOLS_DATA.filter((s) => s.city === c).length;
     const maxT = Math.max(...SCHOOLS_TREND.map((t) => parseFloat(t.total)));
@@ -3503,10 +3507,10 @@ function ensureExplain(q) {
         <div class="card stats">
           <div class="stat-box"><div class="stat-num">${SCHOOLS_DATA.length}<small> 所</small></div><div class="stat-label">电子信息类可报院校</div></div>
           <div class="stat-box"><div class="stat-num">${gong}<small> 所</small></div><div class="stat-label">其中公办</div></div>
-          <div class="stat-box"><div class="stat-num">${(total26 / 10000).toFixed(2)}<small> 万</small></div><div class="stat-label">电子信息类计划</div></div>
+          <div class="stat-box"><div class="stat-num">${total51}<small> 人</small></div><div class="stat-label">电子信息类计划</div></div>
         </div>
         <div style="text-align:center;font-size:11px;color:var(--text-sub);margin:-8px 0 12px">
-          ↑ 上：全广西所有大类总计划（5.19万）　↓ 下：仅你这个"电子与信息类"能报的（4.89万）
+          ↑ 上：全广西所有大类总计划（5.19万）　↓ 下：仅你这个"电子与信息类"能报的（约${total51}人）
         </div>
         <div class="layout">
           <aside class="filter-panel">
@@ -3522,7 +3526,7 @@ function ensureExplain(q) {
             </div>
             <div class="card">
               <div class="section-title">ℹ️ 数据来源说明</div>
-              <div class="muted">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向「51 电子与信息大类」招生的院校，共 ${total26} 个对口名额；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年总数。扩招/缩招按各校 2026 计划数对比 2025 计划数计算。2027 年招生计划与分数线以当年公布为准。</div>
+              <div class="muted">数据为广西招生考试院 2026 年专升本招生计划（仅列 24 所面向「51 电子与信息大类」招生的院校，51大类对口名额合计约 ${total51} 人；每校卡片上的专业均为 51 大类可报）。2024=5.2万、2025=5.31万为历年全大类总数。扩招/缩招按各校全部专业 2026 计划数对比 2025 计划数计算。2027 年招生计划与分数线以当年公布为准。</div>
             </div>
           </aside>
           <section class="school-list">
