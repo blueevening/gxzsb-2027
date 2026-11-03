@@ -2017,9 +2017,33 @@
                   return `<div class="feedback ${ok ? "ok" : "bad"}">${ok ? "✓ 回答正确" : "✕ 回答错误"}</div>`;
                 }
                 const sc = s.scores && s.scores[q.id] != null ? s.scores[q.id] : null;
+                // 阅读大题：显示答对了几题/几空
+                let readingSummary = "";
+                if (q.type === "reading" && q.subQuestions) {
+                  const total = q.subQuestions.length;
+                  const correct = Math.round(sc * total);
+                  readingSummary = `<div style="margin:8px 0;padding:10px;background:color-mix(in srgb, var(--primary) 10%, transparent);border-radius:8px;text-align:center;font-size:15px">
+                    答对 <b style="color:var(--primary);font-size:18px">${correct}</b> / ${total} 题 · 得分 ${Math.round(sc*100)}%
+                  </div>`;
+                  // 答案速览
+                  let ansList = q.subQuestions.map((sq, i) => {
+                    return `<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)">第${i+1}题：<b style="color:var(--success)">${sq.answer}</b></div>`;
+                  }).join('');
+                  readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📋 答案速览</summary><div style="margin-top:6px">${ansList}</div></details>`;
+                } else if (q.blanks) {
+                  const total = q.blanks.length;
+                  const correct = Math.round(sc * total);
+                  readingSummary = `<div style="margin:8px 0;padding:10px;background:color-mix(in srgb, var(--primary) 10%, transparent);border-radius:8px;text-align:center;font-size:15px">
+                    答对 <b style="color:var(--primary);font-size:18px">${correct}</b> / ${total} 空 · 得分 ${Math.round(sc*100)}%
+                  </div>`;
+                  let ansList = q.blanks.map((b, i) => {
+                    return `<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)">空${i+1}：<b style="color:var(--success)">${b.answer}</b></div>`;
+                  }).join('');
+                  readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📋 答案速览</summary><div style="margin-top:6px">${ansList}</div></details>`;
+                }
                 // 填空若智能评分有值，同样展示，与 S2「部分 fill」对齐
                 const showSmart = isSubj || (sc != null && sc > 0);
-                let extra = "";
+                let extra = readingSummary;
                 if (showSmart) {
                   const pct = sc == null ? (ok ? 100 : 0) : Math.round(sc * 100);
                   // 主观题无范文时：给出答案 + 参考步骤（steps）作为“参考要点”
