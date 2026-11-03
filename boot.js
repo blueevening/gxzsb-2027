@@ -10,17 +10,20 @@
 (function () {
   "use strict";
 
-  var V = "3.2.1";          // 与 index.html 的版本号保持一致
+  var V = "3.2.2";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
 
-  /* 自动刷新：每次第一次打开都强制刷新一次，获取最新缓存 */
+  /* 自动刷新：仅当版本号变化时强制刷新一次（避免每次打开都白屏闪一下） */
   try {
+    var lastV = localStorage.getItem('gxzsb.lastV');
     var alreadyReloaded = sessionStorage.getItem('gxzsb_reloaded');
-    if (!alreadyReloaded) {
+    if (lastV !== V && !alreadyReloaded) {
+      localStorage.setItem('gxzsb.lastV', V);
       sessionStorage.setItem('gxzsb_reloaded', '1');
       location.reload();
       return;
     }
+    sessionStorage.setItem('gxzsb_reloaded', '1');
   } catch (e) {}
 
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀

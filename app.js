@@ -3400,13 +3400,14 @@ function ensureExplain(q) {
       const d = s.plan26 - s.plan25;
       if (d > 0) return { cls: "up", txt: "+" + d + " 扩招" };
       if (d < 0) return { cls: "down", txt: "-" + (-d) + " 缩招" };
-      return { cls: "flat", txt: "0 持平" };
+      return { cls: "flat", txt: "持平" };
     };
     const parseNote = (n) => {
       const cntM = (n || "").match(/51大类对口约?(\d+(?:\.\d+)?)人/);
-      const feeM = (n || "").match(/(\d[\,]*(?:-\d[\,]*)?元\/年)/);
-      const rest = (n || "").replace(/51大类对口约?[\d.]+人/, "").replace(/(\d[\,]*(?:-\d[\,]*)?元\/年)/, "").replace(/^[，,、。\s]+/, "").replace(/[，,、。\s]+$/, "");
-      return { cnt: cntM ? cntM[1] : null, fee: feeM ? feeM[1] : null, frags: rest.split(/[，,、。;；]+/).map((x) => x.trim()).filter(Boolean) };
+      // 学费正则：必须匹配多位数字（6000-7500/5520/4600），旧版 \d[\,]* 只匹配单数字会误抓到 "0元/年"
+      const feeM = (n || "").match(/(\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*元\/年)/);
+      const rest = (n || "").replace(/51大类对口约?[\d.]+人/, "").replace(/\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*元\/年/, "").replace(/^[，,、。\s]+/, "").replace(/[，,、。\s]+$/, "");
+      return { cnt: cntM ? cntM[1] : null, fee: feeM ? feeM[1].replace(/\s+/g, "") : null, frags: rest.split(/[，,、。;；]+/).map((x) => x.trim()).filter(Boolean) };
     };
     const findDetail = (schoolName, majorName) => {
       const arr = MAJOR_DETAIL[schoolName] || [];
