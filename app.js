@@ -778,7 +778,6 @@
       state.user = null;
       stopRealtime();
       toastLite("闲置超过 2 小时，已自动退出登录");
-      alert("因闲置超过 2 小时，已自动退出登录。学习记录仍保存在本机，请重新登录。");
       go("login");
       render();
     }, IDLE_LOGOUT_MS);
@@ -5261,9 +5260,9 @@ function formulaFilter() {
       // 从历史记录恢复整卷回看
       const hid = t.getAttribute("data-id");
       const rec = (state.history || []).find(function (h) { return h.id === hid; });
-      if (!rec || !Array.isArray(rec.ids) || !rec.ids.length) { alert("该记录缺少题目快照，无法回看"); return; }
+      if (!rec || !Array.isArray(rec.ids) || !rec.ids.length) { toastLite("该记录缺少题目快照，无法回看"); return; }
       const qs = rec.ids.map(qById).filter(Boolean);
-      if (!qs.length) { alert("题库已更新，该记录中的题目已不存在，无法回看"); return; }
+      if (!qs.length) { toastLite("题库已更新，该记录中的题目已不存在，无法回看"); return; }
       const examPlan = rec.exam && rec.exam.planId ? (D.EXAM_PLANS || {})[rec.exam.planId] : null;
       stopExamTimer();
       state.session = {
@@ -5991,24 +5990,24 @@ function formulaFilter() {
           try {
             data = JSON.parse(r.result);
           } catch(e) {
-            alert("备份文件不是合法 JSON，请选择正确的 .json 备份");
+            toastLite("备份文件不是合法 JSON，请选择正确的 .json 备份");
             return;
           }
           if (!data || typeof data !== "object" || Array.isArray(data)) {
-            alert("备份文件格式错误：应为 JSON 对象");
+            toastLite("备份文件格式错误：应为 JSON 对象");
             return;
           }
           const picked = filterImportKeys(data);
           const ignored = Object.keys(data).filter(function (k) { return !isImportKey(k); });
           if (!Object.keys(picked).length) {
-            alert("未找到可导入的 gxzsb.* 数据" + (ignored.length ? "（已忽略非法 key：" + ignored.slice(0, 5).join(", ") + "）" : ""));
+            toastLite("未找到可导入的 gxzsb.* 数据" + (ignored.length ? "（已忽略非法 key：" + ignored.slice(0, 5).join(", ") + "）" : ""));
             return;
           }
           Object.keys(picked).forEach(function (k) { save(k, picked[k]); });
-          alert("导入成功！共恢复 " + Object.keys(picked).length + " 项" + (ignored.length ? "，已忽略非法 key " + ignored.length + " 项" : "") + "。页面将刷新");
-          location.reload();
+          toastLite("导入成功！共恢复 " + Object.keys(picked).length + " 项。页面将刷新");
+          setTimeout(function(){ location.reload(); }, 1200);
         };
-        r.onerror = function() { alert("读取备份文件失败"); };
+        r.onerror = function() { toastLite("读取备份文件失败"); };
         r.readAsText(f);
       };
       inp.click();
@@ -6030,7 +6029,7 @@ function formulaFilter() {
         // 立即推送空学习数据 + resetAt，手机等设备下次拉取会清空而不是合并回旧数据
         pushProgress(emptyStudyPayload(resetAt, load("gxzsb.nick", null)));
       }
-      alert("学习记录已重置（已登录设备将自动同步）");
+      toastLite("学习记录已重置（已登录设备将自动同步）");
       render();
     } else if (act === "clear") {
       if (!confirm("清除本机全部数据？（含主题、备份与学习记录；登录会话也会结束；若已登录将同步清空云端进度）")) return;
