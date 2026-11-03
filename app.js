@@ -2308,7 +2308,9 @@
           s.submitted = false;
           s.showExp = false;
           render();
-          window.scrollTo({ top: 0 });
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          const shell = document.querySelector('.shell') || document.querySelector('#app');
+          if (shell) shell.scrollTop = 0;
           return;
         }
       }
@@ -2325,7 +2327,9 @@
     s.submitted = s.q[s.i].id in s.results;
     s.showExp = false;
     render();
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const shell = document.querySelector('.shell') || document.querySelector('#app');
+    if (shell) shell.scrollTop = 0;
   }
 
   function saveExamHistory(s) {
@@ -2376,7 +2380,9 @@
     s.submitted = s.q[s.i].id in s.results;
     s.showExp = false;
     render();
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const shell = document.querySelector('.shell') || document.querySelector('#app');
+    if (shell) shell.scrollTop = 0;
   }
 
   /* ========== 考纲套卷历史记录 ========== */
