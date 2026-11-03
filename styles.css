@@ -1154,7 +1154,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   .opt { min-height: 52px !important; font-size: 15px !important; padding: 14px !important; }
   .q-actions {
     position: sticky !important;
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(var(--tab-h, 60px) + 8px + env(safe-area-inset-bottom, 0px)) !important;
     display: flex !important;
     flex-direction: column !important;
     background: var(--bg) !important;
