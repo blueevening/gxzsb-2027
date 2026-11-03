@@ -4126,7 +4126,7 @@ function formulaFilter() {
           <button class="btn btn-primary btn-block" data-act="wb-start-new" type="button">
             学习新词 · 今日已学 ${S.today.learned||0}/${goal}
           </button>
-          <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button">
+          <button class="btn btn-wb-review btn-block" data-nav="word-review" type="button" ${dueReview.length ? "" : "disabled"}>
             复习单词 · ${dueReview.length} 个到期
           </button>
           <button class="btn btn-ghost btn-block" data-nav="word-list" type="button">
@@ -4990,12 +4990,15 @@ function formulaFilter() {
     if (route === "search") {
       const el = document.getElementById("searchInput");
       if (el) {
-        el.focus();
         const n = el.value.length;
         el.setSelectionRange(n, n);
+        let _searchTimer = null;
         el.oninput = () => {
-          state.searchQ = el.value;
-          render();
+          if (_searchTimer) clearTimeout(_searchTimer);
+          _searchTimer = setTimeout(() => {
+            state.searchQ = el.value;
+            render();
+          }, 200);
         };
       }
     }
