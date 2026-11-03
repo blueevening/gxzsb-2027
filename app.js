@@ -5480,7 +5480,7 @@ function formulaFilter() {
       state.notes[id] = box ? box.value : "";
       save(LS.notes, state.notes);
       scheduleSync();
-      t.textContent = "已保存";
+      toastLite("笔记已保存");
     } else if (act === "open-q") startSession({ ids: [t.getAttribute("data-id")], title: "题目精练", limit: 1 });
     else if (act === "exam-history") {
       state.examHistoryPlan = t.getAttribute("data-plan");
@@ -6068,12 +6068,12 @@ function formulaFilter() {
       }
       if (act === "ai-deepseek") {
         window.open("https://chat.deepseek.com/", "_blank", "noopener");
-        alert("题目已复制。打开 DeepSeek 后按 Ctrl+V 发送，即可生成详细解析。");
+        toastLite("题目已复制，粘贴到对话框发送即可");
       } else if (act === "ai-doubao") {
         window.open("https://www.doubao.com/chat/", "_blank", "noopener");
-        alert("题目已复制。打开豆包后按 Ctrl+V 发送，即可生成详细解析。");
+        toastLite("题目已复制，粘贴到对话框发送即可");
       } else {
-        alert("题目与解析提示词已复制到剪贴板");
+        toastLite("题目与解析提示词已复制");
       }
     } else if (act === "goto-formula") {
       state.formulaTab = t.getAttribute("data-subj") || "高等数学";
