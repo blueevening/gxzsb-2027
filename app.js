@@ -1102,6 +1102,7 @@
   function setTitle(title, showBack) {
     if ($("#pageTitle")) $("#pageTitle").textContent = title;
     if ($("#btnBack")) $("#btnBack").hidden = !showBack;
+    try { document.title = title + " · 广西专升本"; } catch (e) {}
   }
 
   /* ========== 页面：首页 ========== */
