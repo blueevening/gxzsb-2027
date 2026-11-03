@@ -1942,10 +1942,10 @@
                 .join("")
             : q.type === "translate" || q.type === "write"
             ? (s.exam && !s.examSubmitted
-                ? `<div class="mistake-box" style="background:#f0f9ff;border-left:3px solid #6366f1;padding:12px;border-radius:8px;color:#6366f1;font-size:14px">📝 ${q.type === "translate" ? "翻译题" : "写作题"} · 交卷后查看${q.type === "translate" ? "译文" : "范文"}</div>`
-                : `<div class="mistake-box" style="background:#eef6ff;border-left:3px solid #3b82f6">${q.type === "translate" ? "✍️ 翻译题 · 直接看译文学习" : "📝 应用文写作 · 直接看范文学习"}</div>
+                ? `<div class="mistake-box" style="background:color-mix(in srgb, var(--primary) 12%, transparent);border-left:3px solid var(--primary);padding:12px;border-radius:8px;color:var(--primary);font-size:14px">📝 ${q.type === "translate" ? "翻译题" : "写作题"} · 交卷后查看${q.type === "translate" ? "译文" : "范文"}</div>`
+                : `<div class="mistake-box" style="background:color-mix(in srgb, var(--primary) 12%, transparent);border-left:3px solid var(--primary);padding:12px;border-radius:8px;color:var(--primary);font-size:14px">${q.type === "translate" ? "✍️ 翻译题 · 直接看译文学习" : "📝 应用文写作 · 直接看范文学习"}</div>
                <div class="ref-answer" style="margin:10px 0 4px"><b>${q.type === "translate" ? "译文：" : "范文："}</b></div>
-               <div class="subj-view" style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:14px;line-height:1.8;white-space:pre-wrap;font-size:15px">${mathHtml(String(q.sample && String(q.sample).trim() ? q.sample : (Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "见下方解析")))}</div>`)
+               <div class="subj-view" style="background:var(--bg-soft);border:1px dashed var(--border);border-radius:8px;padding:14px;line-height:1.8;white-space:pre-wrap;font-size:15px;color:var(--text)">${mathHtml(String(q.sample && String(q.sample).trim() ? q.sample : (Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "见下方解析")))}</div>`)
             : (function () {
                 // 下划线式填空：size 按参考答案字符数预估，最小 6、最大 20，避免短答案留白/长答案溢出
                 var ansLen = String(Array.isArray(q.answer) ? q.answer[0] : (q.answer || "")).replace(/\s+/g, "").length || 6;
