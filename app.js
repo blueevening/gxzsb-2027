@@ -1497,8 +1497,10 @@
     }
     if (f.status.includes("做错")) filtered = filtered.filter((q) => state.wrong[q.id]);
     if (f.status.includes("收藏")) filtered = filtered.filter((q) => state.fav[q.id]);
-    if (f.kind && f.kind.includes("客观题")) filtered = filtered.filter((q) => !isSubjective(q));
-    if (f.kind && f.kind.includes("主观题")) filtered = filtered.filter((q) => isSubjective(q));
+    if (f.kind && f.kind.length === 1) {
+      if (f.kind.includes("客观题")) filtered = filtered.filter((q) => !isSubjective(q));
+      else filtered = filtered.filter((q) => isSubjective(q));
+    }
 
     // 按难度从易到难排序：基础(1)→强化(2)→冲刺(3)
     filtered = filtered.sort((a, b) => (a.difficulty || 1) - (b.difficulty || 1));
