@@ -2303,7 +2303,9 @@ sup.math-sup .frac .den { padding-top: 1px; }
 /* 首页离线题库预载条 */
 .offline-bar {
   display: flex; align-items: center; gap: 10px;
-  background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+  color: var(--success);
   border-radius: 12px; padding: 10px 14px; font-size: 13px; margin-bottom: 8px;
 }
 .offline-bar .ob-ico { font-size: 18px; }
@@ -2911,7 +2913,7 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
 }
 .wb-speak-icon:hover { opacity: 1; }
 .wb-hint {
-  font-size: 13px; color: #666; margin-top: 8px;
+  font-size: 13px; color: var(--text-sub); margin-top: 8px;
 }
 .wb-meaning-section {
   margin-top: 16px; padding-top: 20px;
@@ -2941,7 +2943,7 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
   position: relative; z-index: 10;
 }
 .wb-swipe-hint {
-  text-align: center; font-size: 12px; color: #666; margin-bottom: 16px;
+  text-align: center; font-size: 12px; color: var(--text-sub); margin-bottom: 16px;
 }
 .btn-show-meaning {
   width: 100%; padding: 16px;
