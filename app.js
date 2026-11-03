@@ -3402,7 +3402,7 @@ function ensureExplain(q) {
     const yearStats = {
       "2026": { count: SCHOOLS_DATA.length, gong: SCHOOLS_DATA.filter(s => s.tier.indexOf("公办")>=0).length, plan: total51, planLabel: "电子信息类计划" },
       "2025": { count: schools25.length, gong: schools25.filter(s => s.tier.indexOf("公办")>=0).length, plan: schools25.reduce((a,s)=>a+s.plan25,0), planLabel: "院校总计划" },
-      "2024": { count: null, gong: null, plan: null, planLabel: "暂未收录" }
+      "2024": { count: 22, gong: 15, plan: null, planLabel: "人数暂未汇总" }
     };
     const ys = yearStats[selYear] || yearStats["2026"];
     const cntOf = (c) => c === "all" ? SCHOOLS_DATA.length : SCHOOLS_DATA.filter((s) => s.city === c).length;
