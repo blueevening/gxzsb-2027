@@ -4007,8 +4007,16 @@ function formulaFilter() {
     // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
     // 横排分数 a/b → frac{a}{b}：支持数字、单/双字母短变量(x/R1/Rf/ui)、括号表达式
     // 3 字母以上英文单词(DNS/int/because)与 URL 不转
+    // 先保护IP地址（如 192.168.1.10/24），避免被误匹配成分数
+    const ipPlaceholders = [];
+    raw = raw.replace(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})\b/g, (m) => {
+      ipPlaceholders.push(m);
+      return `__IP_${ipPlaceholders.length - 1}__`;
+    });
     raw = raw.replace(/(?<![a-zA-Z])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
     let out = "";
+    // 恢复IP地址
+    raw = raw.replace(/__IP_(\d+)__/g, (m, idx) => ipPlaceholders[parseInt(idx)]);
     let i = 0;
     while (i < raw.length) {
       const c0 = raw[i];
