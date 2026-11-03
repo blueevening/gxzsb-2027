@@ -105,7 +105,7 @@ body.boot-loading .shell { padding: 32px 16px; }
   z-index: 9999; max-width: min(420px, 88vw);
   background: rgba(17, 24, 39, 0.92); color: #fff; font-size: 13px;
   padding: 10px 20px; border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-md); text-align: center;
+  box-shadow: var(--shadow-md); text-align: left;
   opacity: 1; transition: opacity 0.25s;
 }
 .boot-toast.is-hide { opacity: 0; pointer-events: none; }
@@ -242,7 +242,8 @@ body.boot-loading .shell { padding: 32px 16px; }
 /* P2-3 深色模式细节：主观题参考区/解析区对比度 */
 [data-theme="dark"] .subj-view,
 [data-theme="dark"] .ref-answer { background: rgba(255,255,255,0.04); color: var(--text); }
-[data-theme="dark"] .fill-input { border-bottom-color: var(--border); color: var(--text); }
+[data-theme="dark"] .fill-input {
+  font-family: "SF Mono", "Fira Code", Consolas, monospace; border-bottom-color: var(--border); color: var(--text); }
 [data-theme="dark"] .q-dot { background: rgba(255,255,255,0.1); }
 [data-theme="dark"] .q-dot.ok { background: #16a34a; }
 [data-theme="dark"] .q-dot.bad { background: #dc2626; }
@@ -488,7 +489,7 @@ body.boot-loading .shell { padding: 32px 16px; }
 .exam-timer {
   display: inline-block;
   min-width: 3.2em;
-  text-align: center;
+  text-align: left;
   padding: 1px 6px;
   border-radius: 6px;
   background: color-mix(in srgb, var(--primary) 12%, transparent);
@@ -524,7 +525,7 @@ body.boot-loading .shell { padding: 32px 16px; }
 .self-assess {
   display: flex;
   gap: 8px;
-  margin: 10px 0 4px;
+  margin: 6px 0;
 }
 .self-assess .btn { flex: 1; min-height: 40px; }
 .subj-input {
@@ -625,7 +626,7 @@ body.boot-loading .shell { padding: 32px 16px; }
 .explain-block .content { overflow-wrap: anywhere; word-break: break-word; }
 
 /* 错因选择 */
-.reason-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 4px; }
+.reason-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
 
 /* ===== 弹窗（点遮罩关闭，主题跟随 data-theme） ===== */
 .qa-modal-mask {
@@ -663,7 +664,7 @@ html.qa-modal-open { overflow: hidden; }
 .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .stat-box {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius-card); padding: 12px; text-align: center;
+  border-radius: var(--radius-card); padding: 12px; text-align: left;
   box-shadow: var(--shadow);
 }
 .stat-box .n { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -694,6 +695,7 @@ html.qa-modal-open { overflow: hidden; }
 
 /* 填空输入：下划线式，宽度随 size 属性自适应，最小 6ch，最长撑满卡片 */
 .fill-input {
+  font-family: "SF Mono", "Fira Code", Consolas, monospace;
   display: inline-block;
   width: auto;
   min-width: 6ch;
@@ -705,8 +707,8 @@ html.qa-modal-open { overflow: hidden; }
   background: transparent;
   color: var(--text);
   font-size: 16px; /* ≥16px 防止 iOS 聚焦自动放大 */
-  text-align: center;
-  margin: 10px 0 4px;
+  text-align: left;
+  margin: 6px 0;
   transition: border-color .15s;
 }
 .fill-input:focus { outline: none; border-bottom-color: var(--primary); }
@@ -735,7 +737,7 @@ html.qa-modal-open { overflow: hidden; }
 
 /* ===== 空状态 ===== */
 .empty {
-  text-align: center; padding: 32px 16px; color: var(--text-sub); font-size: 14px;
+  text-align: left; padding: 32px 16px; color: var(--text-sub); font-size: 14px;
 }
 .empty .btn { margin-top: 12px; }
 
@@ -754,7 +756,7 @@ html.qa-modal-open { overflow: hidden; }
 .practice-restore-txt { color: var(--text-sub); font-size: 14px; }
 
 /* ===== 科目题库加载/失败 ===== */
-.bank-loading { padding: 28px 16px; text-align: center; }
+.bank-loading { padding: 28px 16px; text-align: left; }
 .bank-loading-bar { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
 .bank-loading-bar i {
   width: 8px; height: 8px; border-radius: 50%; background: var(--primary);
@@ -764,7 +766,7 @@ html.qa-modal-open { overflow: hidden; }
 .bank-loading-bar i:nth-child(3) { animation-delay: 0.36s; }
 @keyframes bank-blink { 0%, 100% { opacity: 0.25; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.1); } }
 .bank-loading-txt { color: var(--text-sub); font-size: 13px; }
-.bank-load-err { padding: 28px 16px; text-align: center; }
+.bank-load-err { padding: 28px 16px; text-align: left; }
 .bank-load-ico { font-size: 30px; margin-bottom: 8px; }
 .bank-load-txt { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .bank-load-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 14px; }
@@ -1294,7 +1296,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 8px; margin-bottom: 14px;
 }
-.wb-stat { text-align: center; }
+.wb-stat { text-align: left; }
 .wb-stat-num { font-size: 20px; font-weight: 800; color: var(--text); }
 .wb-stat-label { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
 .wb-progress-bar {
@@ -1355,7 +1357,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   min-height: 280px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  text-align: center;
+  text-align: left;
   box-shadow: var(--shadow);
   cursor: pointer;
   transition: transform 0.2s;
@@ -1379,7 +1381,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .wb-hint { font-size: 13px; color: var(--text-sub); margin-top: 20px; }
 
 .wb-done {
-  text-align: center; padding: 60px 20px;
+  text-align: left; padding: 60px 20px;
 }
 .wb-done-icon { font-size: 64px; margin-bottom: 16px; }
 .wb-done-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
@@ -1399,7 +1401,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   margin-bottom: 12px;
 }
 .wb-letter-chips .chip {
-  min-width: 36px; text-align: center;
+  min-width: 36px; text-align: left;
 }
 .wb-count { font-size: 13px; color: var(--text-sub); margin-bottom: 10px; }
 .wb-word-list { display: flex; flex-direction: column; gap: 2px; }
@@ -1445,7 +1447,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px 12px;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: var(--shadow);
@@ -1480,14 +1482,14 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .wb-quiz-label {
   font-size: 13px;
   color: var(--text-sub);
-  text-align: center;
+  text-align: left;
   margin-bottom: 16px;
 }
 .wb-quiz-question {
   font-size: 26px;
   font-weight: 800;
   color: var(--text);
-  text-align: center;
+  text-align: left;
   margin-bottom: 12px;
   line-height: 1.4;
 }
@@ -1495,20 +1497,20 @@ sup.math-sup .frac .den { padding-top: 1px; }
   font-size: 22px;
   font-weight: 700;
   color: var(--text);
-  text-align: center;
+  text-align: left;
   margin-bottom: 12px;
   line-height: 1.5;
 }
 .wb-quiz-phonetic {
   font-size: 16px;
   color: var(--text-sub);
-  text-align: center;
+  text-align: left;
   margin-bottom: 20px;
 }
 .wb-quiz-hint {
   font-size: 18px;
   color: #8B5CF6;
-  text-align: center;
+  text-align: left;
   margin-bottom: 16px;
   font-family: monospace;
   letter-spacing: 4px;
@@ -1573,7 +1575,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .wb-opt-text { flex: 1; }
 
 .wb-quiz-result {
-  text-align: center;
+  text-align: left;
   margin-top: 16px;
   padding: 12px;
   border-radius: 10px;
@@ -1595,7 +1597,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   border-radius: 10px;
   font-size: 14px;
   color: var(--text);
-  text-align: center;
+  text-align: left;
   line-height: 1.6;
 }
 .wb-spell-input {
@@ -1606,7 +1608,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   border-radius: 12px;
   background: var(--bg);
   color: var(--text);
-  text-align: center;
+  text-align: left;
   letter-spacing: 2px;
   box-sizing: border-box;
   margin-bottom: 8px;
@@ -1705,7 +1707,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   font-weight: 800;
   color: var(--text);
   margin-bottom: 20px;
-  text-align: center;
+  text-align: left;
 }
 .kp-section {
   background: var(--card);
@@ -1763,7 +1765,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 
 /* ===== 登录/注册（主题适配，去掉写死浅色块） ===== */
 .login-wrap { max-width: 400px; margin: 60px auto; padding: 0 20px; }
-.login-hero { text-align: center; margin-bottom: 28px; }
+.login-hero { text-align: left; margin-bottom: 28px; }
 .login-hero .logo { font-size: 40px; margin-bottom: 8px; }
 .login-hero .name { font-size: 22px; font-weight: 700; color: var(--text); }
 .login-hero .sub { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
@@ -1835,12 +1837,12 @@ sup.math-sup .frac .den { padding-top: 1px; }
   cursor: pointer;
 }
 .login-submit:active { filter: brightness(0.95); }
-.login-msg { text-align: center; margin-top: 12px; font-size: 13px; color: var(--text-sub); min-height: 1.2em; }
+.login-msg { text-align: left; margin-top: 12px; font-size: 13px; color: var(--text-sub); min-height: 1.2em; }
 
 .login-guest {
   display: block;
   width: 100%;
-  text-align: center;
+  text-align: left;
   margin-top: 20px;
   color: var(--text-sub);
   font-size: 13px;
@@ -1855,7 +1857,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   max-width: 420px; margin: 0 auto; padding: 8vh 24px 24px;
   display: flex; flex-direction: column; align-items: center; gap: 18px;
 }
-.landing-hero { text-align: center; margin-bottom: 4px; }
+.landing-hero { text-align: left; margin-bottom: 4px; }
 .landing-hero .logo { font-size: 48px; margin-bottom: 10px; }
 .landing-hero .name { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: .5px; }
 .landing-hero .sub { font-size: 13px; color: var(--text-sub); margin-top: 6px; line-height: 1.6; }
@@ -1946,7 +1948,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .ring-in b { font-size: 20px; line-height: 1.1; }
 .ring-in span { font-size: 10px; opacity: .9; }
 .hh-stats { display: flex; gap: 12px; width: 100%; justify-content: space-between; }
-.hh-stats > div { text-align: center; flex: 1; }
+.hh-stats > div { text-align: left; flex: 1; }
 .hh-stats b { display: block; font-size: 16px; }
 .hh-stats span { font-size: 11px; opacity: .85; white-space: nowrap; }
 
@@ -2318,7 +2320,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 /* 离线状态提示条 */
 #offlineBar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-  background: #f59e0b; color: #fff; text-align: center;
+  background: #f59e0b; color: #fff; text-align: left;
   font-size: 12px; padding: 5px 10px; font-weight: 600;
 }
 #offlineBar[hidden] { display: none; }
@@ -2779,7 +2781,7 @@ button, .btn { min-height: 44px; }
 /* 1. 空状态组件 */
 .empty-state {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 40px 20px; text-align: center; gap: 10px;
+  padding: 40px 20px; text-align: left; gap: 10px;
 }
 .empty-state .es-icon {
   width: 56px; height: 56px; border-radius: 16px;
@@ -2913,7 +2915,7 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
 .wb-card-inner {
   background: #242832; border-radius: 24px;
   padding: 40px 28px; width: 100%; max-width: 400px;
-  text-align: center;
+  text-align: left;
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
   animation: cardIn 0.3s ease;
 }
@@ -2969,7 +2971,7 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
   position: relative; z-index: 10;
 }
 .wb-swipe-hint {
-  text-align: center; font-size: 12px; color: var(--text-sub); margin-bottom: 16px;
+  text-align: left; font-size: 12px; color: var(--text-sub); margin-bottom: 16px;
 }
 .btn-show-meaning {
   width: 100%; padding: 16px;
