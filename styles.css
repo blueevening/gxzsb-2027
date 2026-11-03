@@ -2777,7 +2777,7 @@ button, .btn { min-height: 44px; }
 .row-item:hover .ri-chevron { color: var(--primary); transform: translateX(2px); }
 
 /* 危险操作分组 */
-.danger-group { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.danger-group { margin-top: 8px; padding-top: 0; border-top: none; }
 .danger-group .row-item { border-color: color-mix(in srgb, var(--error) 20%, var(--border)); }
 .danger-group .row-item .ri-label { color: var(--error); }
 
