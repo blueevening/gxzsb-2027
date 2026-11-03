@@ -1160,9 +1160,8 @@ sup.math-sup .frac .den { padding-top: 1px; }
     background: var(--bg) !important;
     padding: 8px 0 !important;
   }
-  .q-actions .q-nav-row { display: flex !important; gap: 8px !important; }
-  .q-actions .q-nav-row .btn { flex: 1 !important; }
-  .q-actions .btn { min-height: 44px !important; font-size: 13px !important; }
+  .q-actions .q-nav-row { display: flex !important; gap: 6px !important; }
+  .q-actions .q-nav-row .btn { flex: 1 !important; padding: 10px 4px !important; font-size: 12px !important; }
   .q-actions .btn-block { width: 100% !important; }
   .mathline { font-size: 15px !important; overflow-x: auto; max-width: 100%; }
   .f-card { padding: 12px !important; }
