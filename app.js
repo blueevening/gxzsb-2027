@@ -2033,6 +2033,10 @@
                     return `<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)">第${i+1}题：<b style="color:var(--success)">${sq.answer}</b></div>`;
                   }).join('');
                   readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📋 答案速览</summary><div style="margin-top:6px">${ansList}</div></details>`;
+                  if (q.passageZh) {
+                    const zhParas = q.passageZh.split('\\n\\n').map(p => `<p style="margin:0 0 10px 0;line-height:1.8">${mathHtml(p)}</p>`).join('');
+                    readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📖 全文中文翻译</summary><div style="margin-top:8px;padding:12px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-radius:8px;font-size:14px;line-height:1.8;color:var(--text-sub)">${zhParas}</div></details>`;
+                  }
                 } else if (q.blanks) {
                   const total = q.blanks.length;
                   const correct = Math.round(sc * total);
@@ -2043,6 +2047,10 @@
                     return `<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)">空${i+1}：<b style="color:var(--success)">${b.answer}</b></div>`;
                   }).join('');
                   readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📋 答案速览</summary><div style="margin-top:6px">${ansList}</div></details>`;
+                  if (q.passageZh) {
+                    const zhParas = q.passageZh.split('\\n\\n').map(p => `<p style="margin:0 0 10px 0;line-height:1.8">${mathHtml(p)}</p>`).join('');
+                    readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📖 全文中文翻译</summary><div style="margin-top:8px;padding:12px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-radius:8px;font-size:14px;line-height:1.8;color:var(--text-sub)">${zhParas}</div></details>`;
+                  }
                 }
                 // 填空若智能评分有值，同样展示，与 S2「部分 fill」对齐
                 const showSmart = isSubj || (sc != null && sc > 0);
