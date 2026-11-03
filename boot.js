@@ -10,8 +10,19 @@
 (function () {
   "use strict";
 
-  var V = "2.10.0";          // 与 index.html 的版本号保持一致
+  var V = "3.1.2";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
+
+  /* 自动刷新：每次第一次打开都强制刷新一次，获取最新缓存 */
+  try {
+    var alreadyReloaded = sessionStorage.getItem('gxzsb_reloaded');
+    if (!alreadyReloaded) {
+      sessionStorage.setItem('gxzsb_reloaded', '1');
+      location.reload();
+      return;
+    }
+  } catch (e) {}
+
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
 

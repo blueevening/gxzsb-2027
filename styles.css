@@ -249,7 +249,10 @@ body.boot-loading .shell { padding: 32px 16px; }
   border-radius: var(--radius-card);
   box-shadow: var(--shadow);
   padding: 22px;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .card + .card { margin-top: 14px; }
 .section-gap { margin-top: 28px; }
@@ -446,8 +449,12 @@ body.boot-loading .shell { padding: 32px 16px; }
   padding: 12px 14px; margin-bottom: 8px;
   border: 1.5px solid var(--border); border-radius: var(--radius-btn);
   background: var(--card); text-align: left; font-size: 15px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
 }
-.opt:hover:not(:disabled) { border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); }
+.opt:hover:not(:disabled) { 
+  border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); 
+}
 .opt.is-selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
 .opt.is-correct { border-color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); }
 .opt.is-wrong { border-color: var(--error); background: color-mix(in srgb, var(--error) 10%, transparent); }
@@ -463,6 +470,11 @@ body.boot-loading .shell { padding: 32px 16px; }
 .feedback {
   margin: 12px 0; padding: 12px 14px; border-radius: var(--radius-btn);
   font-weight: 700; font-size: 14px;
+  animation: fadeInSlideUp 0.3s ease;
+}
+@keyframes fadeInSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .feedback.ok { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
 .feedback.bad { background: color-mix(in srgb, var(--error) 12%, transparent); color: var(--error); }
