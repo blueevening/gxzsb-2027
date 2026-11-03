@@ -1510,7 +1510,13 @@
 
     // 筛选分组
     const diffChips = ["基础", "强化", "冲刺"].filter((d) => qOf.some((q) => q.difficultyLabel === d)).map((d) => chip("diff", d, d)).join("");
-    const typeChips = (name === "英语" ? ["单选", "判断", "阅读", "阅读填空", "翻译", "写作"] : ["单选", "判断", "填空", "计算", "应用"]).filter((t) => qOf.some((q) => q.typeLabel === t)).map((t) => chip("type", t, t)).join("");
+    // 动态从题库提取所有题型，避免硬编码漏掉新题型（如高数的"解答"题）
+    const allTypes = [...new Set(qOf.map((q) => q.typeLabel).filter(Boolean))];
+    const typeOrder = ["单选", "判断", "填空", "计算", "解答", "应用", "阅读", "阅读填空", "翻译", "写作", "策略"];
+    const typeChips = allTypes.sort((a, b) => {
+      const ia = typeOrder.indexOf(a), ib = typeOrder.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    }).map((t) => chip("type", t, t)).join("");
     const statusChips = ["未做", "做错", "收藏"].map((s) => chip("status", s, s)).join("");
     const kindChips = ["客观题", "主观题"].map((k) => chip("kind", k, k)).join("");
 
