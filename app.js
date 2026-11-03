@@ -2326,10 +2326,11 @@
     s.sel = s.answers[s.q[s.i].id] != null ? s.answers[s.q[s.i].id] : null;
     s.submitted = s.q[s.i].id in s.results;
     s.showExp = false;
+    // 先滚到顶部，再渲染——这样render()保存的savedScrollY就是0
+    window.scrollTo(0, 0);
     render();
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const shell = document.querySelector('.shell') || document.querySelector('#app');
-    if (shell) shell.scrollTop = 0;
+    // 渲染后再强制滚一次，双保险
+    setTimeout(() => window.scrollTo(0, 0), 50);
   }
 
   function saveExamHistory(s) {
@@ -2379,10 +2380,11 @@
     s.sel = s.answers[s.q[s.i].id] != null ? s.answers[s.q[s.i].id] : null;
     s.submitted = s.q[s.i].id in s.results;
     s.showExp = false;
+    // 先滚到顶部，再渲染——这样render()保存的savedScrollY就是0
+    window.scrollTo(0, 0);
     render();
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const shell = document.querySelector('.shell') || document.querySelector('#app');
-    if (shell) shell.scrollTop = 0;
+    // 渲染后再强制滚一次，双保险
+    setTimeout(() => window.scrollTo(0, 0), 50);
   }
 
   /* ========== 考纲套卷历史记录 ========== */
