@@ -5366,7 +5366,11 @@ function formulaFilter() {
       if (v === "next" && R.i < r.questions.length - 1) R.i++;
       render();
     }
-    else if (act === "chapter") startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习" });
+    else if (act === "chapter") {
+      const k = state.filters.kind;
+      const fk = k && k.length === 1 ? (k[0] === "客观题" ? "obj" : "subj") : undefined;
+      startSession({ chapter: t.getAttribute("data-id"), limit: 15, title: "章节练习", filterKind: fk });
+    }
     else if (act === "seq-practice") {
       var subjName = t.getAttribute("data-name");
       if (!window.isSubjectBankLoaded || !window.isSubjectBankLoaded(subjName)) {
@@ -5381,7 +5385,9 @@ function formulaFilter() {
         }).catch(function() { toast("题库加载失败，请刷新重试"); });
         return;
       }
-      startSession({ subject: subjName, limit: 20, title: "顺序练习", ordered: true });
+      var _k = state.filters.kind;
+      var _fk = _k && _k.length === 1 ? (_k[0] === "客观题" ? "obj" : "subj") : undefined;
+      startSession({ subject: subjName, limit: 20, title: "顺序练习", ordered: true, filterKind: _fk });
     }
     else if (act === "seq-obj") {
       const name = t.getAttribute("data-name");
