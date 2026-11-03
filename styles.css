@@ -2607,8 +2607,8 @@ button, .btn { min-height: 44px; }
   .wb-hero-title { font-size: 28px; }
   .wb-stats-row { gap: 32px; }
   .wb-stat-num { font-size: 28px; }
-  .wb-today-card { padding: 24px 28px; }
-  .wb-today-num { font-size: 42px; }
+  .wb-today-card { padding: 16px 20px; }
+  .wb-today-num { font-size: 24px; }
   .wb-mode-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
