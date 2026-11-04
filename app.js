@@ -301,6 +301,7 @@
     practiceMode: load("gxzsb.practiceMode", "test"),
     forgetCurve: load("gxzsb.forgetCurve", "mid"),
     fontSize: load("gxzsb.fontSize", "md"),
+    autoNext: load("gxzsb.autoNext", false),
     filters: normalizeFilters(load('gxzsb.filters', null)),
     formulaTab: "高等数学",
     searchQ: "",
@@ -2296,6 +2297,14 @@
       const qa = document.querySelector(".q-actions");
       if (qa) qa.scrollIntoView({ block: "end", behavior: "smooth" });
     } catch (e) {}
+    // 自动下一题：开启后延迟1.5秒跳转（最后一题/考试模式不自动跳）
+    if (state.autoNext && !s.exam && s.i < s.q.length - 1) {
+      setTimeout(function() {
+        if (state.session === s && state.session.submitted) {
+          nextQ(); saveSession();
+        }
+      }, 1500);
+    }
   }
 
   function nextQ() {
@@ -3853,6 +3862,10 @@ function ensureExplain(q) {
         <button class="row-item" data-act="theme" type="button">
           <span class="ri-main"><span class="ri-label">深色/浅色模式</span></span>
           <span class="ri-chevron">›</span>
+        </button>
+        <button class="row-item" data-act="toggle-auto-next" type="button">
+          <span class="ri-main"><span class="ri-label">提交后自动下一题</span></span>
+          <span class="ri-chevron">${state.autoNext ? "✅" : "○"}</span>
         </button>
         <div class="row-item" style="cursor:default">
           <span class="ri-main"><span class="ri-label">字号大小</span></span>
@@ -6000,6 +6013,11 @@ function formulaFilter() {
       state.fontSize = t.getAttribute("data-v") || "md";
       save("gxzsb.fontSize", state.fontSize);
       applyFontSize();
+      render();
+    } else if (act === "toggle-auto-next") {
+      state.autoNext = !state.autoNext;
+      save("gxzsb.autoNext", state.autoNext);
+      toastLite(state.autoNext ? "已开启：提交后自动下一题" : "已关闭：提交后手动点下一题");
       render();
     } else if (act === "export-txt") {
       // P2-1：导出 TXT（题目+答案+解析），错题本/收藏通用；跟随当前科目/次数筛选
