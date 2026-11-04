@@ -5274,7 +5274,7 @@ function formulaFilter() {
     if (!act && nav) return go(nav);
 
     if (act === "preload-offline") {
-      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js","learn-book-2027.js","english-extra.js","exam-plans-v2.js","kp-detail.js","syllabus.js"];
+      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js","learn-book-2027.js","english-extra.js","exam-plans-v2.js","kp-detail.js","syllabus.js","all-bank.js","all-learn.js","syllabus-sample.js","sb-config.js"];
       const btn = document.getElementById("offlineBtn");
       const txt = document.getElementById("offlineBarTxt");
       if (btn) btn.disabled = true;
