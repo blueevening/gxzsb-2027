@@ -5073,7 +5073,9 @@ function formulaFilter() {
     state.route = route;
     // 进入主界面（已登录或游客）后，才启动题库数据后台加载（幂等）：
     // 未登录停留登录页时不下载数据，弱网下也不与登录认证请求抢占带宽
-    if (state.user && window.gxzsbEnsureData) {
+    // 游客模式（isGuest）也能刷题，所以只要不在登录页就加载数据
+    var isLoginPage = (route === "login" || route === "register");
+    if (!isLoginPage && window.gxzsbEnsureData) {
       try { window.gxzsbEnsureData(); } catch (e) {}
     }
     // 仅在「路由切换」时回到顶部；同一页面的数据加载/状态刷新保持滚动位置，
