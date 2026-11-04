@@ -1624,12 +1624,8 @@
     if (opts.filterKind === "obj") pool = pool.filter((q) => !isSubjective(q));
     if (opts.filterKind === "subj") pool = pool.filter((q) => isSubjective(q));
     // 题型筛选（单选/填空/计算等）
-    // 注意：如果筛选后pool变空了，说明筛选条件和当前科目不匹配（比如残留了英语的"写作"筛选）
-    // 自动忽略题型筛选，避免点进去没题目
     if (state.filters && Array.isArray(state.filters.type) && state.filters.type.length) {
-      var filteredByType = pool.filter((q) => state.filters.type.includes(q.typeLabel));
-      if (filteredByType.length) pool = filteredByType;
-      // 如果筛选后为空，就忽略题型筛选，用全部题目
+      pool = pool.filter((q) => state.filters.type.includes(q.typeLabel));
     }
     if (opts.dueOnly) {
       const dueIds = Object.keys(state.wrong).filter((id) => {
@@ -5107,37 +5103,49 @@ function formulaFilter() {
       state.user = { isGuest: true };
       try { localStorage.setItem("gxzsb.guest", "1"); } catch (e) {}
     }
-    if (route === "bank") app.innerHTML = viewBank();
-    else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
-    else if (route === "practice") app.innerHTML = viewPractice();
-    else if (route === "report") app.innerHTML = viewReport();
-    else if (route === "exam-history") app.innerHTML = viewExamHistory();
-    else if (route === "mock") app.innerHTML = viewMock();
-    else if (route === "stats") app.innerHTML = viewStats();
-    else if (route === "wrong") app.innerHTML = viewWrong();
-    else if (route === "formula") app.innerHTML = viewFormula();
-    else if (route === "resources") app.innerHTML = viewResources();
-    else if (route === "learn") app.innerHTML = viewLearn();
-    else if (route === "learn-point") app.innerHTML = viewLearnDetail(params[0] || "");
-    else if (route === "syllabus") app.innerHTML = viewSyllabus(params[0] ? decodeURIComponent(params[0]) : "");
-    else if (route === "exam-info") app.innerHTML = viewExamInfo();
-    else if (route === "schools") app.innerHTML = viewSchools();
-    else if (route === "me") app.innerHTML = viewMe();
-    else if (route === "search") app.innerHTML = viewSearch();
-    else if (route === "words") app.innerHTML = viewWords();
-    else if (route === "word-learn") {
-      document.body.classList.add('wb-immersive-mode');
-      document.body.style.background = '#12151C';
-      app.innerHTML = viewWordLearn();
-    }
-    else if (route === "word-review") app.innerHTML = viewWordReview();
-    else if (route === "word-list") app.innerHTML = viewWordList(params[0] || "");
-    else if (route === "word-quiz") app.innerHTML = viewWordQuiz();
-    else if (route === "extra") app.innerHTML = viewExtra(params[0] ? decodeURIComponent(params[0]) : "", params[1] ? decodeURIComponent(params[1]) : "");
-    else if (route === "kp-detail") app.innerHTML = viewKpDetail(params[0] || "");
-    else {
-      state.route = "home";
-      app.innerHTML = viewHome();
+    try {
+      if (route === "bank") app.innerHTML = viewBank();
+      else if (route === "subject") app.innerHTML = viewSubject(params[0] ? decodeURIComponent(params[0]) : "高等数学");
+      else if (route === "practice") app.innerHTML = viewPractice();
+      else if (route === "report") app.innerHTML = viewReport();
+      else if (route === "exam-history") app.innerHTML = viewExamHistory();
+      else if (route === "mock") app.innerHTML = viewMock();
+      else if (route === "stats") app.innerHTML = viewStats();
+      else if (route === "wrong") app.innerHTML = viewWrong();
+      else if (route === "formula") app.innerHTML = viewFormula();
+      else if (route === "resources") app.innerHTML = viewResources();
+      else if (route === "learn") app.innerHTML = viewLearn();
+      else if (route === "learn-point") app.innerHTML = viewLearnDetail(params[0] || "");
+      else if (route === "syllabus") app.innerHTML = viewSyllabus(params[0] ? decodeURIComponent(params[0]) : "");
+      else if (route === "exam-info") app.innerHTML = viewExamInfo();
+      else if (route === "schools") app.innerHTML = viewSchools();
+      else if (route === "me") app.innerHTML = viewMe();
+      else if (route === "search") app.innerHTML = viewSearch();
+      else if (route === "words") app.innerHTML = viewWords();
+      else if (route === "word-learn") {
+        document.body.classList.add('wb-immersive-mode');
+        document.body.style.background = '#12151C';
+        app.innerHTML = viewWordLearn();
+      }
+      else if (route === "word-review") app.innerHTML = viewWordReview();
+      else if (route === "word-list") app.innerHTML = viewWordList(params[0] || "");
+      else if (route === "word-quiz") app.innerHTML = viewWordQuiz();
+      else if (route === "extra") app.innerHTML = viewExtra(params[0] ? decodeURIComponent(params[0]) : "", params[1] ? decodeURIComponent(params[1]) : "");
+      else if (route === "kp-detail") app.innerHTML = viewKpDetail(params[0] || "");
+      else {
+        state.route = "home";
+        app.innerHTML = viewHome();
+      }
+    } catch (err) {
+      // 调试：渲染异常时显示错误信息，避免白屏不知道哪里出问题
+      app.innerHTML = '<div class="empty" style="padding:40px 16px;text-align:center">' +
+        '<div style="font-size:18px;margin-bottom:12px">页面渲染出错了</div>' +
+        '<pre style="text-align:left;font-size:12px;background:#f5f5f5;padding:12px;border-radius:8px;overflow:auto">' +
+        String(err && err.message || err) + '\n\n' + (err && err.stack || '').slice(0, 500) +
+        '</pre>' +
+        '<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div>' +
+      '</div>';
+      console.error("render error:", err);
     }
     renderNav();
     // 同路由刷新时恢复滚动位置（避免点击专业 chip 等操作被拉回顶部）
@@ -5557,8 +5565,6 @@ function formulaFilter() {
         }).catch(function() { toast("题库加载失败，请刷新重试"); });
         return;
       }
-      // 保护：确保filters结构正确，避免旧数据缺少kind字段导致抛异常
-      if (!Array.isArray(state.filters.kind)) state.filters = normalizeFilters(state.filters);
       var _k = state.filters.kind;
       var _fk = _k && _k.length === 1 ? (_k[0] === "客观题" ? "obj" : "subj") : undefined;
       startSession({ subject: subjName, limit: 20, title: "顺序练习", ordered: true, filterKind: _fk });
