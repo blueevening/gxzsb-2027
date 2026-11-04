@@ -1482,6 +1482,12 @@
       </div>`;
     }
     setTitle(name, true);
+    // 切换科目时自动重置筛选条件，避免上一个科目的筛选把当前科题目全过滤掉
+    if (state._lastSubject !== name) {
+      state.filters = normalizeFilters(null);
+      save("gxzsb.filters", state.filters);
+      state._lastSubject = name;
+    }
     const m = subjOf(name);
     const p = subjStat(name);
     const chs = chapterList().filter((c) => c.subject === name);

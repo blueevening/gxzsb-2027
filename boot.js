@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "3.5.6";          // 与 index.html 的版本号保持一致
+  var V = "3.5.7";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
 
   /* 自动刷新：仅当版本号变化时强制刷新一次（避免每次打开都白屏闪一下） */
