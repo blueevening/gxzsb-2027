@@ -6631,6 +6631,15 @@ function formulaFilter() {
     render();
     ensureExamTimer();
   });
+  // 竞态修复：app.js 加载时数据可能已经就绪（boot.js 先加载完），
+  // 但 data-ready 事件是在监听器注册前触发的，事件丢了，Q 就一直是空的。
+  // 所以初始化时主动检查一次 GXZSB_DATA_READY 标志，如果已就绪就重建 Q。
+  if (window.GXZSB_DATA_READY && (!Q || !Q.length)) {
+    D = window.STUDY_DATA || {};
+    Q = buildQ(D);
+    Q_BY_ID = new Map(Q.map((q) => [q.id, q]));
+    _subjTotalCache = null;
+  }
   document.documentElement.setAttribute("data-theme", state.theme);
   applyFontSize();
   // 密码不落 localStorage（若历史版本写过则清除）
