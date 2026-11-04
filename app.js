@@ -1010,6 +1010,8 @@
     return FORGET_CURVES[k] || FORGET_CURVES.mid;
   }
   function record(q, ok) {
+    // 移动端震动反馈：答对短震(10ms)，答错长震(30ms)
+    try { if (navigator.vibrate) navigator.vibrate(ok ? 10 : 30); } catch(e) {}
     state.attempts.push({
       questionId: q.id,
       correct: ok,
