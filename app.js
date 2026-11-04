@@ -1630,8 +1630,12 @@
     if (opts.filterKind === "obj") pool = pool.filter((q) => !isSubjective(q));
     if (opts.filterKind === "subj") pool = pool.filter((q) => isSubjective(q));
     // 题型筛选（单选/填空/计算等）
+    // 注意：如果筛选后pool变空了，说明筛选条件和当前科目不匹配（比如残留了英语的"写作"筛选）
+    // 自动忽略题型筛选，避免点进去没题目
     if (state.filters && Array.isArray(state.filters.type) && state.filters.type.length) {
-      pool = pool.filter((q) => state.filters.type.includes(q.typeLabel));
+      var filteredByType = pool.filter((q) => state.filters.type.includes(q.typeLabel));
+      if (filteredByType.length) pool = filteredByType;
+      // 如果筛选后为空，就忽略题型筛选，用全部题目
     }
     if (opts.dueOnly) {
       const dueIds = Object.keys(state.wrong).filter((id) => {
