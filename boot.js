@@ -10,10 +10,12 @@
 (function () {
   "use strict";
 
-  var V = "3.6.4";          // 与 index.html 的版本号保持一致
+  var V = "3.6.5";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
 
-  /* 自动刷新：仅当版本号变化时强制刷新一次（避免每次打开都白屏闪一下） */
+  /* 自动刷新：已禁用（之前版本号变化时自动刷新，导致用户打开页面闪3-4次）
+     现在改成用户手动硬刷新，或者Service Worker下次激活时自动更新 */
+  /*
   try {
     var lastV = localStorage.getItem('gxzsb.lastV');
     var alreadyReloaded = sessionStorage.getItem('gxzsb_reloaded');
@@ -25,6 +27,7 @@
     }
     sessionStorage.setItem('gxzsb_reloaded', '1');
   } catch (e) {}
+  */
 
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
