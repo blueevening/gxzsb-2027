@@ -2034,7 +2034,7 @@
                   }).join('');
                   readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📋 答案速览</summary><div style="margin-top:6px">${ansList}</div></details>`;
                   if (q.passageZh) {
-                    const zhParas = q.passageZh.split('\\n\\n').map(p => `<p style="margin:0 0 10px 0;line-height:1.8">${mathHtml(p)}</p>`).join('');
+                    const zhParas = q.passageZh.split('\n\n').map(p => `<p style="margin:0 0 10px 0;line-height:1.8">${mathHtml(p)}</p>`).join('');
                     readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📖 全文中文翻译</summary><div style="margin-top:8px;padding:12px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-radius:8px;font-size:14px;line-height:1.8;color:var(--text-sub)">${zhParas}</div></details>`;
                   }
                 } else if (q.blanks) {
@@ -2048,7 +2048,7 @@
                   }).join('');
                   readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📋 答案速览</summary><div style="margin-top:6px">${ansList}</div></details>`;
                   if (q.passageZh) {
-                    const zhParas = q.passageZh.split('\\n\\n').map(p => `<p style="margin:0 0 10px 0;line-height:1.8">${mathHtml(p)}</p>`).join('');
+                    const zhParas = q.passageZh.split('\n\n').map(p => `<p style="margin:0 0 10px 0;line-height:1.8">${mathHtml(p)}</p>`).join('');
                     readingSummary += `<details style="margin-top:8px"><summary style="font-size:13px;color:var(--text-sub);cursor:pointer">📖 全文中文翻译</summary><div style="margin-top:8px;padding:12px;background:color-mix(in srgb, var(--primary) 6%, transparent);border-radius:8px;font-size:14px;line-height:1.8;color:var(--text-sub)">${zhParas}</div></details>`;
                   }
                 }
@@ -5510,7 +5510,9 @@ function formulaFilter() {
       const r = window.EN_EXTRA.readings.find((x) => x.id === R.id);
       if (v === "prev" && R.i > 0) R.i--;
       if (v === "next" && R.i < r.questions.length - 1) R.i++;
+      window.scrollTo(0, 0);
       render();
+      setTimeout(() => window.scrollTo(0, 0), 50);
     }
     else if (act === "chapter") {
       const k = state.filters.kind;
