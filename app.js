@@ -2,6 +2,9 @@
 (function () {
   "use strict";
 
+  /* 离线预缓存文件列表（首次访问自动后台静默下载） */
+  var OFFLINE_FILES = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js","learn-book-2027.js","english-extra.js","exam-plans-v2.js","kp-detail.js","syllabus.js","all-bank.js","all-learn.js","syllabus-sample.js","sb-config.js"];
+
   /* ===== v2.6.0 UI 防抖工具：导航/滚动/resize 统一入口 ===== */
   function _debounce(fn, wait) {
     var t = null;
@@ -4004,19 +4007,18 @@ function formulaFilter() {
     var safe = extractSafeHtml(raw);
     raw = safe.text;
     // 横排简单分数 a/b → frac{a}{b}，统一渲染成上下堆叠（分子上/分母下）
-    // 只匹配：纯数字、单字母变量(可带上标)、括号表达式，避免误伤 and/or、he/she 等英文单词
-    // 横排分数 a/b → frac{a}{b}：支持数字、单/双字母短变量(x/R1/Rf/ui)、括号表达式
-    // 3 字母以上英文单词(DNS/int/because)与 URL 不转
-    // 先保护IP地址（如 192.168.1.10/24），避免被误匹配成分数
-    const ipPlaceholders = [];
-    raw = raw.replace(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})\b/g, (m) => {
-      ipPlaceholders.push(m);
-      return `__IP_${ipPlaceholders.length - 1}__`;
-    });
-    raw = raw.replace(/(?<![a-zA-Z.])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
-    let out = "";
-    // 恢复IP地址
-    raw = raw.replace(/__IP_(\d+)__/g, (m, idx) => ipPlaceholders[parseInt(idx)]);
+    // 快速路径：没有斜杠就跳过所有正则匹配，省性能（大部分英文/中文文本不含/）
+    if (raw.indexOf("/") !== -1) {
+      // 先保护IP地址（如 192.168.1.10/24），避免被误匹配成分数
+      const ipPlaceholders = [];
+      raw = raw.replace(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})\b/g, (m) => {
+        ipPlaceholders.push(m);
+        return `__IP_${ipPlaceholders.length - 1}__`;
+      });
+      raw = raw.replace(/(?<![a-zA-Z.])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
+      // 恢复IP地址
+      raw = raw.replace(/__IP_(\d+)__/g, (m, idx) => ipPlaceholders[parseInt(idx)]);
+    }
     let i = 0;
     while (i < raw.length) {
       const c0 = raw[i];
@@ -5274,7 +5276,7 @@ function formulaFilter() {
     if (!act && nav) return go(nav);
 
     if (act === "preload-offline") {
-      const files = ["math-bank.js","english-bank.js","ee-bank.js","c-bank.js","net-bank.js","wordbook.js","formula-book.js","learn-book-2027.js","english-extra.js","exam-plans-v2.js","kp-detail.js","syllabus.js","all-bank.js","all-learn.js","syllabus-sample.js","sb-config.js"];
+      const files = OFFLINE_FILES;
       const btn = document.getElementById("offlineBtn");
       const txt = document.getElementById("offlineBarTxt");
       if (btn) btn.disabled = true;
@@ -6632,4 +6634,21 @@ function formulaFilter() {
   if (restored && !location.hash) { location.hash = "#/practice"; }
   render();
   ensureExamTimer();
+
+  // 首次访问自动后台静默预缓存所有题库（首屏渲染完后延迟3秒，不抢首屏资源）
+  setTimeout(function() {
+    try {
+      var cached = localStorage.getItem("gxzsb.offline-precached");
+      if (cached === window.V) return; // 当前版本已缓存过，跳过
+      if (!window.caches) return;
+      // 后台静默下载，不显示进度条
+      OFFLINE_FILES.forEach(function(f) {
+        fetch(f + "?v=" + window.V, { cache: "force-cache" })
+          .then(function(r) { return r.ok ? r.blob() : null; })
+          .catch(function() {});
+      });
+      // 标记为已缓存（即使还没下完，下次刷新不再重复触发）
+      localStorage.setItem("gxzsb.offline-precached", window.V);
+    } catch(e) {}
+  }, 3000);
 })();
