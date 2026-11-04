@@ -4040,6 +4040,7 @@ function formulaFilter() {
       raw = raw.replace(/__IP_(\d+)__/g, (m, idx) => ipPlaceholders[parseInt(idx)]);
     }
     let i = 0;
+    let out = "";
     while (i < raw.length) {
       const c0 = raw[i];
       let skip = 0;
