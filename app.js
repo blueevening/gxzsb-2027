@@ -5557,6 +5557,8 @@ function formulaFilter() {
         }).catch(function() { toast("题库加载失败，请刷新重试"); });
         return;
       }
+      // 保护：确保filters结构正确，避免旧数据缺少kind字段导致抛异常
+      if (!Array.isArray(state.filters.kind)) state.filters = normalizeFilters(state.filters);
       var _k = state.filters.kind;
       var _fk = _k && _k.length === 1 ? (_k[0] === "客观题" ? "obj" : "subj") : undefined;
       startSession({ subject: subjName, limit: 20, title: "顺序练习", ordered: true, filterKind: _fk });
