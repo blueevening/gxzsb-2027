@@ -446,8 +446,9 @@ body.boot-loading .shell { padding: 32px 16px; }
 .q-dot.now { outline: 2px solid var(--primary); outline-offset: 1px; }
 
 .q-stem {
-  font-size: 17px; line-height: 1.7; font-weight: 650;
-  white-space: pre-wrap; margin: 8px 0 16px;
+  font-size: 17px; line-height: 1.8; font-weight: 600;
+  white-space: pre-wrap; margin: 12px 0 20px;
+  color: var(--text);
 }
 .opt {
   width: 100%; min-height: 48px;
@@ -700,7 +701,7 @@ html.qa-modal-open { overflow: hidden; }
   width: auto;
   min-width: 6ch;
   max-width: 100%;
-  padding: 6px 4px;
+  padding: 8px 6px;
   border: none;
   border-bottom: 2px solid var(--border);
   border-radius: 0;
@@ -708,7 +709,7 @@ html.qa-modal-open { overflow: hidden; }
   color: var(--text);
   font-size: 16px; /* ≥16px 防止 iOS 聚焦自动放大 */
   text-align: left;
-  margin: 6px 0;
+  margin: 8px 0;
   transition: border-color .15s;
 }
 .fill-input:focus { outline: none; border-bottom-color: var(--primary); }
@@ -3054,11 +3055,13 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
 .q-code {
   font-family: "SF Mono", "Fira Code", Consolas, monospace !important;
   font-size: 14px !important;
-  line-height: 1.8 !important;
+  line-height: 1.9 !important;
   background: var(--bg-soft);
-  padding: 14px;
-  border-radius: 8px;
-  border-left: 3px solid var(--primary);
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 4px solid var(--primary);
   white-space: pre-wrap;
   word-break: break-all;
+  margin: 12px 0 20px !important;
+  color: var(--text);
 }
