@@ -1896,6 +1896,10 @@
       return `<div class="empty">没有可练习的题目<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div></div>`;
     }
     const q = s.q[s.i];
+    // 保护：如果当前题不存在（i越界），直接显示空状态，避免抛异常白屏
+    if (!q) {
+      return `<div class="empty">没有可练习的题目<div><button class="btn btn-primary" data-nav="home" type="button">回首页</button></div></div>`;
+    }
     // 渲染前同步：当前题已答过则强制 submitted，避免恢复 session 后按钮状态错乱
     s.submitted = q.id in s.results;
     setTitle(s.q.length ? `${s.title}` : "练习", true);
@@ -6706,4 +6710,7 @@ function formulaFilter() {
       localStorage.setItem("gxzsb.offline-precached", window.V);
     } catch(e) {}
   }, 3000);
+
+  // 调试钩子：暴露关键变量用于测试
+  window.__debug = { state, Q, render, viewPractice, startSession, buildQ };
 })();
