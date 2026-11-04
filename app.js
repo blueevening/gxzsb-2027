@@ -1133,7 +1133,7 @@
     const totalDone = doneIds.size;
     const okN = state.attempts.filter((a) => a.correct).length;
     const acc = state.attempts.length ? Math.round((okN / state.attempts.length) * 100) : null;
-    const wrongCount = Object.keys(state.wrong || {}).length;
+    const wrongCount = Object.keys(state.wrong || {}).filter(function(id){ return !state.wrong[id].mastered; }).length;
     const favCount = Object.keys(state.fav || {}).length;
 
     // 按大纲卷：用分值权重估算「备考完成度」
@@ -5612,8 +5612,8 @@ function formulaFilter() {
       saveSession();
       render();
     }
-    else if (act === "next") { nextQ(); saveSession(); }
-    else if (act === "prev") { prevQ(); saveSession(); }
+    else if (act === "next") { if (!lockAction(200)) return; nextQ(); saveSession(); }
+    else if (act === "prev") { if (!lockAction(200)) return; prevQ(); saveSession(); }
     else if (act === "goto") {
       const s = state.session;
       s.answers = s.answers || {};
