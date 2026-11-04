@@ -2135,6 +2135,7 @@
                 <button class="btn btn-primary btn-sm" data-act="ai-deepseek" data-id="${attr(q.id)}" type="button">DeepSeek 解析</button>
                 <button class="btn btn-ghost btn-sm" data-act="ai-doubao" data-id="${attr(q.id)}" type="button">豆包解析</button>
                 <button class="btn btn-ghost btn-sm" data-act="ai-copy" data-id="${attr(q.id)}" type="button">复制题目</button>
+                <button class="btn btn-ghost btn-sm" data-act="share-q" data-id="${attr(q.id)}" type="button">分享</button>
                 <button class="btn btn-ghost btn-sm" data-act="copy-exp" type="button">一键复制解析</button>
               </div>
               <p class="muted" style="font-size:12px;margin-top:6px">静态解析不够细时，用外部 AI 按题干生成逐步讲解。</p>
@@ -6235,6 +6236,17 @@ function formulaFilter() {
         toastLite("题目已复制，粘贴到对话框发送即可");
       } else {
         toastLite("题目与解析提示词已复制");
+      }
+    } else if (act === "share-q") {
+      const qq = qById(t.getAttribute("data-id")) || (state.session && state.session.q[state.session.i]);
+      if (!qq) return;
+      const shareText = buildAiPrompt(qq);
+      if (navigator.share) {
+        navigator.share({ title: "专升本刷题", text: shareText }).catch(function(){});
+      } else {
+        // 不支持原生分享时回退到复制
+        if (navigator.clipboard) navigator.clipboard.writeText(shareText);
+        toastLite("已复制题目，可粘贴到微信/QQ分享");
       }
     } else if (act === "goto-formula") {
       state.formulaTab = t.getAttribute("data-subj") || "高等数学";
