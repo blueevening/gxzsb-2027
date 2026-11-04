@@ -1,5 +1,5 @@
 /* gxzsb sw v2.11.0 — 双缓存策略：静态资源按版本缓存(秒开、版本更新自动换)，index.html 网络优先拿最新版 */
-const VERSION = "3.3.7";
+const VERSION = "3.3.8";
 const CACHE = "gxzsb-appshell-" + VERSION;   // 版本化：只存 index.html
 const STATIC = "gxzsb-static-" + VERSION;    // 版本化：题库/JS/CSS，版本一变自动清旧
 

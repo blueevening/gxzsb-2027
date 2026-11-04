@@ -5282,7 +5282,7 @@ function formulaFilter() {
       for (const f of files) {
         try {
           if (txt) txt.textContent = "正在下载 " + f + "（" + done + "/" + files.length + "）…";
-          await fetch(f + "?v=offline", { cache: "force-cache" }).then(function(r){ return r.ok ? r.blob() : null; });
+          await fetch(f + "?v=" + window.V, { cache: "force-cache" }).then(function(r){ return r.ok ? r.blob() : null; });
         } catch (e) {}
         done++;
         if (txt) txt.textContent = "已下载 " + done + "/" + files.length + "（没网也能刷题）";
