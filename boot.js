@@ -10,24 +10,28 @@
 (function () {
   "use strict";
 
-  var V = "3.6.5";          // 与 index.html 的版本号保持一致
+  var V = "3.6.6";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
 
-  /* 自动刷新：已禁用（之前版本号变化时自动刷新，导致用户打开页面闪3-4次）
-     现在改成用户手动硬刷新，或者Service Worker下次激活时自动更新 */
-  /*
+  /* 自动刷新：仅当版本号比本地记录的新时刷新一次（避免旧缓存反复刷新死循环） */
   try {
-    var lastV = localStorage.getItem('gxzsb.lastV');
-    var alreadyReloaded = sessionStorage.getItem('gxzsb_reloaded');
-    if (lastV !== V && !alreadyReloaded) {
+    var lastV = localStorage.getItem('gxzsb.lastV') || '0.0.0';
+    // 版本号比较：只有 V > lastV 才刷新（防止旧缓存和本地新版本号不匹配时反复刷新）
+    function verGt(a, b) {
+      var pa = a.split('.'), pb = b.split('.');
+      for (var i = 0; i < 3; i++) {
+        var na = parseInt(pa[i]) || 0, nb = parseInt(pb[i]) || 0;
+        if (na > nb) return true;
+        if (na < nb) return false;
+      }
+      return false;
+    }
+    if (verGt(V, lastV)) {
       localStorage.setItem('gxzsb.lastV', V);
-      sessionStorage.setItem('gxzsb_reloaded', '1');
       location.reload();
       return;
     }
-    sessionStorage.setItem('gxzsb_reloaded', '1');
   } catch (e) {}
-  */
 
   var TIMEOUT = 30000;    // 单个脚本加载超时（毫秒），30s 避免慢网误杀
   var MAX_RETRY = 1;      // 失败自动重试次数
