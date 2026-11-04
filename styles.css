@@ -27,6 +27,9 @@
   --side-w: 220px;
   --content-max: 860px;
 }
+/* 深色/浅色模式切换时的平滑过渡 */
+html { transition: background-color 0.25s ease, color 0.25s ease; }
+body { transition: background-color 0.25s ease, color 0.25s ease; }
 [data-theme="dark"] {
   --bg: #0F1115;
   --card: #1A1D24;
