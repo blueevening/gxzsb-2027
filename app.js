@@ -2740,10 +2740,36 @@
     html += '</div>';
     var oldSheet = document.getElementById("printSheet"); if (oldSheet) oldSheet.remove();
     document.body.insertAdjacentHTML("beforeend", html);
-    setTimeout(function () { window.print(); }, 60);
-    window.onafterprint = function () {
+
+    // 打印稿刚插入时移动端布局提交比桌面慢：先强制一次 reflow，再等两帧 + 200ms 才 print，
+    // 否则 window.print() 可能拿到「已生成但未排版」的快照，表现为预览有内容、导出 PDF 空白。
+    var sheet = document.getElementById("printSheet");
+    if (sheet) { void sheet.offsetHeight; }
+
+    // 字号缩放（applyFontSize 写在 html 上的 zoom）会被带进打印，
+    // 缩放到页面之外就整页空白，打印期间临时归 1，打印结束再还原。
+    var prevZoom = document.documentElement.style.zoom;
+    document.documentElement.style.zoom = "1";
+
+    function restoreZoom() {
+      document.documentElement.style.zoom = prevZoom;
+      window.onafterprint = null;
+    }
+    function removeSheet() {
       var p = document.getElementById("printSheet"); if (p) p.remove();
-    };
+    }
+    window.onafterprint = function () { restoreZoom(); removeSheet(); };
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          window.print();
+          // print 返回即还原字号（若浏览器没触发 onafterprint，字号也不会长期失效）；
+          // 打印稿延后移除，避免某端 print 异步取内容时被提前撤掉。屏幕上它本就是 display:none。
+          restoreZoom();
+          setTimeout(removeSheet, 1500);
+        }, 200);
+      });
+    });
   }
 
   function viewWrong() {

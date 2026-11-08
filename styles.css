@@ -225,21 +225,26 @@ body.boot-loading .shell { padding: 32px 16px; }
 .print-sheet { display: none; }
 @media print {
   .topbar, .tabbar, .side-nav, .q-actions, .btn, .chip, .section-title, .stat-grid, .seg-top { display: none !important; }
-  body { padding: 0; background: #fff; color: #000; }
+  /* 打印是白纸：把页面级高度/溢出/缩放全部放开，避免内容被裁到纸张之外 */
+  html, body { height: auto !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; background: #fff !important; color: #000 !important; zoom: 1 !important; }
   .card { box-shadow: none; border: 1px solid #999; break-inside: avoid; }
   /* 隐藏整个应用界面，只留打印稿 */
   #app { display: none !important; }
   .print-sheet {
     display: block !important;
+    width: 100%; max-width: none; margin: 0; padding: 0;
     color: #000; background: #fff; font-size: 12px; line-height: 1.6;
   }
-  .print-sheet .p-item { break-inside: avoid; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #ccc; }
-  .print-sheet .p-stem { font-size: 13px; }
-  .print-sheet .p-opts { margin: 6px 0; }
+  /* 题干/选项不许被分页拆开；解析可能很长，允许跨页，否则整块被推到下一页甚至丢掉内容 */
+  .print-sheet .p-item { break-inside: auto; page-break-inside: auto; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #ccc; }
+  .print-sheet .p-stem { font-size: 13px; break-inside: avoid; page-break-inside: avoid; }
+  .print-sheet .p-opts { margin: 6px 0; break-inside: avoid; page-break-inside: avoid; }
   .print-sheet .p-opt { padding: 1px 0; }
   .print-sheet .p-correct { font-weight: 700; color: #16a34a; }
   .print-sheet .p-ans, .print-sheet .p-exp { margin-top: 4px; }
   .print-sheet .p-exp { color: #333; }
+  /* 保证绿字/虚线等颜色和背景真的打进 PDF，而不是被浏览器省墨模式省掉 */
+  .print-sheet, .print-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* P2-3 深色模式细节：主观题参考区/解析区对比度 */
