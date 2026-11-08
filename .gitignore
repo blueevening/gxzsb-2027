@@ -20,5 +20,3 @@ net-analysis-batches/
 scripts/*-export.json
 scripts/major-questions.json
 scripts/major-index.tsv
-
-.github/workflows/ci.yml

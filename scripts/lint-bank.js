@@ -79,9 +79,23 @@ const validChapters = {};
 console.log("[3] 逐题校验（字段 / 答案可作答 / 章节归属 / 重复 id）");
 const idSeen = {};
 let chapterBad = 0;
+// 子题组专用虚拟章节（阅读/阅读填空大题），不在大纲 chapters 中，属正常设计
+const GROUP_VIRTUAL_CHAPTERS = { "ch-en-reading": 1, "ch-en-fill": 1 };
+// 子题组大题：reading 用 subQuestions，fill 大题用 blanks；顶层无 answer 是结构设计
+function groupSubs(q) {
+  if (q.type === "reading") return q.subQuestions || [];
+  if (q.type === "fill" && (q.subQuestions || q.blanks)) return q.subQuestions || q.blanks || [];
+  return [];
+}
+function isGroupQuestion(q) {
+  return q.type === "reading" || (q.type === "fill" && (q.subQuestions || q.blanks || []).length > 0);
+}
 Q.forEach((q) => {
   const loc = q.id || "(无id)";
-  ["id", "subject", "type", "stem", "answer"].forEach((k) => {
+  const isGroup = isGroupQuestion(q);
+  // 组题顶层无 answer，只校验 id/subject/type/stem；其余题加验 answer
+  const required = isGroup ? ["id", "subject", "type", "stem"] : ["id", "subject", "type", "stem", "answer"];
+  required.forEach((k) => {
     if (q[k] == null || q[k] === "") err(loc + " 缺少必填字段 " + k);
   });
   if (idSeen[q.id]) err("重复题目 id: " + q.id);
@@ -91,7 +105,22 @@ Q.forEach((q) => {
   if (![1, 2, 3].includes(q.difficulty)) err(loc + " difficulty 非 1/2/3: " + q.difficulty);
   if (!q.analysis || !String(q.analysis).trim()) warn(loc + " 无解析");
 
-  if (CHOICE_TYPES.includes(q.type)) {
+  if (isGroup) {
+    // 子题组：逐子题校验答案/选项/证据/上下文
+    const subs = groupSubs(q);
+    if (!subs.length) {
+      err(loc + " 子题组为空");
+    }
+    subs.forEach((s, si) => {
+      const slog = loc + "#" + (si + 1);
+      if (s.answer == null || s.answer === "") err(slog + " 子题缺少 answer");
+      if (!s.evidence || !String(s.evidence).trim()) err(slog + " 子题缺少 evidence");
+      if (q.type === "fill" && (!s.context || !String(s.context).trim())) err(slog + " 填空子题缺少 context");
+      if (Array.isArray(s.options) && s.options.length && s.options.indexOf(s.answer) === -1) {
+        err(slog + " 子题答案不在选项中");
+      }
+    });
+  } else if (CHOICE_TYPES.includes(q.type)) {
     if (!Array.isArray(q.options) || q.options.length < 2) {
       err(loc + " 选择题 options 缺失或不足 2 项");
     } else {
@@ -109,7 +138,8 @@ Q.forEach((q) => {
     if (!q.answer || !String(q.answer).trim()) err(loc + " 非选择题答案为空");
   }
 
-  if (q.chapter && !validChapters[q.chapter]) {
+  // 组题虚拟章节放行；其余章节必须在大纲中
+  if (q.chapter && !validChapters[q.chapter] && !GROUP_VIRTUAL_CHAPTERS[q.chapter]) {
     err(loc + " [" + q.subject + "] chapter=" + q.chapter + " 未在大纲声明（按章节练习无法触达）");
     chapterBad++;
   }
