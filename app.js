@@ -92,10 +92,21 @@
       return fb;
     }
   };
+  // 存储满 / 隐私模式 / 被系统清理时，写入会静默失败；至少让用户知道进度没保住。
+  // 同一会话只提示一次，避免每次答题都弹。
+  let storageWarned = false;
+  function warnStorageOnce(where, e) {
+    try { console.warn("[gxzsb] 本地存储写入失败（" + where + "）：", e); } catch (e2) {}
+    if (storageWarned) return;
+    storageWarned = true;
+    try { toastLite("本地存储不可用或空间不足，本次进度可能未保存", 4000); } catch (e3) {}
+  }
   const save = (k, v) => {
     try {
       localStorage.setItem(k, JSON.stringify(v));
-    } catch (e) {}
+    } catch (e) {
+      warnStorageOnce(k, e);
+    }
   };
 
   /* __QA_PURE_BEGIN__ — 纯函数，供 scripts/smoke.js 抽取单测 */
@@ -1708,7 +1719,7 @@
       if (s.daily) localStorage.setItem("gxzsb.dailySession", raw);
       else localStorage.removeItem("gxzsb.dailySession");
       localStorage.setItem("gxzsb.session", raw);
-    } catch(e) {}
+    } catch(e) { warnStorageOnce("session", e); }
   }
 
   function touchSeen() {
