@@ -1,6 +1,6 @@
 {
   "name": "gxzsb-2027",
-  "version": "3.6.10",
+  "version": "3.6.11",
   "private": true,
   "description": "广西专升本刷题站（纯静态，GitHub Pages）",
   "scripts": {
