@@ -3073,3 +3073,40 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
   margin: 12px 0 20px !important;
   color: var(--text);
 }
+
+/* ===== 打印最终补丁（必须放在文件最末尾，不要往前挪）=====
+   为什么需要这一块：文件前部的 @media print 之后还写了不少移动端媒体查询，例如
+   @media (max-width:1023px) { .tabbar { display:grid !important } }。
+   打印 A4 宽度约 794px，会命中这条窄屏规则，且它层叠顺序在后，直接把打印隐藏规则顶掉，
+   于是导航栏被打出来；更关键的是 #app 外面还包着一层 .app-frame，它占满整屏（约 721px），
+   旧的 print 规则只隐藏 #app，.app-frame 仍占位，打印稿被整体推到第 2 页 ——
+   这就是「第一页几乎全空、内容从第二页才开始」的原因。
+   这里用更高特异性（html body ...）+ 文件末尾位置，确保无论前面怎么写都能压住。 */
+@media print {
+  html body #offlineBar,
+  html body .sync-bar,
+  html body .topbar,
+  html body .tabbar,
+  html body .side-nav,
+  html body .app-frame,
+  html body .q-actions,
+  html body .btn,
+  html body .chip,
+  html body .section-title,
+  html body .stat-grid,
+  html body .seg-top,
+  html body #app {
+    display: none !important;
+  }
+  html body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+    zoom: 1 !important;
+  }
+  .print-sheet { display: block !important; width: 100%; }
+}
+
