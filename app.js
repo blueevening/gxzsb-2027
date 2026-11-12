@@ -2124,15 +2124,33 @@
           <div class="explain-body">
             <div class="explain-block" style="border-left:3px solid var(--success);background:color-mix(in srgb, var(--success) 10%, transparent);padding:12px;border-radius:8px;margin-bottom:12px">
               <h4 style="margin:0 0 6px 0">⚡ 秒懂考点</h4>
-              <div class="content" style="font-size:15px">本题考 <strong style="color:var(--success)">${esc(q.knowledgePoint || q.subject)}</strong> · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:var(--success);font-size:18px">${mathHtml(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
+              <div class="content" style="font-size:15px">
+                ${(function(){
+                  var line = (q.steps || []).map(function(x){ return String(x); }).filter(function(x){ return /^【(秒懂考点|核心考点|考点)】/.test(x.trim()); })[0];
+                  var txt = line ? line.replace(/^【[^】]*】/, "").trim() : "";
+                  if (txt) return mathHtml(txt);
+                  return "本题考 <strong style=\"color:var(--success)\">" + esc(q.knowledgePoint || q.subject) + "</strong>";
+                })()}
+              </div>
+              <div class="muted" style="font-size:12px;margin-top:6px">考点：${esc(q.knowledgePoint || q.subject)} · 难度：${esc(q.difficultyLabel)} · 正确答案：<strong style="color:var(--success);font-size:15px">${mathHtml(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer)}</strong></div>
             </div>
             <details class="explain-block" style="border-left:3px solid #3b82f6" open>
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">📖 详细解析（点击展开）</summary>
               <div class="content">
             ${
-              (q.steps || []).length
-                ? q.steps.map(fmtExpLine).join("")
-                : exp.split("\n").filter(function(l){return l.trim();}).map(fmtExpLine).join("")
+              (function(){
+                var hasSteps = (q.steps || []).length > 0;
+                var fullLines = String(exp || "").split("\n").filter(function(l){ return l.trim(); });
+                var stepsTxt = hasSteps ? q.steps.join("") : "";
+                var fullTxt = fullLines.join("");
+                // 若完整解析并不比分步更丰富（只是同一段文字），就不重复展示
+                var duplicate = hasSteps && fullTxt.replace(/\s/g,"").length <= stepsTxt.replace(/\s/g,"").length + 40;
+                var head = 'margin:12px 0 6px;font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--text-sub)';
+                var out = "";
+                if (hasSteps) out += '<p style="' + head + '">⚡ 分步速览</p>' + q.steps.map(fmtExpLine).join("");
+                if (fullLines.length && !duplicate) out += '<p style="' + head + '">📘 完整解析</p>' + fullLines.map(fmtExpLine).join("");
+                return out;
+              })()
             }
             ${q.model ? `<p><strong>建模：</strong>${esc(q.model)}</p>` : ""}
             ${q.sample ? `<p><strong>范文/译文：</strong></p><div>${esc(q.sample).replace(/\n/g,"<br/>")}</div>` : ""}
@@ -2142,7 +2160,7 @@
             <details class="explain-block" style="border-left:3px solid #f59e0b">
               <summary style="cursor:pointer;font-weight:bold;padding:8px 0">⚠️ 避坑指南（新手必看）</summary>
               <div class="content">
-                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:var(--warning)">• ${esc(p)}</p>`;}).join("") : '<p style="color:var(--warning)">• 看清题目问的是什么</p>'}
+                ${(q.pitfalls || []).length ? q.pitfalls.map(function(p){return `<p style="color:var(--warning);margin:4px 0">• ${mathHtml(String(p)).replace(/\n/g,"<br/>")}</p>`;}).join("") : '<p style="color:var(--warning)">• 看清题目问的是什么</p>'}
                 ${wrongN ? `<p style="color:var(--error)">• 你曾错这道题 ${wrongN} 次，务必巩固</p>` : ""}
               </div>
             </details>
@@ -2162,7 +2180,6 @@
                 <button class="btn btn-ghost btn-sm" data-act="prac-point" data-p="${attr(q.knowledgePoint)}" type="button">同考点练题</button>
               </div>
             </div>
-            <div class="explain-block"><h4>易错点</h4><div class="mistake-box">${(q.pitfalls || ["注意审题"]).map((p) => "• " + esc(p)).join("<br/>")}${wrongN ? `<br/>• 你曾错 ${wrongN} 次` : ""}</div></div>
             <div class="explain-block"><h4>我的笔记</h4>
               <textarea class="note-input" id="noteInput">${esc(state.notes[q.id] || "")}</textarea>
               <button class="btn btn-ghost btn-sm" data-act="save-note" data-id="${attr(q.id)}" type="button" style="margin-top:8px">保存笔记</button>
@@ -2734,7 +2751,11 @@
       }
       html += '<div class="p-ans"><b>答案：</b>' + esc(String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || ""))) + '</div>';
       var exp = ensureExplain(q) || q.analysis || "";
-      html += '<div class="p-exp"><b>解析：</b>' + String(exp).replace(/<[^>]+>/g, "") + '</div>';
+      var expPrint = String(exp)
+        .replace(/<[^>]+>/g, "")
+        .replace(/frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)")
+        .replace(/\n/g, "<br>");
+      html += '<div class="p-exp"><b>解析：</b>' + expPrint + '</div>';
       html += '</div>';
     });
     html += '</div>';
@@ -3941,6 +3962,14 @@ function ensureExplain(q) {
   }
   function viewSearch() {
     setTitle("搜索", true);
+    /* 搜索列表只放纯文字摘要：先把内联 SVG 剥成"〔图示〕"再截断，
+       否则 slice 会把 <svg> 从中间切断，闭合标签丢掉后整段标签当文本漏出来 */
+    const plainStem = (s) =>
+      String(s == null ? "" : s)
+        .replace(/<svg[\s\S]*?<\/svg>/gi, "〔图示〕")
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]*>/g, "")
+        .trim();
     const k = state.searchQ.trim().toLowerCase();
     const hits = k
       ? Q.filter((q) =>
@@ -3958,7 +3987,7 @@ function ensureExplain(q) {
                 (q) => `<button class="list-row" data-act="open-q" data-id="${attr(q.id)}" type="button">
                   <span class="dot" style="background:${subjOf(q.subject).color}"></span>
                   <span class="main">
-                    <span class="t">${highlight(renderMath(String(q.stem).slice(0, 80)), k)}</span>
+                    <span class="t">${highlight(renderMath(plainStem(q.stem).slice(0, 80)), k)}</span>
                     <span class="s">${subjOf(q.subject).short} · ${esc(q.chapter || "")} · ${esc(q.difficultyLabel)}</span>
                   </span>
                   <span class="end">›</span>
@@ -4014,16 +4043,20 @@ function formulaFilter() {
   function fracSpan(num, den) {
     return '<span class="frac"><span class="num">' + mathHtml(num) + '</span><span class="den">' + mathHtml(den) + "</span></span>";
   }
-  // 解析行渲染：去掉外层 1.2.3. 编号；一行里的 ①②③ 拆成多行、②③ 缩进
+  // 解析行渲染：先按换行拆段（防止整段塞进单个 step 挤成一坨），再把 ①②③ 拆成多行、②③ 缩进
   function fmtExpLine(l) {
-    var parts = String(l).split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])/).filter(function (p) { return p.trim(); });
+    var text = String(l);
+    if (text.indexOf("\n") >= 0) {
+      return text.split("\n").filter(function (x) { return x.trim(); }).map(function (x) { return fmtExpLine(x); }).join("");
+    }
+    var parts = text.split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])/).filter(function (p) { return p.trim(); });
     if (parts.length > 1) {
       return parts.map(function (p) {
         var isHead = /^【/.test(p);
         return '<p style="margin-left:' + (isHead ? '0' : '16px') + ';margin:4px 0">' + (isHead ? '<strong>' : '') + mathHtml(p) + (isHead ? '</strong>' : '') + '</p>';
       }).join("");
     }
-    return '<p style="margin:4px 0">' + (/^【/.test(l) ? '<strong>' : '') + mathHtml(l) + (/^【/.test(l) ? '</strong>' : '') + '</p>';
+    return '<p style="margin:4px 0">' + (/^【/.test(text) ? '<strong>' : '') + mathHtml(text) + (/^【/.test(text) ? '</strong>' : '') + '</p>';
   }
 
   /* SVG 安全提取：把 stem 中的 br 换行和 svg 图示提取为安全占位符，
@@ -4072,7 +4105,7 @@ function formulaFilter() {
         ipPlaceholders.push(m);
         return `__IP_${ipPlaceholders.length - 1}__`;
       });
-      raw = raw.replace(/(?<![a-zA-Z.])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
+      raw = raw.replace(/(?<![a-zA-Z0-9.·×÷+\-^])(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)\s*\/\s*(\([^()]*\)|[0-9]+(?:\.[0-9]+)?|[a-zA-Z]{1,2}\d?)(?![a-zA-Z])/g, "frac{$1}{$2}");
       // 恢复IP地址
       raw = raw.replace(/__IP_(\d+)__/g, (m, idx) => ipPlaceholders[parseInt(idx)]);
     }
@@ -4228,11 +4261,15 @@ function formulaFilter() {
             const pureWords = /^[A-Za-z]+$/.test(A) && /^[A-Za-z]+$/.test(B);
             // 倒数关系：1/csc、1/sec、1/cot 等（数字/纯字母函数名）保持横排更清晰
             const reciprocal = /^[0-9]+$/.test(A) && /^[A-Za-z]+$/.test(B);
+            // 单位比值：314rad/s、12V/4Ω、V/Ω 这类，两侧都是"数值+单位"或纯单位时保持横排，
+            // 否则单位会被拆成上下两行，学生看不懂
+            const UNIT_W = '(?:[0-9.]+)?(?:s|ms|us|ns|min|h|rad|deg|m|cm|mm|km|kg|g|A|V|W|Ω|Hz|kHz|MHz|Pa|N|J|C|F|H|L|dB|rpm|bit|B)';
+            const unitRatio = new RegExp('^' + UNIT_W + '$').test(A) && new RegExp('^' + UNIT_W + '$').test(B);
             if (hasCJK) { i++; continue; }
             if (/y'/.test(s0.slice(Math.max(0, L - 2), R + 2)) && /y'\(/.test(s0.slice(L, R))) {
               /* fallthrough */
             }
-            if (A && B && !pureWords && !reciprocal && A.indexOf("@@") < 0 && B.indexOf("@@") < 0) {
+            if (A && B && !pureWords && !reciprocal && !unitRatio && A.indexOf("@@") < 0 && B.indexOf("@@") < 0) {
               let pre = "";
               const pm = A.match(/^(lim|LIM)\s+/);
               if (pm) { pre = pm[0]; A = A.slice(pm[0].length).trim(); }
@@ -5943,7 +5980,7 @@ function formulaFilter() {
       const txt =
         "【题目】" + String(q.stem || "") + "\n" +
         "【答案】" + String(Array.isArray(q.answer) ? q.answer.join(" / ") : q.answer || "") + "\n" +
-        "【解析】\n" + exp;
+        "【解析】\n" + String(exp).replace(/frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)");
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(txt).then(function () {
           toastLite("解析已复制");
@@ -6088,7 +6125,10 @@ function formulaFilter() {
         if (q.options && q.options.length) q.options.forEach(function(o, idx){ lines.push("   " + "ABCD"[idx] + ". " + String(o).replace(/<[^>]+>/g, "")); });
         lines.push("   【答案】" + String(Array.isArray(q.answer) ? q.answer.join(" / ") : (q.answer || "")));
         var exp = ensureExplain(q) || q.analysis || "";
-        lines.push("   【解析】" + String(exp).replace(/<[^>]+>/g, "").slice(0, 500));
+        var expTxt = String(exp)
+          .replace(/<[^>]+>/g, "")
+          .replace(/frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)");
+        lines.push("   【解析】" + expTxt);
         lines.push("");
       });
       var blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
