@@ -403,18 +403,36 @@
      不被题库文件抢占带宽。app.js 渲染主界面时调用 gxzsbEnsureData；点科目时 loadSubjectBank 也会确保。 */
   var _dataPromise = null;
   var _basePromise = null;
-  function startData() {
-    if (_dataPromise) return _dataPromise;
+  /* 基础题库（all-bank）单独可启动：点科目时需要它，不能等词库排队 */
+  function startBase() {
+    if (_basePromise) return _basePromise;
     var allScript = DATA_SCRIPTS.filter(function (s) { return s.src === "all-bank.js"; })[0];
-    /* 第一步：all-bank 最先（做题基础：初始化 STUDY_DATA、meta/chapters），小而关键 */
     _basePromise = (async function () {
       var af = await loadWithRetry(allScript, 0, 1);
       if (af) throw new Error(af);
     })();
+    return _basePromise;
+  }
+  function startData() {
+    if (_dataPromise) return _dataPromise;
+    /* 第一步：all-bank 最先（做题基础：初始化 STUDY_DATA、meta/chapters），小而关键。
+       做成可延后的启动：落在背单词页时可以把它排到词库后面，别和词库抢带宽。 */
     _dataPromise = (async function () {
-      /* 单词书和基础题库同时起跑：背单词是从首页第一屏就能点进来的功能，
-         等 all-bank 加载完再排到队尾，会出现「进去先转圈十几秒」的观感。 */
-      try { window.gxzsbEnsureWords().catch(function () {}); } catch (e) {}
+      /* 直接落在背单词/词库相关页面时，先把词库拿到手再加载其余数据：
+         弱网下 9 个脚本并发会把 150KB 的词库挤到队尾，页面就得干等十几秒。 */
+      var focusWords = /^#\/(words|word-|extra)/.test(location.hash || "");
+      if (focusWords) {
+        try {
+          await window.gxzsbEnsureWords();
+          try { window.dispatchEvent(new CustomEvent("gxzsb:words-ready")); } catch (e) {}
+          setProgress(1, 9);
+        } catch (e) {}
+        startBase();
+      } else {
+        /* 其他页面：词库和基础题库同时起跑，背单词是从首页第一屏就能点进来的功能 */
+        try { window.gxzsbEnsureWords().catch(function () {}); } catch (e) {}
+        startBase();
+      }
       try {
         await _basePromise;
         window.GXZSB_BASE_READY = true;
@@ -450,7 +468,11 @@
     return _dataPromise;
   }
   window.gxzsbEnsureData = function () { return startData(); };
-  window.gxzsbEnsureBase = function () { return (_basePromise || startData()); };
+  /* 只要基础题库：直接起 all-bank，不因为「当前在背单词页」被词库挡住 */
+  window.gxzsbEnsureBase = function () {
+    startData();
+    return startBase();
+  };
 
   /* 单词书单独暴露一个「去重 + 校验 + 重试」的加载入口：
      app.js 的背单词页直接复用它，避免和后台预加载各下一份 748KB 的词库。
