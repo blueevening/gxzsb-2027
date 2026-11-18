@@ -20,3 +20,6 @@ net-analysis-batches/
 scripts/*-export.json
 scripts/major-questions.json
 scripts/major-index.tsv
+
+# 本地 UI 体检截图/度量，不入库
+_ux-review/

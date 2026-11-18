@@ -1420,7 +1420,7 @@
     return isSubjective(q) ? "主观题" : "客观题";
   }
   function viewBank() {
-    setTitle("题库", true);
+    setTitle("题库", false);
     const doneIds = new Set(state.attempts.map((a) => a.questionId).filter(Boolean));
     const allSubjNames = ["高等数学","英语","电工电子技术基础","C语言程序设计","计算机网络基础"];
     const totalQ = allSubjNames.reduce(function (s, n) { return s + (subjStat(n).total || 0); }, 0) || totalQuestions();
@@ -1444,17 +1444,19 @@
             const p = subjStat(n);
             const m = subjOf(n);
             return (
-              '<button class="bank-subject hoverable ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%;background:var(--card);border:1px solid var(--border);transition:all .2s ease">' +
+              '<button class="bank-subject hoverable ' + m.cls + '" data-act="subject" data-name="' + attr(n) + '" type="button" style="display:block;padding:14px;border-radius:12px;margin-bottom:8px;text-align:left;width:100%;background:var(--card);border:1px solid var(--border);transition:all .2s ease">' +
+              '<div style="display:flex;align-items:center;gap:12px">' +
               '<div style="width:40px;height:40px;border-radius:10px;background:' + (m.color || "#2563EB") + '20;color:' + (m.color || "#2563EB") + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">' + esc(m.short[0]) + '</div>' +
               '<div style="flex:1;min-width:0">' +
               '<div style="font-size:15px;font-weight:600">' + esc(m.short) + '</div>' +
               '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + p.total + " 题 · 已练 " + p.done + "</div>" +
-              '<div class="bar" style="margin-top:6px;height:4px"><i style="width:' + (p.pct || 0) + '%;background:' + (m.color || "#2563EB") + ';border-radius:2px"></i></div>' +
               '</div>' +
               '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">' +
               '<span style="font-size:12px;color:var(--text-sub)">' + (p.pct || 0) + '%</span>' +
               '<span style="font-size:12px;color:' + (m.color || "#2563EB") + ';font-weight:600">开始刷题 ›</span>' +
               '</div>' +
+              '</div>' +
+              '<div class="bar" style="margin-top:10px;height:5px"><i style="width:' + (p.pct || 0) + '%;background:' + (m.color || "#2563EB") + ';border-radius:3px"></i></div>' +
               '</button>'
             );
           }).join("")
@@ -1545,7 +1547,7 @@
         </div>
         <div style="text-align:right">
           <div style="font-size:24px;font-weight:700;color:var(--primary)">${p.done}<span style="font-size:12px;color:var(--text-sub)">/${p.total}</span></div>
-          <div class="muted" style="font-size:11px">已练 · ${p.acc == null ? "—" : p.acc + "%"}正确率</div>
+          <div class="muted" style="font-size:11px">正确率 ${p.acc == null ? "—" : p.acc + "%"}</div>
         </div>
       </div>
 
@@ -1558,7 +1560,7 @@
         <div class="chip-row" style="margin-bottom:12px">${statusChips}</div>
         <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">类型</div>
         <div class="chip-row">${kindChips}</div>
-        <p class="muted" style="font-size:12px;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--border)">当前：${[...f.diff, ...f.type, ...f.status].join("+") || "全部"} → <b>${filtered.length}</b> 题</p>
+        <p class="muted" style="font-size:12px;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--border)">当前筛选：${[...f.diff, ...f.type, ...f.status, ...(f.kind || [])].join(" + ") || "全部"} · 共 <b>${filtered.length}</b> 题</p>
       </div>
 
       <div class="section-title">章节练习</div>
@@ -1584,8 +1586,8 @@
                     <span class="dot" style="background:${m.color};flex-shrink:0"></span>
                     <span class="main">
                       <span class="t" style="font-size:14px;font-weight:600">${esc(c.title)}</span>
-                      <span class="s" style="font-size:11px;margin-top:4px;display:block">${c.count}题 · 已练${c.done}/${c.count} · ${c.acc == null ? "—" : c.acc + "%"}</span>
-                      <span style="display:block;height:3px;background:var(--panel);border-radius:2px;margin-top:6px;overflow:hidden"><span style="display:block;height:100%;width:${c.count ? (c.done/c.count*100) : 0}%;background:${m.color};border-radius:2px"></span></span>
+                      <span class="s" style="font-size:11px;margin-top:4px;display:block">${c.count}题 · 已练 ${c.done}/${c.count}${c.acc == null ? "" : " · 正确率 " + c.acc + "%"}</span>
+                      <span style="display:block;height:4px;background:color-mix(in srgb, var(--text) 12%, transparent);border-radius:2px;margin-top:8px;overflow:hidden"><span style="display:block;height:100%;width:${c.count ? (c.done/c.count*100) : 0}%;background:${m.color};border-radius:2px"></span></span>
                     </span>
                     <span class="end" style="flex-shrink:0">›</span>
                   </button>`
@@ -2627,6 +2629,15 @@
 
       <div class="section-title">近 7 日学习量</div>
       <div class="card">
+        ${dayStat.every((d) => !d.n) ? `
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--primary-soft);display:grid;place-items:center;font-size:19px;flex-shrink:0">📈</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">还没有学习记录</div>
+            <div class="muted" style="font-size:12px;line-height:1.5">做完今日 30 题就会出趋势</div>
+          </div>
+          <button class="btn btn-primary btn-sm" data-act="daily" type="button">去做题</button>
+        </div>` : `
         <div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:8px 0">
           ${dayStat.map((d) => `
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end">
@@ -2635,12 +2646,12 @@
               <span class="muted" style="font-size:11px">${d.label}</span>
             </div>
           `).join("")}
-        </div>
+        </div>`}
       </div>
 
       <div class="section-title">正确率趋势（近 7 日）</div>
       <div class="card">
-        ${dayStat.every((d) => !d.n) ? `<div class="empty">还没有作答数据</div>` : `
+        ${dayStat.every((d) => !d.n) ? `<div class="muted" style="text-align:center;font-size:13px;padding:18px 0">做几道题后，这里会显示每天的答对率</div>` : `
         <svg viewBox="0 0 280 100" width="100%" height="120" role="img" aria-label="正确率趋势">
           <polyline fill="none" stroke="var(--primary)" stroke-width="2"
             points="${dayStat.map((d, i) => (20 + i * 40) + "," + (90 - (d.acc / 100) * 70)).join(" ")}" />
@@ -2657,10 +2668,10 @@
         ${subjRows.map((r) => `
           <div class="hbar-row">
             <div class="label">${esc(r.short)}</div>
-            <div class="hbar-track"><div class="hbar-fill" style="width:${Math.max(3, Math.round((r.done / (r.total || 1)) * 100))}%;background:${r.color}"></div></div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%;background:${r.color}"></div></div>
             <div class="val">${r.done}/${r.total}</div>
           </div>
-          <div class="muted" style="font-size:11px;margin:-2px 0 8px">正确率 ${r.acc == null ? "—" : r.acc + "%"} · 覆盖 ${Math.max(3, Math.round((r.done / maxDone) * 100))}%</div>
+          <div class="muted" style="font-size:11px;margin:-2px 0 8px">正确率 ${r.acc == null ? "—" : r.acc + "%"} · 覆盖率 ${r.total ? Math.round((r.done / r.total) * 100) : 0}%</div>
         `).join("")}
       </div>
 
@@ -2794,7 +2805,7 @@
   }
 
   function viewWrong() {
-    setTitle("错题 / 收藏", true);
+    setTitle("错题 / 收藏", false);
     const now = Date.now();
     const tab = state.wrongTab || "wrong";
     const allItems = Object.keys(state.wrong)
@@ -2909,7 +2920,18 @@
       }
 
       body =
-        '<div class="card"><strong>今天有 ' + due + " 道题该重做</strong>" +
+        (allItems.length === 0
+          ? '<div class="card" style="text-align:center;padding:28px 20px">' +
+            '<div style="width:64px;height:64px;border-radius:20px;background:var(--primary-soft);display:grid;place-items:center;margin:0 auto 14px">' +
+            '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--primary)"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>' +
+            '</div>' +
+            '<div style="font-size:16px;font-weight:700">错题本还是空的</div>' +
+            '<p class="muted" style="font-size:13px;line-height:1.65;margin:8px auto 18px;max-width:280px">做错的题会自动收进这里，并按遗忘曲线在到期日提醒重做。</p>' +
+            '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+            '<button class="btn btn-primary" data-act="daily" type="button">去做今日 30 题</button>' +
+            '<button class="btn btn-ghost" data-nav="bank" type="button">去题库</button>' +
+            '</div></div>'
+          : '<div class="card"><strong>今天有 ' + due + " 道题该重做</strong>" +
         '<p class="muted" style="font-size:13px;margin:6px 0 12px;line-height:1.6">按艾宾浩斯遗忘曲线自动排期，到期重做记得更牢；点 ✓ 手动标记已掌握</p>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
         '<button class="btn btn-primary" data-act="due" type="button"' + (due ? "" : " disabled") + ">开始重做到期题</button>" +
@@ -2954,7 +2976,7 @@
         '</div>' : "") +
         (allItems.length ? '<div style="margin:12px 0"><button class="btn btn-ghost btn-block" data-act="clear-wrong" type="button" style="color:var(--error)">' +
           ((subjFilter !== "all" || nFilter) ? ("清空当前筛选的 " + filteredItems.length + " 道错题") : "清空错题本（全部 " + allItems.length + " 道）") +
-          '</button></div>' : "");
+          '</button></div>' : ""));
     } else if (tab === "fav") {
       body =
         '<div class="section-title">我的收藏</div>' +
@@ -3707,10 +3729,10 @@ function ensureExplain(q) {
     return `
       <div class="schools-v2">
         <div class="card">
-          <input class="search-box" id="schoolSearch" type="search" placeholder="搜院校名 / 专业 / 城市（如：电子信息、桂林）" value="${attr(state.schoolQ || "")}" autocomplete="off" />
+          <input class="search-box" id="schoolSearch" type="search" placeholder="搜院校 / 专业 / 城市" value="${attr(state.schoolQ || "")}" autocomplete="off" />
         </div>
         <div class="card">
-          <div class="section-title">📈 改革三年招生趋势（全大类总数）· 点选切换年份</div>
+          <div class="section-title">改革三年招生趋势（全大类总数）· 点选切换年份</div>
           <div class="trend-grid">
             ${SCHOOLS_TREND.map((t) => `<div class="trend-cell ${t.year === selYear ? "active" : ""}" data-act="school-year" data-v="${t.year}">
               <div class="trend-year">${t.year}</div>
@@ -3719,11 +3741,11 @@ function ensureExplain(q) {
               <div class="trend-note">${t.note}</div>
             </div>`).join("")}
           </div>
-          <div class="source-line">📅 数据来源：广西招生考试院，更新于 2026-05</div>
+          <div class="source-line">数据来源：广西招生考试院，更新于 2026-05</div>
         </div>
         <div class="card stats">
-          <div class="stat-box"><div class="stat-num">${ys.count ?? "—"}<small> ${ys.count ? "所" : ""}</small></div><div class="stat-label">${selYear === "2024" ? "院校数据" : "电子信息类可报院校"}</div></div>
-          <div class="stat-box"><div class="stat-num">${ys.gong ?? "—"}<small> ${ys.gong ? "所" : ""}</small></div><div class="stat-label">其中公办</div></div>
+          <div class="stat-box"><div class="stat-num">${ys.count ?? "—"}<small> ${ys.count ? "所" : ""}</small></div><div class="stat-label">${selYear === "2024" ? "院校数据" : "可报院校"}</div></div>
+          <div class="stat-box"><div class="stat-num">${ys.gong ?? "—"}<small> ${ys.gong ? "所" : ""}</small></div><div class="stat-label">公办院校</div></div>
           <div class="stat-box"><div class="stat-num">${ys.plan ?? "—"}<small> ${ys.plan ? " 人" : ""}</small></div><div class="stat-label">${ys.planLabel}</div></div>
         </div>
         <div class="layout">
@@ -3734,7 +3756,7 @@ function ensureExplain(q) {
                 ${cities.map((c) => `<button type="button" class="chip ${cityFilter === c ? "on" : ""}" data-act="school-city" data-v="${attr(c)}">${c === "all" ? "全部城市" : esc(c)}<span class="cnt">${cntOf(c)}</span></button>`).join("")}
               </div>
               <div class="section-title" style="margin-top:12px">📊 扩招 / 缩招</div>
-              <div class="seg">${seg("schoolTrend", trendFilter, [{v:"all",t:"全部"},{v:"up",t:"↑扩招"},{v:"down",t:"↓缩招"},{v:"new",t:"🆕新增"}])}</div>
+              <div class="seg">${seg("schoolTrend", trendFilter, [{v:"all",t:"全部"},{v:"up",t:"↑扩招"},{v:"down",t:"↓缩招"},{v:"new",t:"新增"}])}</div>
               <div class="section-title" style="margin-top:12px">🏛️ 公办 / 民办</div>
               <div class="seg">${seg("schoolPub", pubFilter, [{v:"all",t:"全部"},{v:"公",t:"公办"},{v:"民",t:"民办"}])}</div>
             </div>
@@ -3857,6 +3879,20 @@ function ensureExplain(q) {
     });
     var max = 1; days.forEach(function (x) { if (x.t > max) max = x.t; });
     var total = days.reduce(function (s, x) { return s + x.t; }, 0);
+    /* 0 数据时不再画 7 条 2% 高的“发丝条”，那只是一块看不懂的空白；
+       改成一句人话 + 一个直接去做题的入口 */
+    if (!total) {
+      return '<div class="card" style="margin-bottom:16px;padding:16px">' +
+        '<div style="font-size:13px;font-weight:700;margin-bottom:10px">近 7 天做题</div>' +
+        '<div style="display:flex;align-items:center;gap:12px">' +
+        '<div style="width:40px;height:40px;border-radius:12px;background:var(--primary-soft);display:grid;place-items:center;font-size:19px;flex-shrink:0">📊</div>' +
+        '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:14px;font-weight:600;color:var(--text)">还没有做题记录</div>' +
+        '<div class="muted" style="font-size:12px;line-height:1.5">做完今日 30 题就会出趋势</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-sm" data-act="daily" type="button">去做题</button>' +
+        '</div></div>';
+    }
     var bars = days.map(function (x) {
       var h = x.t ? Math.max(6, Math.round(x.t / max * 100)) : 2;
       var rate = x.t ? Math.round(x.c / x.t * 100) : null;

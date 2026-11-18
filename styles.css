@@ -136,6 +136,9 @@ body.boot-loading .shell { padding: 32px 16px; }
 .topbar .title { font-size: 17px; font-weight: 750; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .topbar .back { width: 44px; height: 44px; border-radius: var(--radius-btn); display: grid; place-items: center; font-size: 18px; -webkit-tap-highlight-color: transparent; }
 .topbar .back:hover { background: var(--card); }
+/* display:grid 会盖掉 UA 的 [hidden]，统一兜底，避免「←」出现在不该出现的页面 */
+.topbar button[hidden],
+.topbar .back[hidden] { display: none !important; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: var(--radius-btn);
   display: grid; place-items: center; border: 1px solid var(--border); background: var(--card);
@@ -305,16 +308,29 @@ body.boot-loading .shell { padding: 32px 16px; }
 .btn-accent:active { transform: scale(0.98); }
 .btn-sm { min-height: 38px; padding: 0 14px; font-size: 13px; border-radius: 10px; }
 .btn-block { width: 100%; }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+/* 禁用态：不再用 opacity 整体变淡（白字叠白底几乎不可读），
+   改成实心灰底 + 可读的次级文字色，浅色/深色共用变量 */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--text) 8%, var(--card));
+  color: var(--text-sub);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  filter: none;
+  cursor: not-allowed;
+}
 
 /* ===== pill / chip ===== */
 .chip {
-  display: inline-flex; align-items: center; min-height: 28px;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px;
   padding: 0 12px; border-radius: var(--radius-pill);
   border: 1px solid var(--border); background: var(--card);
   font-size: 12px; font-weight: 650; color: var(--text-sub);
   white-space: nowrap;
 }
+/* 选中态里挂的计数（.muted）要跟着变浅，不能继续压深字色 */
+.chip.is-active .muted { color: inherit; opacity: .7; }
 .chip.is-active { background: var(--text); border-color: var(--text); color: var(--card); }
 .chip-out {
   background: color-mix(in srgb, var(--warning, #d97706) 14%, var(--card));
@@ -442,12 +458,13 @@ body.boot-loading .shell { padding: 32px 16px; }
   transition: width 0.25s ease;
 }
 .q-dots {
-  display: flex; gap: 3px; overflow-x: auto; padding: 6px 0 2px;
+  display: flex; align-items: center; gap: 3px; overflow-x: auto; padding: 6px 0 2px;
   scrollbar-width: none;
 }
 .q-dots::-webkit-scrollbar { display: none; }
 .q-dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0;
+  width: 9px; height: 9px; min-width: 9px; min-height: 9px; padding: 0;
+  border-radius: 50%; background: var(--border); flex-shrink: 0;
 }
 .q-dot.ok { background: var(--success); }
 .q-dot.bad { background: var(--error); }
@@ -746,9 +763,9 @@ html.qa-modal-open { overflow: hidden; }
 
 /* ===== 空状态 ===== */
 .empty {
-  text-align: left; padding: 32px 16px; color: var(--text-sub); font-size: 14px;
+  text-align: center; padding: 56px 20px; color: var(--text-sub); font-size: 14px; line-height: 1.7;
 }
-.empty .btn { margin-top: 12px; }
+.empty .btn { margin-top: 14px; }
 
 /* ===== 答题恢复中 ===== */
 .practice-restore {
@@ -817,6 +834,10 @@ html.qa-modal-open { overflow: hidden; }
 .home-tasks { display:flex; flex-direction:column; gap:0; }
 .home-progress { display:grid; gap:16px; }
 .chapter-grid { display:flex; flex-direction:column; }
+/* 章节行含三行内容，圆点按标题行对齐，避免落在正文中缝 */
+.chapter-grid .list-row { align-items: flex-start; padding-top: 13px; padding-bottom: 13px; }
+.chapter-grid .list-row .dot { width: 6px; height: 6px; border-radius: 3px; margin-top: 7px; }
+.chapter-grid .list-row .end { font-size: 15px; line-height: 20px; color: var(--text-sub); opacity: .75; }
 .practice-wrap { display:grid; gap:16px; }
 /* 翻题淡入上滑，避免整页重绘的闪白感 */
 .practice-wrap > div > .card,
@@ -838,6 +859,10 @@ html.qa-modal-open { overflow: hidden; }
 }
 .fnav-row::-webkit-scrollbar { display: none; }
 .fnav-chip { flex-shrink: 0; white-space: nowrap; }
+/* 手机端章节导航换成换行排布：横向滚动时最右一枚总被切一半且没有渐隐提示 */
+@media (max-width: 600px) {
+  .fnav-row { flex-wrap: wrap; overflow-x: visible; row-gap: 8px; }
+}
 .formula-group-title {
   display:flex; align-items:center; gap:10px;
   font-size:15px; font-weight:800; color:var(--text);
@@ -1207,6 +1232,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
   .stat-grid { grid-template-columns: 1fr 1fr !important; }
   .card { padding: 16px !important; border-radius: 12px !important; }
   .section-title { margin: 24px 0 10px !important; }
+  .schools-v2 .card > .section-title:first-child { margin-top: 0 !important; }
   img { max-width: 100% !important; height: auto !important; }
   * { max-width: 100%; }
   .shell > *, .card > * { max-width: 100%; }
@@ -1959,7 +1985,7 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .hh-stats { display: flex; gap: 12px; width: 100%; justify-content: space-between; }
 .hh-stats > div { text-align: left; flex: 1; }
 .hh-stats b { display: block; font-size: 16px; }
-.hh-stats span { font-size: 11px; opacity: .85; white-space: nowrap; }
+.hh-stats span { font-size: 11px; opacity: .85; white-space: nowrap; color: rgba(255,255,255,.86); }
 
 .home-today { margin-bottom: 8px; }
 .today-card {
@@ -2133,8 +2159,9 @@ sup.math-sup .frac .den { padding-top: 1px; }
   font-feature-settings: "tnum";
 }
 
-/* ԱȶȣҪֲҪ̫ */
-.muted, .oc-sub, .today-label, .hh-stats span {
+/* 对比度：要区分但不能被压成灰底灰字 —— 注意 .hh-stats 在蓝色 Hero 上，
+   必须保持白色系，不能套用 --text-sub（否则灰字压蓝底几乎看不见） */
+.muted, .oc-sub, .today-label {
   color: var(--text-sub);
 }
 
@@ -2695,6 +2722,8 @@ button, .btn { min-height: 44px; }
 .schools-v2 .search-box { width:100%; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-btn); color:var(--text); padding:11px 14px; font-size:14px; outline:none; transition:all .2s ease; }
 .schools-v2 .search-box:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
 .schools-v2 .section-title { font-size:13px; font-weight:700; margin-bottom:8px; }
+/* 卡片内的首个分组标题不要继承全局 28px 上边距，否则卡片顶部一大块留白 */
+.schools-v2 .card > .section-title:first-child { margin-top:0; }
 .schools-v2 .muted { color:var(--text-sub); font-size:12px; }
 .schools-v2 .trend-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 .schools-v2 .trend-cell { background:color-mix(in srgb, var(--text) 5%, transparent); border:1px solid var(--border); border-radius:10px; padding:12px 8px 10px; text-align:center; display:flex; flex-direction:column; gap:2px; transition:all .2s ease; }
@@ -3054,9 +3083,11 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
 /* 撤销之前的纵向堆叠，手机端保持三列横排 */
 @media (max-width: 600px) {
   .schools-v2 .trend-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
-  .schools-v2 .trend-cell { padding: 10px 6px; }
+  /* 必须恢复纵向排布：上面的手机端规则曾把卡片改成横向 flex，
+     三段内容挤在 80px 内会逐字换行、互相叠住 */
+  .schools-v2 .trend-cell { flex-direction: column; align-items: center; text-align: center; padding: 10px 6px; gap: 1px; min-width: 0; overflow: hidden; }
   .schools-v2 .trend-num { font-size: 20px !important; }
-  .schools-v2 .trend-label { font-size: 10px; }
+  .schools-v2 .trend-label { font-size: 10px; line-height: 1.35; }
   .schools-v2 .trend-note { font-size: 9px; line-height: 1.3; }
 }
 
@@ -3072,6 +3103,22 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
   word-break: break-all;
   margin: 12px 0 20px !important;
   color: var(--text);
+}
+
+/* ===== 移动端细节打磨（2026-11-18）=====
+   1) 触控目标：chip 28→32、btn-sm 38→40，尽量贴近 40px 可点区；
+   2) 进度条轨道对比度提高，0% 时也能看清“这里有一条进度”；
+   3) 空状态改为居中排版（原来 text-align:left，图标居中文字左对齐很别扭）；
+   4) Hero 上的大纲下载链接加高到 36px，指头更好点。 */
+@media (max-width: 600px) {
+  .chip { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+  .btn-sm { min-height: 40px; }
+  .hh-pdfs a { height: 36px; }
+  .bar { height: 7px; background: color-mix(in srgb, var(--text) 13%, transparent); }
+  .bar.light { height: 9px; background: color-mix(in srgb, var(--text) 15%, transparent); }
+  .wb-progress-bar { background: color-mix(in srgb, var(--text) 14%, var(--card)); }
+  .empty-state { padding: 32px 16px; text-align: center; }
+  .empty-state .es-desc { margin-left: auto; margin-right: auto; }
 }
 
 /* ===== 打印最终补丁（必须放在文件最末尾，不要往前挪）=====

@@ -22,8 +22,18 @@
       navigator.serviceWorker.register('sw.js').catch(function () {});
     }
   } catch (e) {}
-  /* 应用主题 */
-  try { if (localStorage.getItem("gxzsb.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
+  /* 应用主题：app.js 用 JSON.stringify 存（值形如 "dark" 带引号），
+     这里必须兼容带引号 / 裸字符串两种历史写法，否则深色模式首帧会先闪白 */
+  try {
+    var rawTheme = localStorage.getItem("gxzsb.theme");
+    var themeVal = rawTheme;
+    try { themeVal = JSON.parse(rawTheme); } catch (e2) {}
+    if (themeVal === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      var mc = document.querySelector('meta[name="theme-color"]');
+      if (mc) mc.setAttribute("content", "#0F1115");
+    }
+  } catch (e) {}
 })();
 </script>
 <style>
@@ -39,6 +49,9 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
 [data-theme="dark"] .topbar{background:#0F1115;border-color:#2A2D38}
 .topbar .title{flex:1;min-width:0;font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar button{width:44px;height:44px;border-radius:10px;border:1px solid #E8EAEE;background:#fff;color:inherit;font-size:18px;display:grid;place-items:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+/* hidden 必须真的隐藏：上面的 display:grid 会覆盖 UA 的 [hidden]{display:none}，
+   导致首页/「我的」这类不该有返回键的页面一直显示「←」 */
+.topbar button[hidden]{display:none!important}
 [data-theme="dark"] .topbar button{background:#1A1D24;border-color:#2A2D38}
 .app-frame{min-height:calc(100vh - 56px)}
 .shell{padding:16px;max-width:860px;margin:0 auto}
@@ -53,7 +66,7 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
   .tabbar{display:none}
 }
 </style>
-<link rel="stylesheet" href="styles.css?v=3.10.7">
+<link rel="stylesheet" href="styles.css?v=3.10.8">
 </head>
 <body>
   <div id="offlineBar" hidden>📡 离线模式 · 数据存本地，联网后自动同步</div>
@@ -103,6 +116,6 @@ html,body{margin:0;padding:0;background:#F7F8FA;color:#1A1D26;-webkit-text-size-
   sync();
 })();
 </script>
-<script defer src="boot.js?v=3.10.7"></script>
+<script defer src="boot.js?v=3.10.8"></script>
 </body>
 </html>
