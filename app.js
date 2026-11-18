@@ -1410,6 +1410,13 @@
   function iconFile() {
     return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
   }
+  // 统计小图标：题库顶部三项统计原来用 📚✅🎯 emoji，和全站线性图标风格打架
+  function miniIcon(paths) {
+    return '<svg class="stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+  }
+  var ICON_BOOK = miniIcon('<path d="M2 4h6a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a3 3 0 0 0-3 3v13a3 3 0 0 1 3-3h6z"/>');
+  var ICON_CHECK = miniIcon('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.7"/>');
+  var ICON_TARGET = miniIcon('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>');
 
   /* ========== 题库首页 ========== */
   function isSubjective(q) {
@@ -1433,9 +1440,9 @@
     ];
     return (
       '<div class="card" style="display:flex;text-align:center;padding:16px;margin-bottom:16px">' +
-      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div style="font-size:12px;color:var(--text-sub)">📚 总题数</div></div>' +
-      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div style="font-size:12px;color:var(--text-sub)">✅ 已练习</div></div>' +
-      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div style="font-size:12px;color:var(--text-sub)">🎯 正确率</div></div>' +
+      '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + (totalQ == null ? "—" : totalQ) + '</div><div class="bank-stat-label">' + ICON_BOOK + '总题数</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + totalDone + '</div><div class="bank-stat-label">' + ICON_CHECK + '已练习</div></div>' +
+      '<div style="flex:1;border-left:1px solid var(--border)"><div style="font-size:22px;font-weight:700">' + (acc == null ? "—" : acc + "%") + '</div><div class="bank-stat-label">' + ICON_TARGET + '正确率</div></div>' +
       '</div>' +
       groups.map(function (g) {
         return (
@@ -2651,7 +2658,7 @@
 
       <div class="section-title">正确率趋势（近 7 日）</div>
       <div class="card">
-        ${dayStat.every((d) => !d.n) ? `<div class="muted" style="text-align:center;font-size:13px;padding:18px 0">做几道题后，这里会显示每天的答对率</div>` : `
+        ${dayStat.every((d) => !d.n) ? `<div class="muted" style="text-align:center;font-size:13px;padding:6px 0">做几道题后，这里会显示每天的答对率</div>` : `
         <svg viewBox="0 0 280 100" width="100%" height="120" role="img" aria-label="正确率趋势">
           <polyline fill="none" stroke="var(--primary)" stroke-width="2"
             points="${dayStat.map((d, i) => (20 + i * 40) + "," + (90 - (d.acc / 100) * 70)).join(" ")}" />
@@ -2666,12 +2673,14 @@
       <div class="section-title">科目进度</div>
       <div class="card">
         ${subjRows.map((r) => `
-          <div class="hbar-row">
-            <div class="label">${esc(r.short)}</div>
-            <div class="hbar-track"><div class="hbar-fill" style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%;background:${r.color}"></div></div>
-            <div class="val">${r.done}/${r.total}</div>
+          <div class="hbar-block">
+            <div class="hbar-row">
+              <div class="label">${esc(r.short)}</div>
+              <div class="hbar-track"><div class="hbar-fill" style="width:${r.total ? Math.round((r.done / r.total) * 100) : 0}%;background:${r.color}"></div></div>
+              <div class="val">${r.done}/${r.total}</div>
+            </div>
+            <div class="hbar-meta">正确率 ${r.acc == null ? "—" : r.acc + "%"} · 覆盖率 ${r.total ? Math.round((r.done / r.total) * 100) : 0}%</div>
           </div>
-          <div class="muted" style="font-size:11px;margin:-2px 0 8px">正确率 ${r.acc == null ? "—" : r.acc + "%"} · 覆盖率 ${r.total ? Math.round((r.done / r.total) * 100) : 0}%</div>
         `).join("")}
       </div>
 
@@ -3038,7 +3047,14 @@ function ensureExplain(q) {
         '<div class="formula-group">' +
         '<div class="formula-group-title"><span class="line" style="background:' + (sc.color || "#2563EB") + '"></span>' +
         esc(ch.chapter) + '<span class="muted">（' + (ch.points || []).length + "）</span></div>" +
-        (ch.outline ? '<p class="muted" style="font-size:12px;margin:-4px 0 8px;line-height:1.6">' + esc(ch.outline) + "</p>" : "") +
+        (function () {
+          if (!ch.outline) return "";
+          var segs = String(ch.outline).split(/；|;/).map(function (s) { return s.trim(); }).filter(Boolean);
+          if (segs.length > 1) {
+            return '<ul class="syl-list" style="margin:0 0 10px">' + segs.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ul>";
+          }
+          return '<p class="chapter-outline">' + esc(ch.outline) + "</p>";
+        })() +
         '<div class="card" style="padding:0;overflow:hidden">' +
         (ch.points || []).map(function (p, pi) {
           return (
@@ -3078,7 +3094,7 @@ function ensureExplain(q) {
       '<div class="fnav-row">' +
         '<button class="chip fnav-chip ' + (selCh < 0 ? "is-active" : "") + '" data-act="learn-chapter" data-ci="-1" type="button">全部</button>' +
         chapters.map(function (ch, ci) {
-          return '<button class="chip fnav-chip ' + (ci === selCh ? "is-active" : "") + '" data-act="learn-chapter" data-ci="' + ci + '" type="button">' + esc(ch.chapter.length > 6 ? ch.chapter.slice(0, 6) + "…" : ch.chapter) + ' <span class="muted">' + (ch.points || []).length + "</span></button>";
+          return '<button class="chip fnav-chip ' + (ci === selCh ? "is-active" : "") + '" data-act="learn-chapter" data-ci="' + ci + '" type="button">' + esc(ch.chapter.length > 10 ? ch.chapter.slice(0, 10) + "…" : ch.chapter) + ' <span class="muted">' + (ch.points || []).length + "</span></button>";
         }).join("") +
       "</div>" +
       '<div id="learnList">' + buildLearnListHTML(cur) + "</div>" +
@@ -3247,7 +3263,8 @@ function ensureExplain(q) {
       }
     ];
     return `
-      <div class="section-title">免费学习资料 <span class="muted" style="font-weight:400;font-size:12px">点开跳官方/正版免费源，本站不存文件</span></div>
+      <div class="section-title">免费学习资料</div>
+      <p class="muted" style="font-size:12.5px;margin:-6px 0 12px">点开跳官方 / 正版免费源，本站不存文件。</p>
       ${groups.map(function (g) {
         return `
         <div class="card" style="padding:14px 16px;margin-bottom:12px">
@@ -3255,7 +3272,10 @@ function ensureExplain(q) {
           ${g.items.map(function (it) {
             return `
             <a href="${attr(it.url)}" target="_blank" rel="noopener" style="display:block;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;text-decoration:none;color:var(--text)">
-              <div style="font-weight:650">${esc(it.name)} →</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-weight:650;flex:1;min-width:0">${esc(it.name)}</div>
+                <span class="muted" style="flex-shrink:0" aria-hidden="true">→</span>
+              </div>
               <div style="font-size:12px;color:var(--text-sub);margin-top:2px">${esc(it.desc)}</div>
             </a>`;
           }).join("")}
@@ -3917,8 +3937,8 @@ function ensureExplain(q) {
 
     return `
       <div class="me-page">
-      <div class="card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;margin-bottom:16px">
-        <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:24px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px">${nick[0] || "学"}</div>
+      <div class="card me-hero" style="text-align:center;padding:20px 16px;margin-bottom:16px">
+        <div class="me-avatar">${nick[0] || "学"}</div>
         <div style="font-size:16px;font-weight:bold">${esc(nick)}</div>
       </div>
 
@@ -5107,6 +5127,7 @@ function formulaFilter() {
 
   /* ========== 2027 官方考纲 ========== */
   function viewSyllabus(subjId) {
+    setTitle("2027 考纲", true);
     const S = window.SYLLABUS;
     if (!S) return '<div class="empty">考纲数据加载中<button class="btn btn-primary" data-nav="home" type="button">回首页</button></div>';
     const subs = S.subjects;
@@ -5116,7 +5137,7 @@ function formulaFilter() {
       return `<button class="chip ${x.id===subjId?'is-active':''}" data-nav="syllabus/${x.id}" type="button">${x.name}</button>`;
     }).join("");
     let html = `
-      <div class="page-head"><h2 class="page-title">2027 官方考纲</h2><p class="muted">${S.meta.year} · 来源广西招生考试院</p></div>
+      <p class="muted" style="font-size:12.5px;margin:2px 0 10px">${S.meta.year} 年版 · 来源广西招生考试院</p>
       <div style="overflow-x:auto;padding-bottom:6px">${chips}</div>
       <div class="card" style="margin-top:12px">
         <div class="row-between"><b style="font-size:17px">${cur.name}</b><span class="pill" style="background:${cur.color}22;color:${cur.color}">${cur.score} 分</span></div>
@@ -5135,9 +5156,15 @@ function formulaFilter() {
     (cur.chapters||[]).forEach(function(ch){
       html += `<div class="section-title">${ch.title}</div>`;
       ch.points.forEach(function(p){
+        // v4.0：考纲原文是「函数三要素…；有界/单调…；反函数…」这种分号串联长句，
+        // 手机上读成一坨。按分号拆成条目，一条一行，扫读成本立刻降下来。
+        const segs = String(p[1] || "").split(/；|;/).map(function(s){ return s.trim(); }).filter(Boolean);
+        const body = segs.length > 1
+          ? `<ul class="syl-list">${segs.map(function(s){ return `<li>${esc(s)}</li>`; }).join("")}</ul>`
+          : `<p style="margin:6px 0 0;font-size:13.5px;line-height:1.7;color:var(--text-2)">${esc(p[1])}</p>`;
         html += `<div class="card" style="margin-bottom:10px">
           <div style="font-weight:600;color:${cur.color}">${p[0]}</div>
-          <p style="margin:6px 0 0;font-size:13.5px;line-height:1.7;color:var(--text-2)">${p[1]}</p>
+          ${body}
         </div>`;
       });
     });

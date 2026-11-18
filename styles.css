@@ -4,6 +4,8 @@
   --card: #FFFFFF;
   --text: #1A1D26;
   --text-sub: #6B7280;
+  /* 正文次级色：多处沿用 var(--text-2) 但此前从未定义，属于静默失效的样式 */
+  --text-2: #414857;
   --border: #E8EAEE;
   --primary: #2D5BFF;
   --primary-soft: #EEF2FF;
@@ -35,6 +37,7 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
   --card: #1A1D24;
   --text: #E8EAF0;
   --text-sub: #8B8FA3;
+  --text-2: #B9BDCC;
   --border: #2A2D38;
   --primary: #5B7FFF;
   --primary-soft: rgba(91,127,255,0.12);
@@ -188,6 +191,53 @@ body.boot-loading .shell { padding: 32px 16px; }
   }
   .shell { padding: 0; max-width: 100%; }
 }
+
+/* 「我的」页头像卡：浅色用品牌渐变，深色降饱和降亮度，避免整块面板过亮刺眼；
+   头像圆改用半透明白，不再和紫色底撞成两种蓝紫 */
+.me-hero { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+[data-theme="dark"] .me-hero { background: linear-gradient(135deg, #3f43c4, #6a45c9); }
+.me-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff; font-size: 24px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 6px;
+}
+
+/* 题库顶部统计：线性小图标 + 文案，替代原来的 emoji */
+.bank-stat-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 2px; font-size: 12px; color: var(--text-sub);
+}
+.stat-ico { width: 13px; height: 13px; flex-shrink: 0; opacity: .85; }
+
+/* 科目进度：每个科目独立成块，块间留白，避免六行挤成一坨看不清归属 */
+.hbar-block { margin-bottom: 12px; }
+.hbar-block:last-child { margin-bottom: 2px; }
+.hbar-meta { font-size: 11.5px; color: var(--text-sub); margin-top: 3px; }
+
+/* 章节导语：原来 12px 灰字密排一坨，手机上像免责声明；提一号字、放宽行距 */
+.chapter-outline {
+  font-size: 13px; line-height: 1.75; color: var(--text-2);
+  margin: -2px 0 10px;
+}
+
+/* 考纲条目列表：分号长句拆条后的排版 */
+.syl-list { margin: 6px 0 0; padding: 0; list-style: none; }
+.syl-list li {
+  position: relative; padding-left: 14px; margin: 3px 0 0;
+  font-size: 13.5px; line-height: 1.65; color: var(--text-2);
+}
+.syl-list li::before {
+  content: ""; position: absolute; left: 3px; top: .72em;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 60%, transparent);
+}
+
+/* 考纲页页头：此前完全没有样式，h2 走浏览器默认 1.5em，和全站字号体系脱节 */
+.page-head { margin: 2px 0 14px; }
+.page-head .page-title { font-size: 22px; font-weight: 800; letter-spacing: -0.2px; }
+.page-head p { margin-top: 4px; font-size: 13px; line-height: 1.6; }
 
 /* ===== 底部 Tab ===== */
 .tabbar {
@@ -1462,6 +1512,15 @@ sup.math-sup .frac .den { padding-top: 1px; }
 .wb-word-item.is-gram .wb-w { min-width: 0; font-size: 16px; }
 .wb-word-item.is-gram .wb-ph { display: none; }
 .wb-word-item.is-gram .wb-mean { flex: none; line-height: 1.7; margin-top: 2px; }
+
+/* v4.0：手机上词汇行改两行——词/音标/词性一行，释义独占下一行。
+   原来四列挤一行，长释义会被压成锯齿状换行，行高也忽高忽低。 */
+@media (max-width: 600px) {
+  .wb-word-item { row-gap: 2px; padding: 12px 14px; }
+  .wb-word-item .wb-w { min-width: 0; font-size: 17px; }
+  .wb-word-item .wb-ph { font-size: 12px; }
+  .wb-word-item .wb-mean { flex: 1 1 100%; line-height: 1.55; }
+}
 
 @media (max-width: 480px) {
   .wb-word { font-size: 28px; }
@@ -2912,6 +2971,11 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
 .wb-card {
   background: #12151C !important;
 }
+/* v4.0 修复：基础 .wb-card 带 2px solid var(--border) + 20px 圆角，
+   浅色主题下整屏会被这圈浅灰描边包住（看起来像白框）。沉浸层里必须去掉。 */
+.wb-immersive .wb-card {
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+}
 .wb-immersive::before {
   content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
   background: radial-gradient(circle at 30% 20%, rgba(0,230,118,0.08) 0%, transparent 40%),
@@ -2931,11 +2995,12 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
 }
 .wb-immersive .wb-close-btn {
   position: absolute; top: 16px; left: 16px;
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: rgba(255,255,255,0.1); border: none;
   color: #fff; font-size: 18px; cursor: pointer;
   z-index: 10001;
   display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
 .wb-immersive .wb-close-btn:hover { background: rgba(255,255,255,0.2); }
 .wb-round-badge {
@@ -2976,6 +3041,8 @@ body.wb-immersive-mode .shell { padding-bottom: 0 !important; }
 .wb-speak-icon {
   background: none; border: none; font-size: 18px; cursor: pointer;
   opacity: 0.7;
+  min-width: 44px; min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .wb-speak-icon:hover { opacity: 1; }
 .wb-hint {
@@ -3106,14 +3173,22 @@ body[data-no-back="1"] .topbar .back { visibility: hidden; }
 }
 
 /* ===== 移动端细节打磨（2026-11-18）=====
-   1) 触控目标：chip 28→32、btn-sm 38→40，尽量贴近 40px 可点区；
+   1) 触控目标统一 ≥40：chip 32→40、btn-sm 38→40；
    2) 进度条轨道对比度提高，0% 时也能看清“这里有一条进度”；
    3) 空状态改为居中排版（原来 text-align:left，图标居中文字左对齐很别扭）；
    4) Hero 上的大纲下载链接加高到 36px，指头更好点。 */
 @media (max-width: 600px) {
-  .chip { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+  .chip { min-height: 40px; padding: 0 13px; font-size: 12.5px; }
+  /* 页面第一个小标题不再额外叠 28px 上边距（顶栏下方会空出近 100px） */
+  .shell > .section-title:first-child { margin-top: 0 !important; }
+  /* 今日任务：主按钮整行，两个次级按钮并排，原来三个全宽按钮堆成三块砖 */
+  .today-side { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .today-side .btn-accent { grid-column: 1 / -1; }
+  /* 院校页筛选chip在手机上改为换行：横滑模式把后半截选项藏在屏幕外，等于没有 */
+  .schools-v2 .chip-row { flex-wrap: wrap; overflow-x: visible; padding-bottom: 0; }
+  .schools-v2 .chip { white-space: nowrap; }
   .btn-sm { min-height: 40px; }
-  .hh-pdfs a { height: 36px; }
+  .hh-pdfs a { height: 40px; }
   .bar { height: 7px; background: color-mix(in srgb, var(--text) 13%, transparent); }
   .bar.light { height: 9px; background: color-mix(in srgb, var(--text) 15%, transparent); }
   .wb-progress-bar { background: color-mix(in srgb, var(--text) 14%, var(--card)); }
