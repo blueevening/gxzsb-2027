@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var V = "4.0.0";          // 与 index.html 的版本号保持一致
+  var V = "4.0.1";          // 与 index.html 的版本号保持一致
   try { window.V = V; } catch (e) {}
 
   /* 自动刷新：仅当版本号比本地记录的新时刷新一次（避免旧缓存反复刷新死循环） */
@@ -412,6 +412,9 @@
       if (af) throw new Error(af);
     })();
     _dataPromise = (async function () {
+      /* 单词书和基础题库同时起跑：背单词是从首页第一屏就能点进来的功能，
+         等 all-bank 加载完再排到队尾，会出现「进去先转圈十几秒」的观感。 */
+      try { window.gxzsbEnsureWords().catch(function () {}); } catch (e) {}
       try {
         await _basePromise;
         window.GXZSB_BASE_READY = true;
@@ -424,6 +427,9 @@
         var doneCount = 0;
         var total = small.length;
         await Promise.all(small.map(function (script) {
+          /* 已提前起跑过的脚本（如单词书）直接跳过，不重复下载；
+             注意只能按文件名判断：多个脚本的 verify 都是 STUDY_DATA，按 verify 判断会误跳过 */
+          if (script.src === "wordbook.js" && window.WORDS) { doneCount++; setProgress(doneCount, total); return Promise.resolve(); }
           return loadWithRetry(script, 0, total).then(function (f) {
             doneCount++;
             setProgress(doneCount, total);
@@ -445,6 +451,23 @@
   }
   window.gxzsbEnsureData = function () { return startData(); };
   window.gxzsbEnsureBase = function () { return (_basePromise || startData()); };
+
+  /* 单词书单独暴露一个「去重 + 校验 + 重试」的加载入口：
+     app.js 的背单词页直接复用它，避免和后台预加载各下一份 748KB 的词库。
+     页面等不到数据时也能拿到明确的失败原因，而不是一直转圈。 */
+  var _wordPromise = null;
+  window.gxzsbEnsureWords = function () {
+    if (window.WORDS && window.WORDS.getStats) return Promise.resolve();
+    if (_wordPromise) return _wordPromise;
+    _wordPromise = loadWithRetry({ src: "wordbook.js", label: "单词书", verify: "WORDS" }, 0, 1)
+      .then(function (failLabel) {
+        if (failLabel) { _wordPromise = null; throw new Error(failLabel); }
+      }, function (e) {
+        _wordPromise = null;
+        throw e;
+      });
+    return _wordPromise;
+  };
 
   /* 断网/联网提示 */
   function netBar() {

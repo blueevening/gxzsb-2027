@@ -4389,11 +4389,35 @@ function formulaFilter() {
   function viewWords() {
     setTitle("英语核心词汇", false);
     if (!window.WORDS || !window.WORDS.getStats) {
-      var s = document.createElement("script");
-      s.src = "wordbook.js?v=" + (window.V || Date.now());
-      s.onload = function(){ render(); };
-      document.head.appendChild(s);
-      return '<div class="card" style="padding:40px 16px;text-align:center;color:var(--text-sub)">正在加载词库…</div>';
+      // 失败态：词库下载失败时给明确提示 + 重试按钮，而不是无限转圈/无限重复注入
+      if (window.__wbLoadFail) {
+        return `<div class="card" style="padding:28px 18px;text-align:center">
+          <div style="font-size:15px;font-weight:650;margin-bottom:6px">词库没能加载成功</div>
+          <div class="muted" style="font-size:13px;line-height:1.7;margin-bottom:14px">可能是网络中断或首次下载被中断。<br>词库约 150KB，重试一般几秒内完成。</div>
+          <button class="btn btn-primary" data-act="wb-reload" type="button" style="min-width:120px">重新加载词库</button>
+        </div>`;
+      }
+      // 优先复用 boot 的去重加载器（避免背单词页和后台预加载各下一份 748KB）
+      if (window.gxzsbEnsureWords) {
+        window.gxzsbEnsureWords().then(function () {
+          if (window.WORDS && window.WORDS.getStats) render();
+          else { window.__wbLoadFail = 1; render(); }
+        }, function () { window.__wbLoadFail = 1; render(); });
+      } else {
+        var s = document.createElement("script");
+        s.src = "wordbook.js?v=" + (window.V || Date.now());
+        s.onload = function () {
+          if (window.WORDS && window.WORDS.getStats) render();
+          else { window.__wbLoadFail = 1; render(); }
+        };
+        s.onerror = function () { window.__wbLoadFail = 1; render(); };
+        document.head.appendChild(s);
+      }
+      return `<div class="card" style="padding:32px 18px;text-align:center">
+        <div class="wb-loading-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div style="font-size:14px;color:var(--text-sub);margin-top:4px">正在加载词库…</div>
+        <div class="muted" style="font-size:12px;margin-top:6px">首次进入需下载约 150KB，之后秒开</div>
+      </div>`;
     }
     var S = window.WORDS.getStats();
     var goal = window.WORDS.getDailyGoal();
@@ -6456,6 +6480,9 @@ function formulaFilter() {
     } else if (act === "wb-start-new") {
       state.wbLearn = null;
       go("word-learn");
+      render();
+    } else if (act === "wb-reload") {
+      window.__wbLoadFail = 0;
       render();
     } else if (act === "wb-set-goal") {
       window.WORDS.setDailyGoal(parseInt(t.getAttribute("data-v")));
