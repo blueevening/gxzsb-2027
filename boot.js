@@ -389,14 +389,20 @@
 
     // supabase SDK 后台异步加载，不阻塞主流程
     var sbScript = { src: "vendor/supabase.min.js", required: false, label: "登录组件", verify: "" };
-    loadWithRetry(sbScript, 0, 1).then(function (failLabel) {
-      if (failLabel) {
-        // SDK 加载失败：静默降级为本地模式，不打扰用户
-        try { window.dispatchEvent(new CustomEvent("gxzsb:sb-unavailable")); } catch (e) {}
-      } else {
-        try { window.dispatchEvent(new CustomEvent("gxzsb:sb-ready")); } catch (e) {}
-      }
-    });
+    function loadSb() {
+      loadWithRetry(sbScript, 0, 1).then(function (failLabel) {
+        if (failLabel) {
+          // SDK 加载失败：静默降级为本地模式，不打扰用户
+          try { window.dispatchEvent(new CustomEvent("gxzsb:sb-unavailable")); } catch (e) {}
+        } else {
+          try { window.dispatchEvent(new CustomEvent("gxzsb:sb-ready")); } catch (e) {}
+        }
+      });
+    }
+    /* 落在背单词页时，213KB 的登录 SDK 会明显挤掉 app.js / 词库的带宽：
+       先让页面和词库优先，SDK 稍后再补（点登录时如果还没到会提示初始化中）。 */
+    if (/^#\/(words|word-|extra)/.test(location.hash || "")) setTimeout(loadSb, 4000);
+    else loadSb();
   }
 
   /* PHASE2（数据）延迟到进入主界面后再启动：未登录不下载数据，弱网下登录认证请求优先、
